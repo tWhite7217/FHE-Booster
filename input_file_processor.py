@@ -128,23 +128,33 @@ for dependent_operation in dependencies:
 
 outputfile.write("~\n")
 
+
+# max_num_paths = max([len(path_list) for path_list in bootstrapping_paths.values()])
+# outputfile.write("P1..P%d\n" % max_num_paths)
+# outputfile.write("~\n")
+
+# for operation in bootstrapping_paths:
+#     i = 1
+#     for bootstrapping_path in bootstrapping_paths[operation]:
+#         for dependency in bootstrapping_path:
+#             outputfile.write("%s %s P%d\n" % (operation, dependency, i))
+#         i += 1
+
+# outputfile.write("~\n")
+
+outputfile.write("%d\n" % bootstrapping_latency)
+
+outputfile.write("~\n")
+
 create_bootstrapping_paths()
 
-max_num_paths = max([len(path_list) for path_list in bootstrapping_paths.values()])
-outputfile.write("P1..P%d\n" % max_num_paths)
-outputfile.write("~\n")
+for (operation, path_list) in bootstrapping_paths.items():
+    for path in path_list:
+        constraint_string = ""
+        for dependency in path:
+            constraint_string += "BOOTSTRAPPED(%s) + " % (dependency[2:])
+        constraint_string = constraint_string[:-2] + ">= 1;\n"
+        outputfile.write(constraint_string)
 
-for operation in bootstrapping_paths:
-    i = 0
-    for bootstrapping_path in bootstrapping_paths[operation]:
-        for dependency in bootstrapping_path:
-            outputfile.write("%s %s P%d\n" % (operation, dependency, i))
-        i += 1
-
-# outputfile.write()
-
-outputfile.write("~\n")
-
-outputfile.write(str(bootstrapping_latency))
 
 outputfile.close()
