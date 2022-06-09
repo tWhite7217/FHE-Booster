@@ -1,6 +1,8 @@
 import re
 
 bootstrapping_latency = 12
+bootstrapping_path_length = 3
+num_bootstrapping_cores = 1
 
 inputfile = open("unprocessed_input_file.txt")
 
@@ -20,7 +22,7 @@ def create_bootstrapping_paths():
 
 
 def create_bootstrapping_paths_helper(dependency, level):
-    if level == 3:
+    if level == bootstrapping_path_length:
         return [[dependency]]
     elif dependency not in dependencies:
         return [[]]
@@ -97,6 +99,11 @@ for dependent_operation in dependencies:
 outputfile.write("~\n")
 
 outputfile.write("%d\n" % bootstrapping_latency)
+
+outputfile.write("~\n")
+
+if num_bootstrapping_cores > 0:
+    outputfile.write("C1..C%d\n" % num_bootstrapping_cores)
 
 outputfile.write("~\n")
 
