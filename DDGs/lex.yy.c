@@ -471,6 +471,7 @@ char *yytext;
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 enum class OperationType {
     ADD,
@@ -489,37 +490,40 @@ std::vector<std::shared_ptr<Operation>> operations;
 
 std::string output;
 
+std::unordered_map<OperationType, int> operation_latencies = {
+    {OperationType::ADD, 1},
+    {OperationType::MUL, 5},
+};
+
+std::unordered_map<OperationType, std::string> operation_strings = {
+    {OperationType::ADD, "ADD"},
+    {OperationType::MUL, "MUL"},
+};
+
 void create_output() {
-    int i = 0;
+    for (auto& [operation_type, latency] : operation_latencies) {
+        output += operation_strings[operation_type] + " " + std::to_string(latency) + "\n";
+    }
+
+    output += "~\n";
+    
     for (auto& operation : operations) {
-        output += "OP" + std::to_string(i) + " ";
-        // std::cout << "OP" << i << " ";
-        if (operation->type == OperationType::ADD) {
-            output += "ADD";
-            // std::cout << "ADD";
-        } else if (operation->type == OperationType::MUL) {
-            output += "MUL";
-            // std::cout << "MUL";
-        }
+        output += "OP" + std::to_string(operation->id) + " ";
+        output += operation_strings[operation->type] + " ";
         if (operation->depends_on.size() > 0) {
-            output += " [";
-            // std::cout << " [";
+            output += "[";
             for (auto& dependency : operation->depends_on) {
-                output += std::to_string(dependency->id) + ", ";
-                // std::cout << dependency->id << ", ";
+                output += "OP" + std::to_string(dependency->id) + ", ";
             }
             output = output.substr(0, output.size() - 2);
             output += "]";
-            // std::cout << "]";
         }
         output += "\n";
-        // std::cout << "\n";
-        i++;
     }
 }
 
-#line 522 "lex.yy.c"
-#line 523 "lex.yy.c"
+#line 526 "lex.yy.c"
+#line 527 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -736,10 +740,10 @@ YY_DECL
 		}
 
 	{
-#line 56 "tgff_to_unprocessed_lingo.l"
+#line 60 "tgff_to_unprocessed_lingo.l"
 
 
-#line 743 "lex.yy.c"
+#line 747 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -798,9 +802,9 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 58 "tgff_to_unprocessed_lingo.l"
+#line 62 "tgff_to_unprocessed_lingo.l"
 {
-    operations.emplace_back(std::make_shared<Operation>(operations.size()));
+    operations.emplace_back(std::make_shared<Operation>(operations.size()+1));
     std::string yystring = std::string{yytext};
     std::string type_string = yystring.substr(yystring.find("TYPE") + 5, yystring.size());
     int type_num = std::stoi(type_string);
@@ -809,7 +813,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 66 "tgff_to_unprocessed_lingo.l"
+#line 70 "tgff_to_unprocessed_lingo.l"
 {
     std::string yystring = std::string{yytext};
     std::string from_string = yystring.substr(8, yystring.find("  TO"));
@@ -821,21 +825,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 75 "tgff_to_unprocessed_lingo.l"
+#line 79 "tgff_to_unprocessed_lingo.l"
 {}
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 77 "tgff_to_unprocessed_lingo.l"
+#line 81 "tgff_to_unprocessed_lingo.l"
 {}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 79 "tgff_to_unprocessed_lingo.l"
+#line 83 "tgff_to_unprocessed_lingo.l"
 ECHO;
 	YY_BREAK
-#line 839 "lex.yy.c"
+#line 843 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1840,7 +1844,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 79 "tgff_to_unprocessed_lingo.l"
+#line 83 "tgff_to_unprocessed_lingo.l"
 
 int yywrap() { /* need this to avoid link problem */
 	return 1;

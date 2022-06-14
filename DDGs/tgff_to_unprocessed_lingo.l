@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 enum class OperationType {
     ADD,
@@ -22,25 +23,35 @@ std::vector<std::shared_ptr<Operation>> operations;
 
 std::string output;
 
+std::unordered_map<OperationType, int> operation_latencies = {
+    {OperationType::ADD, 1},
+    {OperationType::MUL, 5},
+};
+
+std::unordered_map<OperationType, std::string> operation_strings = {
+    {OperationType::ADD, "ADD"},
+    {OperationType::MUL, "MUL"},
+};
+
 void create_output() {
-    int i = 0;
+    for (auto& [operation_type, latency] : operation_latencies) {
+        output += operation_strings[operation_type] + " " + std::to_string(latency) + "\n";
+    }
+
+    output += "~\n";
+    
     for (auto& operation : operations) {
-        output += "OP" + std::to_string(i) + " ";
-        if (operation->type == OperationType::ADD) {
-            output += "ADD";
-        } else if (operation->type == OperationType::MUL) {
-            output += "MUL";
-        }
+        output += "OP" + std::to_string(operation->id) + " ";
+        output += operation_strings[operation->type] + " ";
         if (operation->depends_on.size() > 0) {
-            output += " [";
+            output += "[";
             for (auto& dependency : operation->depends_on) {
-                output += std::to_string(dependency->id) + ", ";
+                output += "OP" + std::to_string(dependency->id) + ", ";
             }
             output = output.substr(0, output.size() - 2);
             output += "]";
         }
         output += "\n";
-        i++;
     }
 }
 
@@ -49,7 +60,7 @@ void create_output() {
 %%
 
 "TASK t0_"[0-9]+[ \t]"TYPE "[0-9]+ {
-    operations.emplace_back(std::make_shared<Operation>(operations.size()));
+    operations.emplace_back(std::make_shared<Operation>(operations.size()+1));
     std::string yystring = std::string{yytext};
     std::string type_string = yystring.substr(yystring.find("TYPE") + 5, yystring.size());
     int type_num = std::stoi(type_string);

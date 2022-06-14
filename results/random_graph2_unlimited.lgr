@@ -1,0 +1,186 @@
+  LINGO/WIN64 19.0.55 (5 May 2022 ), LINDO API 13.0.4099.342
+
+  Licensee info: tomwhite@udel.edu
+  License expires:  6 DEC 2022
+
+  Local optimal solution found.
+  Objective value:                              55.00000
+  Objective bound:                              55.00000
+  Infeasibilities:                              0.000000
+  Extended solver steps:                               5
+  Total solver iterations:                           465
+  Elapsed runtime seconds:                          0.31
+
+  Model Class:                                     PINLP
+
+  Total variables:                     54
+  Nonlinear variables:                 18
+  Integer variables:                   54
+
+  Total constraints:                   61
+  Nonlinear constraints:                1
+
+  Total nonzeros:                     175
+  Nonlinear nonzeros:                  18
+
+
+
+                                Variable           Value        Reduced Cost
+                   BOOTSTRAPPING_LATENCY        12.00000            0.000000
+                            LATENCY( T0)        5.000000            0.000000
+                            LATENCY( T1)        1.000000            0.000000
+                      BOOTSTRAPPED( OP1)        0.000000            0.000000
+                      BOOTSTRAPPED( OP2)        0.000000            0.000000
+                      BOOTSTRAPPED( OP3)        1.000000            0.000000
+                      BOOTSTRAPPED( OP4)        0.000000            0.000000
+                      BOOTSTRAPPED( OP5)        1.000000            0.000000
+                      BOOTSTRAPPED( OP6)        0.000000            0.000000
+                      BOOTSTRAPPED( OP7)        0.000000            0.000000
+                      BOOTSTRAPPED( OP8)        0.000000            0.000000
+                      BOOTSTRAPPED( OP9)        0.000000            0.000000
+                     BOOTSTRAPPED( OP10)        1.000000            0.000000
+                     BOOTSTRAPPED( OP11)        1.000000            0.000000
+                     BOOTSTRAPPED( OP12)        0.000000            0.000000
+                     BOOTSTRAPPED( OP13)        0.000000            0.000000
+                     BOOTSTRAPPED( OP14)        0.000000            0.000000
+                     BOOTSTRAPPED( OP15)        0.000000            0.000000
+                     BOOTSTRAPPED( OP16)        0.000000            0.000000
+                     BOOTSTRAPPED( OP17)        0.000000            0.000000
+                     BOOTSTRAPPED( OP18)        0.000000            0.000000
+                        START_TIME( OP1)        0.000000            0.000000
+                        START_TIME( OP2)        0.000000            0.000000
+                        START_TIME( OP3)        5.000000            0.000000
+                        START_TIME( OP4)        5.000000            0.000000
+                        START_TIME( OP5)        10.00000            0.000000
+                        START_TIME( OP6)        22.00000            0.000000
+                        START_TIME( OP7)        27.00000            0.000000
+                        START_TIME( OP8)        23.00000            0.000000
+                        START_TIME( OP9)        32.00000            0.000000
+                       START_TIME( OP10)        32.00000            0.000000
+                       START_TIME( OP11)        32.00000            0.000000
+                       START_TIME( OP12)        28.00000            0.000000
+                       START_TIME( OP13)        49.00000            0.000000
+                       START_TIME( OP14)        49.00000            0.000000
+                       START_TIME( OP15)        49.00000            0.000000
+                       START_TIME( OP16)        49.00000            0.000000
+                       START_TIME( OP17)        50.00000            0.000000
+                       START_TIME( OP18)        50.00000            0.000000
+                       FINISH_TIME( OP1)        5.000000            0.000000
+                       FINISH_TIME( OP2)        5.000000            0.000000
+                       FINISH_TIME( OP3)        22.00000            0.000000
+                       FINISH_TIME( OP4)        10.00000            0.000000
+                       FINISH_TIME( OP5)        23.00000            0.000000
+                       FINISH_TIME( OP6)        27.00000            0.000000
+                       FINISH_TIME( OP7)        32.00000            0.000000
+                       FINISH_TIME( OP8)        28.00000            0.000000
+                       FINISH_TIME( OP9)        33.00000            0.000000
+                      FINISH_TIME( OP10)        49.00000            0.000000
+                      FINISH_TIME( OP11)        49.00000            0.000000
+                      FINISH_TIME( OP12)        29.00000            0.000000
+                      FINISH_TIME( OP13)        50.00000            0.000000
+                      FINISH_TIME( OP14)        54.00000            0.000000
+                      FINISH_TIME( OP15)        50.00000            0.000000
+                      FINISH_TIME( OP16)        54.00000            0.000000
+                      FINISH_TIME( OP17)        51.00000            0.000000
+                      FINISH_TIME( OP18)        55.00000            1.000000
+          OPERATION_IS_OF_TYPE( OP1, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP1, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP2, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP2, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP3, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP3, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP4, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP4, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP5, T0)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP5, T1)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP6, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP6, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP7, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP7, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP8, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP8, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP9, T0)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP9, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP10, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP10, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP11, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP11, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP12, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP12, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP13, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP13, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP14, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP14, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP15, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP15, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP16, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP16, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP17, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP17, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP18, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP18, T1)        0.000000            0.000000
+
+                                     Row    Slack or Surplus      Dual Price
+                                       1        0.000000            0.000000
+                                       2        0.000000            0.000000
+                                       3        0.000000            0.000000
+                                       4        0.000000            0.000000
+                                       5        0.000000            0.000000
+                                       6        0.000000            0.000000
+                                       7        0.000000            0.000000
+                                       8        0.000000            0.000000
+                                       9        0.000000            0.000000
+                                      10        0.000000            0.000000
+                                      11        0.000000            0.000000
+                                      12        0.000000            0.000000
+                                      13        0.000000            0.000000
+                                      14        0.000000            0.000000
+                                      15        0.000000            0.000000
+                                      16        0.000000            0.000000
+                                      17        0.000000            0.000000
+                                      18        0.000000            0.000000
+                                      19        0.000000            0.000000
+                                      20        0.000000            0.000000
+                                      21        0.000000            0.000000
+                                      22        5.000000            0.000000
+                                      23        0.000000            0.000000
+                                      24        0.000000            0.000000
+                                      25        18.00000            0.000000
+                                      26        18.00000            0.000000
+                                      27        1.000000            0.000000
+                                      28        0.000000            0.000000
+                                      29        0.000000            0.000000
+                                      30        0.000000            0.000000
+                                      31        0.000000            0.000000
+                                      32        0.000000            0.000000
+                                      33        0.000000            0.000000
+                                      34        0.000000            0.000000
+                                      35        21.00000            0.000000
+                                      36        0.000000            0.000000
+                                      37        26.00000            0.000000
+                                      38        0.000000            0.000000
+                                      39        26.00000            0.000000
+                                      40        0.000000            0.000000
+                                      41        0.000000            0.000000
+                                      42        0.000000            0.000000
+                                      43        0.000000            0.000000
+                                      44        0.000000            0.000000
+                                      45        0.000000            0.000000
+                                      46        0.000000            0.000000
+                                      47        0.000000            0.000000
+                                      48        0.000000            0.000000
+                                      49        0.000000            0.000000
+                                      50        0.000000            0.000000
+                                      51        0.000000            0.000000
+                                      52        0.000000            0.000000
+                                      53        0.000000            0.000000
+                                      54        0.000000            0.000000
+                                      55        0.000000            0.000000
+                                      56        0.000000            0.000000
+                                      57        0.000000            0.000000
+                                      58        0.000000            0.000000
+                                      59        0.000000            0.000000
+                                      60        0.000000            0.000000
+                                      61        55.00000           -1.000000
+
+ 
