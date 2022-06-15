@@ -1,1 +1,2 @@
 *.LDT
+__pycache__/
