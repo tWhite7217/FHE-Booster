@@ -34,6 +34,8 @@ class SolutionValidator:
         self.bootstrapping_constraints_are_met()
 
         while self.program_is_not_complete():
+            self.clock_cycle += 1
+
             self.bootstrapping_operations = self.decrement_cycles_left_for(
                 self.bootstrapping_operations
             )
@@ -53,14 +55,12 @@ class SolutionValidator:
             ready_operations = self.get_ready_operations()
             self.start_running_ready_operations(ready_operations)
 
-            self.clock_cycle += 1
-
         if self.clock_cycle != self.solver_latency:
             print("Error: The latencies mismatch")
             print("Solver latency: %d" % self.solver_latency)
             print("Calculated latency: %d" % self.clock_cycle)
-        elif self.used_bootstrap_limited_model == "False":
-            print("Unlimited ILP model results are correct")
+        else:
+            print("ILP model results are correct")
             sys.exit(0)
 
     def bootstrapping_constraints_are_met(self):
@@ -80,6 +80,7 @@ class SolutionValidator:
         return (
             len(self.uncompleted_operations) > 0
             or len(self.running_operations) > 0
+            or len(self.bootstrapping_queue) > 0
             or len(self.bootstrapping_operations) > 0
         )
 
@@ -200,6 +201,7 @@ class SolutionValidator:
                 if (
                     dependency in self.uncompleted_operations
                     or dependency in self.running_operations
+                    or dependency in self.bootstrapping_queue
                     or dependency in self.bootstrapping_operations
                 ):
                     return False

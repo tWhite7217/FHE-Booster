@@ -1,0 +1,1824 @@
+  LINGO/WIN64 19.0.55 (5 May 2022 ), LINDO API 13.0.4099.342
+
+  Licensee info: tomwhite@udel.edu
+  License expires:  6 DEC 2022
+
+  Local optimal solution found.
+  Objective value:                              58.00000
+  Objective bound:                              58.00000
+  Infeasibilities:                              0.000000
+  Extended solver steps:                              47
+  Total solver iterations:                         28585
+  Elapsed runtime seconds:                        189.07
+
+  Model Class:                                     PINLP
+
+  Total variables:                    738
+  Nonlinear variables:                684
+  Integer variables:                  738
+
+  Total constraints:                 1015
+  Nonlinear constraints:              766
+
+  Total nonzeros:                    3613
+  Nonlinear nonzeros:                2160
+
+
+
+                                Variable           Value        Reduced Cost
+                   BOOTSTRAPPING_LATENCY        12.00000            0.000000
+                            LATENCY( T0)        5.000000            0.000000
+                            LATENCY( T1)        1.000000            0.000000
+                      BOOTSTRAPPED( OP1)        0.000000            0.000000
+                      BOOTSTRAPPED( OP2)        0.000000            0.000000
+                      BOOTSTRAPPED( OP3)        1.000000            0.000000
+                      BOOTSTRAPPED( OP4)        0.000000            0.000000
+                      BOOTSTRAPPED( OP5)        1.000000            0.000000
+                      BOOTSTRAPPED( OP6)        0.000000            0.000000
+                      BOOTSTRAPPED( OP7)        1.000000            0.000000
+                      BOOTSTRAPPED( OP8)        0.000000            0.000000
+                      BOOTSTRAPPED( OP9)        0.000000            0.000000
+                     BOOTSTRAPPED( OP10)        0.000000            0.000000
+                     BOOTSTRAPPED( OP11)        0.000000            0.000000
+                     BOOTSTRAPPED( OP12)        0.000000            0.000000
+                     BOOTSTRAPPED( OP13)        0.000000            0.000000
+                     BOOTSTRAPPED( OP14)        0.000000            0.000000
+                     BOOTSTRAPPED( OP15)        0.000000            0.000000
+                     BOOTSTRAPPED( OP16)        0.000000            0.000000
+                     BOOTSTRAPPED( OP17)        0.000000            0.000000
+                     BOOTSTRAPPED( OP18)        0.000000            0.000000
+                        START_TIME( OP1)        0.000000            0.000000
+                        START_TIME( OP2)        0.000000            0.000000
+                        START_TIME( OP3)        5.000000            0.000000
+                        START_TIME( OP4)        14.00000            0.000000
+                        START_TIME( OP5)        20.00000            0.000000
+                        START_TIME( OP6)        22.00000            0.000000
+                        START_TIME( OP7)        27.00000            0.000000
+                        START_TIME( OP8)        34.00000            0.000000
+                        START_TIME( OP9)        47.00000            0.000000
+                       START_TIME( OP10)        47.00000            0.000000
+                       START_TIME( OP11)        47.00000            0.000000
+                       START_TIME( OP12)        39.00000            0.000000
+                       START_TIME( OP13)        52.00000            0.000000
+                       START_TIME( OP14)        52.00000            0.000000
+                       START_TIME( OP15)        52.00000            0.000000
+                       START_TIME( OP16)        52.00000            0.000000
+                       START_TIME( OP17)        53.00000            0.000000
+                       START_TIME( OP18)        53.00000            0.000000
+              BOOTSTRAP_START_TIME( OP1)        5.000000            0.000000
+              BOOTSTRAP_START_TIME( OP2)        5.000000            0.000000
+              BOOTSTRAP_START_TIME( OP3)        10.00000            0.000000
+              BOOTSTRAP_START_TIME( OP4)        20.00000            0.000000
+              BOOTSTRAP_START_TIME( OP5)        22.00000            0.000000
+              BOOTSTRAP_START_TIME( OP6)        27.00000            0.000000
+              BOOTSTRAP_START_TIME( OP7)        35.00000            0.000000
+              BOOTSTRAP_START_TIME( OP8)        39.00000            0.000000
+              BOOTSTRAP_START_TIME( OP9)        48.00000            0.000000
+             BOOTSTRAP_START_TIME( OP10)        52.00000            0.000000
+             BOOTSTRAP_START_TIME( OP11)        52.00000            0.000000
+             BOOTSTRAP_START_TIME( OP12)        40.00000            0.000000
+             BOOTSTRAP_START_TIME( OP13)        53.00000            0.000000
+             BOOTSTRAP_START_TIME( OP14)        57.00000            0.000000
+             BOOTSTRAP_START_TIME( OP15)        53.00000            0.000000
+             BOOTSTRAP_START_TIME( OP16)        57.00000            0.000000
+             BOOTSTRAP_START_TIME( OP17)        54.00000            0.000000
+             BOOTSTRAP_START_TIME( OP18)        58.00000            0.000000
+                       FINISH_TIME( OP1)        5.000000            0.000000
+                       FINISH_TIME( OP2)        5.000000            0.000000
+                       FINISH_TIME( OP3)        22.00000            0.000000
+                       FINISH_TIME( OP4)        20.00000            0.000000
+                       FINISH_TIME( OP5)        34.00000            0.000000
+                       FINISH_TIME( OP6)        27.00000            0.000000
+                       FINISH_TIME( OP7)        47.00000            0.000000
+                       FINISH_TIME( OP8)        39.00000            0.000000
+                       FINISH_TIME( OP9)        48.00000            0.000000
+                      FINISH_TIME( OP10)        52.00000            0.000000
+                      FINISH_TIME( OP11)        52.00000            0.000000
+                      FINISH_TIME( OP12)        40.00000            0.000000
+                      FINISH_TIME( OP13)        53.00000            0.000000
+                      FINISH_TIME( OP14)        57.00000            0.000000
+                      FINISH_TIME( OP15)        53.00000            0.000000
+                      FINISH_TIME( OP16)        57.00000            0.000000
+                      FINISH_TIME( OP17)        54.00000            0.000000
+                      FINISH_TIME( OP18)        58.00000            1.000000
+                           B2C( OP1, C1)        0.000000            0.000000
+                           B2C( OP2, C1)        0.000000            0.000000
+                           B2C( OP3, C1)        1.000000            0.000000
+                           B2C( OP4, C1)        0.000000            0.000000
+                           B2C( OP5, C1)        1.000000            0.000000
+                           B2C( OP6, C1)        0.000000            0.000000
+                           B2C( OP7, C1)        1.000000            0.000000
+                           B2C( OP8, C1)        0.000000            0.000000
+                           B2C( OP9, C1)        0.000000            0.000000
+                          B2C( OP10, C1)        0.000000            0.000000
+                          B2C( OP11, C1)        0.000000            0.000000
+                          B2C( OP12, C1)        0.000000            0.000000
+                          B2C( OP13, C1)        0.000000            0.000000
+                          B2C( OP14, C1)        0.000000            0.000000
+                          B2C( OP15, C1)        0.000000            0.000000
+                          B2C( OP16, C1)        0.000000            0.000000
+                          B2C( OP17, C1)        0.000000            0.000000
+                          B2C( OP18, C1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP1, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP1, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP2, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP2, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP3, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP3, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP4, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP4, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP5, T0)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP5, T1)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP6, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP6, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP7, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP7, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP8, T0)        1.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP8, T1)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP9, T0)        0.000000            0.000000
+          OPERATION_IS_OF_TYPE( OP9, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP10, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP10, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP11, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP11, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP12, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP12, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP13, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP13, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP14, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP14, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP15, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP15, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP16, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP16, T1)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP17, T0)        0.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP17, T1)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP18, T0)        1.000000            0.000000
+         OPERATION_IS_OF_TYPE( OP18, T1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP1, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP1, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP2, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP2, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP5)        1.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP7)        1.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP3, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP3, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP4, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP4, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP7)        1.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP5, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP5, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP6, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP6, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP7, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP7, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP8, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP8, OP18)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP1)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP2)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP3)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP4)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP5)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP6)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP7)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP8)        0.000000            0.000000
+       BOOTSTRAP_ON_SAME_CORE( OP9, OP9)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP10)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP11)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP12)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP13)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP14)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP15)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP16)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP17)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP9, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP10, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP10, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP11, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP11, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP12, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP12, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP13, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP13, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP14, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP14, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP15, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP15, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP16, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP16, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP17, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP17, OP18)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP1)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP2)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP3)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP4)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP5)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP6)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP7)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP8)        0.000000            0.000000
+      BOOTSTRAP_ON_SAME_CORE( OP18, OP9)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP10)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP11)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP12)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP13)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP14)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP15)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP16)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP17)        0.000000            0.000000
+     BOOTSTRAP_ON_SAME_CORE( OP18, OP18)        0.000000            0.000000
+                       BORDER( OP1, OP1)        0.000000            0.000000
+                       BORDER( OP1, OP2)        0.000000            0.000000
+                       BORDER( OP1, OP3)        0.000000            0.000000
+                       BORDER( OP1, OP4)        0.000000            0.000000
+                       BORDER( OP1, OP5)        0.000000            0.000000
+                       BORDER( OP1, OP6)        0.000000            0.000000
+                       BORDER( OP1, OP7)        0.000000            0.000000
+                       BORDER( OP1, OP8)        0.000000            0.000000
+                       BORDER( OP1, OP9)        0.000000            0.000000
+                      BORDER( OP1, OP10)        0.000000            0.000000
+                      BORDER( OP1, OP11)        0.000000            0.000000
+                      BORDER( OP1, OP12)        0.000000            0.000000
+                      BORDER( OP1, OP13)        0.000000            0.000000
+                      BORDER( OP1, OP14)        0.000000            0.000000
+                      BORDER( OP1, OP15)        0.000000            0.000000
+                      BORDER( OP1, OP16)        0.000000            0.000000
+                      BORDER( OP1, OP17)        0.000000            0.000000
+                      BORDER( OP1, OP18)        0.000000            0.000000
+                       BORDER( OP2, OP1)        0.000000            0.000000
+                       BORDER( OP2, OP2)        0.000000            0.000000
+                       BORDER( OP2, OP3)        0.000000            0.000000
+                       BORDER( OP2, OP4)        0.000000            0.000000
+                       BORDER( OP2, OP5)        0.000000            0.000000
+                       BORDER( OP2, OP6)        0.000000            0.000000
+                       BORDER( OP2, OP7)        0.000000            0.000000
+                       BORDER( OP2, OP8)        0.000000            0.000000
+                       BORDER( OP2, OP9)        0.000000            0.000000
+                      BORDER( OP2, OP10)        0.000000            0.000000
+                      BORDER( OP2, OP11)        0.000000            0.000000
+                      BORDER( OP2, OP12)        0.000000            0.000000
+                      BORDER( OP2, OP13)        0.000000            0.000000
+                      BORDER( OP2, OP14)        0.000000            0.000000
+                      BORDER( OP2, OP15)        0.000000            0.000000
+                      BORDER( OP2, OP16)        0.000000            0.000000
+                      BORDER( OP2, OP17)        0.000000            0.000000
+                      BORDER( OP2, OP18)        0.000000            0.000000
+                       BORDER( OP3, OP1)        0.000000            0.000000
+                       BORDER( OP3, OP2)        0.000000            0.000000
+                       BORDER( OP3, OP3)        0.000000            0.000000
+                       BORDER( OP3, OP4)        0.000000            0.000000
+                       BORDER( OP3, OP5)        1.000000            0.000000
+                       BORDER( OP3, OP6)        0.000000            0.000000
+                       BORDER( OP3, OP7)        1.000000            0.000000
+                       BORDER( OP3, OP8)        0.000000            0.000000
+                       BORDER( OP3, OP9)        0.000000            0.000000
+                      BORDER( OP3, OP10)        0.000000            0.000000
+                      BORDER( OP3, OP11)        0.000000            0.000000
+                      BORDER( OP3, OP12)        0.000000            0.000000
+                      BORDER( OP3, OP13)        0.000000            0.000000
+                      BORDER( OP3, OP14)        0.000000            0.000000
+                      BORDER( OP3, OP15)        0.000000            0.000000
+                      BORDER( OP3, OP16)        0.000000            0.000000
+                      BORDER( OP3, OP17)        0.000000            0.000000
+                      BORDER( OP3, OP18)        0.000000            0.000000
+                       BORDER( OP4, OP1)        0.000000            0.000000
+                       BORDER( OP4, OP2)        0.000000            0.000000
+                       BORDER( OP4, OP3)        0.000000            0.000000
+                       BORDER( OP4, OP4)        0.000000            0.000000
+                       BORDER( OP4, OP5)        0.000000            0.000000
+                       BORDER( OP4, OP6)        0.000000            0.000000
+                       BORDER( OP4, OP7)        0.000000            0.000000
+                       BORDER( OP4, OP8)        0.000000            0.000000
+                       BORDER( OP4, OP9)        0.000000            0.000000
+                      BORDER( OP4, OP10)        0.000000            0.000000
+                      BORDER( OP4, OP11)        0.000000            0.000000
+                      BORDER( OP4, OP12)        0.000000            0.000000
+                      BORDER( OP4, OP13)        0.000000            0.000000
+                      BORDER( OP4, OP14)        0.000000            0.000000
+                      BORDER( OP4, OP15)        0.000000            0.000000
+                      BORDER( OP4, OP16)        0.000000            0.000000
+                      BORDER( OP4, OP17)        0.000000            0.000000
+                      BORDER( OP4, OP18)        0.000000            0.000000
+                       BORDER( OP5, OP1)        0.000000            0.000000
+                       BORDER( OP5, OP2)        0.000000            0.000000
+                       BORDER( OP5, OP3)        0.000000            0.000000
+                       BORDER( OP5, OP4)        0.000000            0.000000
+                       BORDER( OP5, OP5)        0.000000            0.000000
+                       BORDER( OP5, OP6)        0.000000            0.000000
+                       BORDER( OP5, OP7)        1.000000            0.000000
+                       BORDER( OP5, OP8)        0.000000            0.000000
+                       BORDER( OP5, OP9)        0.000000            0.000000
+                      BORDER( OP5, OP10)        0.000000            0.000000
+                      BORDER( OP5, OP11)        0.000000            0.000000
+                      BORDER( OP5, OP12)        0.000000            0.000000
+                      BORDER( OP5, OP13)        0.000000            0.000000
+                      BORDER( OP5, OP14)        0.000000            0.000000
+                      BORDER( OP5, OP15)        0.000000            0.000000
+                      BORDER( OP5, OP16)        0.000000            0.000000
+                      BORDER( OP5, OP17)        0.000000            0.000000
+                      BORDER( OP5, OP18)        0.000000            0.000000
+                       BORDER( OP6, OP1)        0.000000            0.000000
+                       BORDER( OP6, OP2)        0.000000            0.000000
+                       BORDER( OP6, OP3)        0.000000            0.000000
+                       BORDER( OP6, OP4)        0.000000            0.000000
+                       BORDER( OP6, OP5)        0.000000            0.000000
+                       BORDER( OP6, OP6)        0.000000            0.000000
+                       BORDER( OP6, OP7)        0.000000            0.000000
+                       BORDER( OP6, OP8)        0.000000            0.000000
+                       BORDER( OP6, OP9)        0.000000            0.000000
+                      BORDER( OP6, OP10)        0.000000            0.000000
+                      BORDER( OP6, OP11)        0.000000            0.000000
+                      BORDER( OP6, OP12)        0.000000            0.000000
+                      BORDER( OP6, OP13)        0.000000            0.000000
+                      BORDER( OP6, OP14)        0.000000            0.000000
+                      BORDER( OP6, OP15)        0.000000            0.000000
+                      BORDER( OP6, OP16)        0.000000            0.000000
+                      BORDER( OP6, OP17)        0.000000            0.000000
+                      BORDER( OP6, OP18)        0.000000            0.000000
+                       BORDER( OP7, OP1)        0.000000            0.000000
+                       BORDER( OP7, OP2)        0.000000            0.000000
+                       BORDER( OP7, OP3)        0.000000            0.000000
+                       BORDER( OP7, OP4)        0.000000            0.000000
+                       BORDER( OP7, OP5)        0.000000            0.000000
+                       BORDER( OP7, OP6)        0.000000            0.000000
+                       BORDER( OP7, OP7)        0.000000            0.000000
+                       BORDER( OP7, OP8)        0.000000            0.000000
+                       BORDER( OP7, OP9)        0.000000            0.000000
+                      BORDER( OP7, OP10)        0.000000            0.000000
+                      BORDER( OP7, OP11)        0.000000            0.000000
+                      BORDER( OP7, OP12)        0.000000            0.000000
+                      BORDER( OP7, OP13)        0.000000            0.000000
+                      BORDER( OP7, OP14)        0.000000            0.000000
+                      BORDER( OP7, OP15)        0.000000            0.000000
+                      BORDER( OP7, OP16)        0.000000            0.000000
+                      BORDER( OP7, OP17)        0.000000            0.000000
+                      BORDER( OP7, OP18)        0.000000            0.000000
+                       BORDER( OP8, OP1)        0.000000            0.000000
+                       BORDER( OP8, OP2)        0.000000            0.000000
+                       BORDER( OP8, OP3)        0.000000            0.000000
+                       BORDER( OP8, OP4)        0.000000            0.000000
+                       BORDER( OP8, OP5)        0.000000            0.000000
+                       BORDER( OP8, OP6)        0.000000            0.000000
+                       BORDER( OP8, OP7)        0.000000            0.000000
+                       BORDER( OP8, OP8)        0.000000            0.000000
+                       BORDER( OP8, OP9)        0.000000            0.000000
+                      BORDER( OP8, OP10)        0.000000            0.000000
+                      BORDER( OP8, OP11)        0.000000            0.000000
+                      BORDER( OP8, OP12)        0.000000            0.000000
+                      BORDER( OP8, OP13)        0.000000            0.000000
+                      BORDER( OP8, OP14)        0.000000            0.000000
+                      BORDER( OP8, OP15)        0.000000            0.000000
+                      BORDER( OP8, OP16)        0.000000            0.000000
+                      BORDER( OP8, OP17)        0.000000            0.000000
+                      BORDER( OP8, OP18)        0.000000            0.000000
+                       BORDER( OP9, OP1)        0.000000            0.000000
+                       BORDER( OP9, OP2)        0.000000            0.000000
+                       BORDER( OP9, OP3)        0.000000            0.000000
+                       BORDER( OP9, OP4)        0.000000            0.000000
+                       BORDER( OP9, OP5)        0.000000            0.000000
+                       BORDER( OP9, OP6)        0.000000            0.000000
+                       BORDER( OP9, OP7)        0.000000            0.000000
+                       BORDER( OP9, OP8)        0.000000            0.000000
+                       BORDER( OP9, OP9)        0.000000            0.000000
+                      BORDER( OP9, OP10)        0.000000            0.000000
+                      BORDER( OP9, OP11)        0.000000            0.000000
+                      BORDER( OP9, OP12)        0.000000            0.000000
+                      BORDER( OP9, OP13)        0.000000            0.000000
+                      BORDER( OP9, OP14)        0.000000            0.000000
+                      BORDER( OP9, OP15)        0.000000            0.000000
+                      BORDER( OP9, OP16)        0.000000            0.000000
+                      BORDER( OP9, OP17)        0.000000            0.000000
+                      BORDER( OP9, OP18)        0.000000            0.000000
+                      BORDER( OP10, OP1)        0.000000            0.000000
+                      BORDER( OP10, OP2)        0.000000            0.000000
+                      BORDER( OP10, OP3)        0.000000            0.000000
+                      BORDER( OP10, OP4)        0.000000            0.000000
+                      BORDER( OP10, OP5)        0.000000            0.000000
+                      BORDER( OP10, OP6)        0.000000            0.000000
+                      BORDER( OP10, OP7)        0.000000            0.000000
+                      BORDER( OP10, OP8)        0.000000            0.000000
+                      BORDER( OP10, OP9)        0.000000            0.000000
+                     BORDER( OP10, OP10)        0.000000            0.000000
+                     BORDER( OP10, OP11)        0.000000            0.000000
+                     BORDER( OP10, OP12)        0.000000            0.000000
+                     BORDER( OP10, OP13)        0.000000            0.000000
+                     BORDER( OP10, OP14)        0.000000            0.000000
+                     BORDER( OP10, OP15)        0.000000            0.000000
+                     BORDER( OP10, OP16)        0.000000            0.000000
+                     BORDER( OP10, OP17)        0.000000            0.000000
+                     BORDER( OP10, OP18)        0.000000            0.000000
+                      BORDER( OP11, OP1)        0.000000            0.000000
+                      BORDER( OP11, OP2)        0.000000            0.000000
+                      BORDER( OP11, OP3)        0.000000            0.000000
+                      BORDER( OP11, OP4)        0.000000            0.000000
+                      BORDER( OP11, OP5)        0.000000            0.000000
+                      BORDER( OP11, OP6)        0.000000            0.000000
+                      BORDER( OP11, OP7)        0.000000            0.000000
+                      BORDER( OP11, OP8)        0.000000            0.000000
+                      BORDER( OP11, OP9)        0.000000            0.000000
+                     BORDER( OP11, OP10)        0.000000            0.000000
+                     BORDER( OP11, OP11)        0.000000            0.000000
+                     BORDER( OP11, OP12)        0.000000            0.000000
+                     BORDER( OP11, OP13)        0.000000            0.000000
+                     BORDER( OP11, OP14)        0.000000            0.000000
+                     BORDER( OP11, OP15)        0.000000            0.000000
+                     BORDER( OP11, OP16)        0.000000            0.000000
+                     BORDER( OP11, OP17)        0.000000            0.000000
+                     BORDER( OP11, OP18)        0.000000            0.000000
+                      BORDER( OP12, OP1)        0.000000            0.000000
+                      BORDER( OP12, OP2)        0.000000            0.000000
+                      BORDER( OP12, OP3)        0.000000            0.000000
+                      BORDER( OP12, OP4)        0.000000            0.000000
+                      BORDER( OP12, OP5)        0.000000            0.000000
+                      BORDER( OP12, OP6)        0.000000            0.000000
+                      BORDER( OP12, OP7)        0.000000            0.000000
+                      BORDER( OP12, OP8)        0.000000            0.000000
+                      BORDER( OP12, OP9)        0.000000            0.000000
+                     BORDER( OP12, OP10)        0.000000            0.000000
+                     BORDER( OP12, OP11)        0.000000            0.000000
+                     BORDER( OP12, OP12)        0.000000            0.000000
+                     BORDER( OP12, OP13)        0.000000            0.000000
+                     BORDER( OP12, OP14)        0.000000            0.000000
+                     BORDER( OP12, OP15)        0.000000            0.000000
+                     BORDER( OP12, OP16)        0.000000            0.000000
+                     BORDER( OP12, OP17)        0.000000            0.000000
+                     BORDER( OP12, OP18)        0.000000            0.000000
+                      BORDER( OP13, OP1)        0.000000            0.000000
+                      BORDER( OP13, OP2)        0.000000            0.000000
+                      BORDER( OP13, OP3)        0.000000            0.000000
+                      BORDER( OP13, OP4)        0.000000            0.000000
+                      BORDER( OP13, OP5)        0.000000            0.000000
+                      BORDER( OP13, OP6)        0.000000            0.000000
+                      BORDER( OP13, OP7)        0.000000            0.000000
+                      BORDER( OP13, OP8)        0.000000            0.000000
+                      BORDER( OP13, OP9)        0.000000            0.000000
+                     BORDER( OP13, OP10)        0.000000            0.000000
+                     BORDER( OP13, OP11)        0.000000            0.000000
+                     BORDER( OP13, OP12)        0.000000            0.000000
+                     BORDER( OP13, OP13)        0.000000            0.000000
+                     BORDER( OP13, OP14)        0.000000            0.000000
+                     BORDER( OP13, OP15)        0.000000            0.000000
+                     BORDER( OP13, OP16)        0.000000            0.000000
+                     BORDER( OP13, OP17)        0.000000            0.000000
+                     BORDER( OP13, OP18)        0.000000            0.000000
+                      BORDER( OP14, OP1)        0.000000            0.000000
+                      BORDER( OP14, OP2)        0.000000            0.000000
+                      BORDER( OP14, OP3)        0.000000            0.000000
+                      BORDER( OP14, OP4)        0.000000            0.000000
+                      BORDER( OP14, OP5)        0.000000            0.000000
+                      BORDER( OP14, OP6)        0.000000            0.000000
+                      BORDER( OP14, OP7)        0.000000            0.000000
+                      BORDER( OP14, OP8)        0.000000            0.000000
+                      BORDER( OP14, OP9)        0.000000            0.000000
+                     BORDER( OP14, OP10)        0.000000            0.000000
+                     BORDER( OP14, OP11)        0.000000            0.000000
+                     BORDER( OP14, OP12)        0.000000            0.000000
+                     BORDER( OP14, OP13)        0.000000            0.000000
+                     BORDER( OP14, OP14)        0.000000            0.000000
+                     BORDER( OP14, OP15)        0.000000            0.000000
+                     BORDER( OP14, OP16)        0.000000            0.000000
+                     BORDER( OP14, OP17)        0.000000            0.000000
+                     BORDER( OP14, OP18)        0.000000            0.000000
+                      BORDER( OP15, OP1)        0.000000            0.000000
+                      BORDER( OP15, OP2)        0.000000            0.000000
+                      BORDER( OP15, OP3)        0.000000            0.000000
+                      BORDER( OP15, OP4)        0.000000            0.000000
+                      BORDER( OP15, OP5)        0.000000            0.000000
+                      BORDER( OP15, OP6)        0.000000            0.000000
+                      BORDER( OP15, OP7)        0.000000            0.000000
+                      BORDER( OP15, OP8)        0.000000            0.000000
+                      BORDER( OP15, OP9)        0.000000            0.000000
+                     BORDER( OP15, OP10)        0.000000            0.000000
+                     BORDER( OP15, OP11)        0.000000            0.000000
+                     BORDER( OP15, OP12)        0.000000            0.000000
+                     BORDER( OP15, OP13)        0.000000            0.000000
+                     BORDER( OP15, OP14)        0.000000            0.000000
+                     BORDER( OP15, OP15)        0.000000            0.000000
+                     BORDER( OP15, OP16)        0.000000            0.000000
+                     BORDER( OP15, OP17)        0.000000            0.000000
+                     BORDER( OP15, OP18)        0.000000            0.000000
+                      BORDER( OP16, OP1)        0.000000            0.000000
+                      BORDER( OP16, OP2)        0.000000            0.000000
+                      BORDER( OP16, OP3)        0.000000            0.000000
+                      BORDER( OP16, OP4)        0.000000            0.000000
+                      BORDER( OP16, OP5)        0.000000            0.000000
+                      BORDER( OP16, OP6)        0.000000            0.000000
+                      BORDER( OP16, OP7)        0.000000            0.000000
+                      BORDER( OP16, OP8)        0.000000            0.000000
+                      BORDER( OP16, OP9)        0.000000            0.000000
+                     BORDER( OP16, OP10)        0.000000            0.000000
+                     BORDER( OP16, OP11)        0.000000            0.000000
+                     BORDER( OP16, OP12)        0.000000            0.000000
+                     BORDER( OP16, OP13)        0.000000            0.000000
+                     BORDER( OP16, OP14)        0.000000            0.000000
+                     BORDER( OP16, OP15)        0.000000            0.000000
+                     BORDER( OP16, OP16)        0.000000            0.000000
+                     BORDER( OP16, OP17)        0.000000            0.000000
+                     BORDER( OP16, OP18)        0.000000            0.000000
+                      BORDER( OP17, OP1)        0.000000            0.000000
+                      BORDER( OP17, OP2)        0.000000            0.000000
+                      BORDER( OP17, OP3)        0.000000            0.000000
+                      BORDER( OP17, OP4)        0.000000            0.000000
+                      BORDER( OP17, OP5)        0.000000            0.000000
+                      BORDER( OP17, OP6)        0.000000            0.000000
+                      BORDER( OP17, OP7)        0.000000            0.000000
+                      BORDER( OP17, OP8)        0.000000            0.000000
+                      BORDER( OP17, OP9)        0.000000            0.000000
+                     BORDER( OP17, OP10)        0.000000            0.000000
+                     BORDER( OP17, OP11)        0.000000            0.000000
+                     BORDER( OP17, OP12)        0.000000            0.000000
+                     BORDER( OP17, OP13)        0.000000            0.000000
+                     BORDER( OP17, OP14)        0.000000            0.000000
+                     BORDER( OP17, OP15)        0.000000            0.000000
+                     BORDER( OP17, OP16)        0.000000            0.000000
+                     BORDER( OP17, OP17)        0.000000            0.000000
+                     BORDER( OP17, OP18)        0.000000            0.000000
+                      BORDER( OP18, OP1)        0.000000            0.000000
+                      BORDER( OP18, OP2)        0.000000            0.000000
+                      BORDER( OP18, OP3)        0.000000            0.000000
+                      BORDER( OP18, OP4)        0.000000            0.000000
+                      BORDER( OP18, OP5)        0.000000            0.000000
+                      BORDER( OP18, OP6)        0.000000            0.000000
+                      BORDER( OP18, OP7)        0.000000            0.000000
+                      BORDER( OP18, OP8)        0.000000            0.000000
+                      BORDER( OP18, OP9)        0.000000            0.000000
+                     BORDER( OP18, OP10)        0.000000            0.000000
+                     BORDER( OP18, OP11)        0.000000            0.000000
+                     BORDER( OP18, OP12)        0.000000            0.000000
+                     BORDER( OP18, OP13)        0.000000            0.000000
+                     BORDER( OP18, OP14)        0.000000            0.000000
+                     BORDER( OP18, OP15)        0.000000            0.000000
+                     BORDER( OP18, OP16)        0.000000            0.000000
+                     BORDER( OP18, OP17)        0.000000            0.000000
+                     BORDER( OP18, OP18)        0.000000            0.000000
+
+                                     Row    Slack or Surplus      Dual Price
+                                       1        0.000000            0.000000
+                                       2        0.000000            0.000000
+                                       3        1.000000            0.000000
+                                       4        1.000000            0.000000
+                                       5        1.000000            0.000000
+                                       6        0.000000            0.000000
+                                       7        0.000000            0.000000
+                                       8        0.000000            0.000000
+                                       9        0.000000            0.000000
+                                      10        0.000000            0.000000
+                                      11        0.000000            0.000000
+                                      12        0.000000            0.000000
+                                      13        0.000000            0.000000
+                                      14        0.000000            0.000000
+                                      15        0.000000            0.000000
+                                      16        0.000000            0.000000
+                                      17        0.000000            0.000000
+                                      18        0.000000            0.000000
+                                      19        0.000000            0.000000
+                                      20        0.000000            0.000000
+                                      21        9.000000            0.000000
+                                      22        0.000000            0.000000
+                                      23        15.00000            0.000000
+                                      24        0.000000            0.000000
+                                      25        0.000000            0.000000
+                                      26        29.00000            0.000000
+                                      27        29.00000            0.000000
+                                      28        12.00000            0.000000
+                                      29        0.000000            0.000000
+                                      30        0.000000            0.000000
+                                      31        0.000000            0.000000
+                                      32        0.000000            0.000000
+                                      33        0.000000            0.000000
+                                      34        0.000000            0.000000
+                                      35        0.000000            0.000000
+                                      36        13.00000            0.000000
+                                      37        0.000000            0.000000
+                                      38        18.00000            0.000000
+                                      39        0.000000            0.000000
+                                      40        18.00000            0.000000
+                                      41        0.000000            0.000000
+                                      42        0.000000            0.000000
+                                      43        0.000000            0.000000
+                                      44        0.000000            0.000000
+                                      45        0.000000            0.000000
+                                      46        0.000000            0.000000
+                                      47        0.000000            0.000000
+                                      48        0.000000            0.000000
+                                      49        0.000000            0.000000
+                                      50        0.000000            0.000000
+                                      51        0.000000            0.000000
+                                      52        0.000000            0.000000
+                                      53        0.000000            0.000000
+                                      54        0.000000            0.000000
+                                      55        0.000000            0.000000
+                                      56        0.000000            0.000000
+                                      57        0.000000            0.000000
+                                      58        0.000000            0.000000
+                                      59        0.000000            0.000000
+                                      60        0.000000            0.000000
+                                      61        0.000000            0.000000
+                                      62        0.000000            0.000000
+                                      63        0.000000            0.000000
+                                      64        0.000000            0.000000
+                                      65        0.000000            0.000000
+                                      66        0.000000            0.000000
+                                      67        0.000000            0.000000
+                                      68        0.000000            0.000000
+                                      69        0.000000            0.000000
+                                      70        0.000000            0.000000
+                                      71        0.000000            0.000000
+                                      72        0.000000            0.000000
+                                      73        0.000000            0.000000
+                                      74        0.000000            0.000000
+                                      75        0.000000            0.000000
+                                      76        0.000000            0.000000
+                                      77        0.000000            0.000000
+                                      78        0.000000            0.000000
+                                      79        0.000000            0.000000
+                                      80        0.000000            0.000000
+                                      81        0.000000            0.000000
+                                      82        0.000000            0.000000
+                                      83        0.000000            0.000000
+                                      84        0.000000            0.000000
+                                      85        0.000000            0.000000
+                                      86        0.000000            0.000000
+                                      87        0.000000            0.000000
+                                      88        0.000000            0.000000
+                                      89        0.000000            0.000000
+                                      90        0.000000            0.000000
+                                      91        0.000000            0.000000
+                                      92        0.000000            0.000000
+                                      93        0.000000            0.000000
+                                      94        0.000000            0.000000
+                                      95        0.000000            0.000000
+                                      96        0.000000            0.000000
+                                      97        0.000000            0.000000
+                                      98        0.000000            0.000000
+                                      99        0.000000            0.000000
+                                     100        0.000000            0.000000
+                                     101        0.000000            0.000000
+                                     102        0.000000            0.000000
+                                     103        0.000000            0.000000
+                                     104        0.000000            0.000000
+                                     105        0.000000            0.000000
+                                     106        0.000000            0.000000
+                                     107        0.000000            0.000000
+                                     108        0.000000            0.000000
+                                     109        0.000000            0.000000
+                                     110        0.000000            0.000000
+                                     111        0.000000            0.000000
+                                     112        0.000000            0.000000
+                                     113        0.000000            0.000000
+                                     114        0.000000            0.000000
+                                     115        0.000000            0.000000
+                                     116        0.000000            0.000000
+                                     117        0.000000            0.000000
+                                     118        0.000000            0.000000
+                                     119        0.000000            0.000000
+                                     120        0.000000            0.000000
+                                     121        0.000000            0.000000
+                                     122        0.000000            0.000000
+                                     123        0.000000            0.000000
+                                     124        0.000000            0.000000
+                                     125        0.000000            0.000000
+                                     126        0.000000            0.000000
+                                     127        0.000000            0.000000
+                                     128        0.000000            0.000000
+                                     129        0.000000            0.000000
+                                     130        0.000000            0.000000
+                                     131        0.000000            0.000000
+                                     132        0.000000            0.000000
+                                     133        0.000000            0.000000
+                                     134        0.000000            0.000000
+                                     135        0.000000            0.000000
+                                     136        0.000000            0.000000
+                                     137        0.000000            0.000000
+                                     138        0.000000            0.000000
+                                     139        0.000000            0.000000
+                                     140        0.000000            0.000000
+                                     141        0.000000            0.000000
+                                     142        0.000000            0.000000
+                                     143        0.000000            0.000000
+                                     144        0.000000            0.000000
+                                     145        0.000000            0.000000
+                                     146        0.000000            0.000000
+                                     147        0.000000            0.000000
+                                     148        0.000000            0.000000
+                                     149        0.000000            0.000000
+                                     150        0.000000            0.000000
+                                     151        0.000000            0.000000
+                                     152        0.000000            0.000000
+                                     153        0.000000            0.000000
+                                     154        0.000000            0.000000
+                                     155        0.000000            0.000000
+                                     156        0.000000            0.000000
+                                     157        0.000000            0.000000
+                                     158        0.000000            0.000000
+                                     159        0.000000            0.000000
+                                     160        0.000000            0.000000
+                                     161        0.000000            0.000000
+                                     162        0.000000            0.000000
+                                     163        0.000000            0.000000
+                                     164        0.000000            0.000000
+                                     165        0.000000            0.000000
+                                     166        0.000000            0.000000
+                                     167        0.000000            0.000000
+                                     168        0.000000            0.000000
+                                     169        0.000000            0.000000
+                                     170        0.000000            0.000000
+                                     171        0.000000            0.000000
+                                     172        0.000000            0.000000
+                                     173        0.000000            0.000000
+                                     174        0.000000            0.000000
+                                     175        0.000000            0.000000
+                                     176        0.000000            0.000000
+                                     177        0.000000            0.000000
+                                     178        0.000000            0.000000
+                                     179        0.000000            0.000000
+                                     180        0.000000            0.000000
+                                     181        0.000000            0.000000
+                                     182        0.000000            0.000000
+                                     183        0.000000            0.000000
+                                     184        0.000000            0.000000
+                                     185        0.000000            0.000000
+                                     186        0.000000            0.000000
+                                     187        0.000000            0.000000
+                                     188        0.000000            0.000000
+                                     189        0.000000            0.000000
+                                     190        0.000000            0.000000
+                                     191        0.000000            0.000000
+                                     192        0.000000            0.000000
+                                     193        0.000000            0.000000
+                                     194        0.000000            0.000000
+                                     195        0.000000            0.000000
+                                     196        0.000000            0.000000
+                                     197        0.000000            0.000000
+                                     198        0.000000            0.000000
+                                     199        0.000000            0.000000
+                                     200        0.000000            0.000000
+                                     201        0.000000            0.000000
+                                     202        0.000000            0.000000
+                                     203        0.000000            0.000000
+                                     204        0.000000            0.000000
+                                     205        0.000000            0.000000
+                                     206        0.000000            0.000000
+                                     207        0.000000            0.000000
+                                     208        0.000000            0.000000
+                                     209        0.000000            0.000000
+                                     210        0.000000            0.000000
+                                     211        0.000000            0.000000
+                                     212        0.000000            0.000000
+                                     213        0.000000            0.000000
+                                     214        0.000000            0.000000
+                                     215        0.000000            0.000000
+                                     216        0.000000            0.000000
+                                     217        0.000000            0.000000
+                                     218        0.000000            0.000000
+                                     219        0.000000            0.000000
+                                     220        0.000000            0.000000
+                                     221        0.000000            0.000000
+                                     222        0.000000            0.000000
+                                     223        0.000000            0.000000
+                                     224        0.000000            0.000000
+                                     225        0.000000            0.000000
+                                     226        0.000000            0.000000
+                                     227        0.000000            0.000000
+                                     228        0.000000            0.000000
+                                     229        0.000000            0.000000
+                                     230        0.000000            0.000000
+                                     231        0.000000            0.000000
+                                     232        0.000000            0.000000
+                                     233        0.000000            0.000000
+                                     234        0.000000            0.000000
+                                     235        0.000000            0.000000
+                                     236        0.000000            0.000000
+                                     237        0.000000            0.000000
+                                     238        0.000000            0.000000
+                                     239        0.000000            0.000000
+                                     240        0.000000            0.000000
+                                     241        0.000000            0.000000
+                                     242        0.000000            0.000000
+                                     243        0.000000            0.000000
+                                     244        0.000000            0.000000
+                                     245        0.000000            0.000000
+                                     246        0.000000            0.000000
+                                     247        0.000000            0.000000
+                                     248        0.000000            0.000000
+                                     249        0.000000            0.000000
+                                     250        0.000000            0.000000
+                                     251        0.000000            0.000000
+                                     252        0.000000            0.000000
+                                     253        0.000000            0.000000
+                                     254        0.000000            0.000000
+                                     255        0.000000            0.000000
+                                     256        0.000000            0.000000
+                                     257        0.000000            0.000000
+                                     258        0.000000            0.000000
+                                     259        0.000000            0.000000
+                                     260        0.000000            0.000000
+                                     261        0.000000            0.000000
+                                     262        0.000000            0.000000
+                                     263        0.000000            0.000000
+                                     264        0.000000            0.000000
+                                     265        0.000000            0.000000
+                                     266        0.000000            0.000000
+                                     267        0.000000            0.000000
+                                     268        0.000000            0.000000
+                                     269        0.000000            0.000000
+                                     270        0.000000            0.000000
+                                     271        0.000000            0.000000
+                                     272        0.000000            0.000000
+                                     273        0.000000            0.000000
+                                     274        0.000000            0.000000
+                                     275        0.000000            0.000000
+                                     276        0.000000            0.000000
+                                     277        0.000000            0.000000
+                                     278        0.000000            0.000000
+                                     279        0.000000            0.000000
+                                     280        0.000000            0.000000
+                                     281        0.000000            0.000000
+                                     282        0.000000            0.000000
+                                     283        0.000000            0.000000
+                                     284        0.000000            0.000000
+                                     285        0.000000            0.000000
+                                     286        0.000000            0.000000
+                                     287        0.000000            0.000000
+                                     288        0.000000            0.000000
+                                     289        0.000000            0.000000
+                                     290        0.000000            0.000000
+                                     291        0.000000            0.000000
+                                     292        0.000000            0.000000
+                                     293        0.000000            0.000000
+                                     294        0.000000            0.000000
+                                     295        0.000000            0.000000
+                                     296        0.000000            0.000000
+                                     297        0.000000            0.000000
+                                     298        0.000000            0.000000
+                                     299        0.000000            0.000000
+                                     300        0.000000            0.000000
+                                     301        0.000000            0.000000
+                                     302        0.000000            0.000000
+                                     303        0.000000            0.000000
+                                     304        0.000000            0.000000
+                                     305        0.000000            0.000000
+                                     306        0.000000            0.000000
+                                     307        0.000000            0.000000
+                                     308        0.000000            0.000000
+                                     309        0.000000            0.000000
+                                     310        0.000000            0.000000
+                                     311        0.000000            0.000000
+                                     312        0.000000            0.000000
+                                     313        0.000000            0.000000
+                                     314        0.000000            0.000000
+                                     315        0.000000            0.000000
+                                     316        0.000000            0.000000
+                                     317        0.000000            0.000000
+                                     318        0.000000            0.000000
+                                     319        0.000000            0.000000
+                                     320        0.000000            0.000000
+                                     321        0.000000            0.000000
+                                     322        0.000000            0.000000
+                                     323        0.000000            0.000000
+                                     324        0.000000            0.000000
+                                     325        0.000000            0.000000
+                                     326        0.000000            0.000000
+                                     327        0.000000            0.000000
+                                     328        0.000000            0.000000
+                                     329        0.000000            0.000000
+                                     330        0.000000            0.000000
+                                     331        0.000000            0.000000
+                                     332        0.000000            0.000000
+                                     333        0.000000            0.000000
+                                     334        0.000000            0.000000
+                                     335        0.000000            0.000000
+                                     336        0.000000            0.000000
+                                     337        0.000000            0.000000
+                                     338        0.000000            0.000000
+                                     339        0.000000            0.000000
+                                     340        0.000000            0.000000
+                                     341        0.000000            0.000000
+                                     342        0.000000            0.000000
+                                     343        0.000000            0.000000
+                                     344        0.000000            0.000000
+                                     345        0.000000            0.000000
+                                     346        0.000000            0.000000
+                                     347        0.000000            0.000000
+                                     348        0.000000            0.000000
+                                     349        0.000000            0.000000
+                                     350        0.000000            0.000000
+                                     351        0.000000            0.000000
+                                     352        0.000000            0.000000
+                                     353        0.000000            0.000000
+                                     354        0.000000            0.000000
+                                     355        0.000000            0.000000
+                                     356        0.000000            0.000000
+                                     357        0.000000            0.000000
+                                     358        0.000000            0.000000
+                                     359        0.000000            0.000000
+                                     360        0.000000            0.000000
+                                     361        0.000000            0.000000
+                                     362        0.000000            0.000000
+                                     363        0.000000            0.000000
+                                     364        0.000000            0.000000
+                                     365        0.000000            0.000000
+                                     366        0.000000            0.000000
+                                     367        0.000000            0.000000
+                                     368        0.000000            0.000000
+                                     369        0.000000            0.000000
+                                     370        0.000000            0.000000
+                                     371        0.000000            0.000000
+                                     372        0.000000            0.000000
+                                     373        0.000000            0.000000
+                                     374        0.000000            0.000000
+                                     375        0.000000            0.000000
+                                     376        0.000000            0.000000
+                                     377        0.000000            0.000000
+                                     378        0.000000            0.000000
+                                     379        0.000000            0.000000
+                                     380        0.000000            0.000000
+                                     381        0.000000            0.000000
+                                     382        0.000000            0.000000
+                                     383        0.000000            0.000000
+                                     384        0.000000            0.000000
+                                     385        0.000000            0.000000
+                                     386        0.000000            0.000000
+                                     387        0.000000            0.000000
+                                     388        0.000000            0.000000
+                                     389        0.000000            0.000000
+                                     390        0.000000            0.000000
+                                     391        0.000000            0.000000
+                                     392        0.000000            0.000000
+                                     393        0.000000            0.000000
+                                     394        0.000000            0.000000
+                                     395        0.000000            0.000000
+                                     396        0.000000            0.000000
+                                     397        0.000000            0.000000
+                                     398        0.000000            0.000000
+                                     399        0.000000            0.000000
+                                     400        0.000000            0.000000
+                                     401        0.000000            0.000000
+                                     402        0.000000            0.000000
+                                     403        0.000000            0.000000
+                                     404        0.000000            0.000000
+                                     405        0.000000            0.000000
+                                     406        0.000000            0.000000
+                                     407        0.000000            0.000000
+                                     408        0.000000            0.000000
+                                     409        0.000000            0.000000
+                                     410        0.000000            0.000000
+                                     411        0.000000            0.000000
+                                     412        0.000000            0.000000
+                                     413        0.000000            0.000000
+                                     414        0.000000            0.000000
+                                     415        0.000000            0.000000
+                                     416        0.000000            0.000000
+                                     417        0.000000            0.000000
+                                     418        0.000000            0.000000
+                                     419        0.000000            0.000000
+                                     420        0.000000            0.000000
+                                     421        0.000000            0.000000
+                                     422        0.000000            0.000000
+                                     423        0.000000            0.000000
+                                     424        0.000000            0.000000
+                                     425        0.000000            0.000000
+                                     426        0.000000            0.000000
+                                     427        0.000000            0.000000
+                                     428        0.000000            0.000000
+                                     429        0.000000            0.000000
+                                     430        0.000000            0.000000
+                                     431        0.000000            0.000000
+                                     432        0.000000            0.000000
+                                     433        0.000000            0.000000
+                                     434        0.000000            0.000000
+                                     435        0.000000            0.000000
+                                     436        0.000000            0.000000
+                                     437        0.000000            0.000000
+                                     438        0.000000            0.000000
+                                     439        0.000000            0.000000
+                                     440        0.000000            0.000000
+                                     441        0.000000            0.000000
+                                     442        0.000000            0.000000
+                                     443        0.000000            0.000000
+                                     444        0.000000            0.000000
+                                     445        0.000000            0.000000
+                                     446        0.000000            0.000000
+                                     447        0.000000            0.000000
+                                     448        0.000000            0.000000
+                                     449        0.000000            0.000000
+                                     450        0.000000            0.000000
+                                     451        0.000000            0.000000
+                                     452        0.000000            0.000000
+                                     453        0.000000            0.000000
+                                     454        0.000000            0.000000
+                                     455        0.000000            0.000000
+                                     456        0.000000            0.000000
+                                     457        0.000000            0.000000
+                                     458        0.000000            0.000000
+                                     459        0.000000            0.000000
+                                     460        0.000000            0.000000
+                                     461        0.000000            0.000000
+                                     462        0.000000            0.000000
+                                     463        0.000000            0.000000
+                                     464        0.000000            0.000000
+                                     465        0.000000            0.000000
+                                     466        0.000000            0.000000
+                                     467        0.000000            0.000000
+                                     468        0.000000            0.000000
+                                     469        0.000000            0.000000
+                                     470        0.000000            0.000000
+                                     471        0.000000            0.000000
+                                     472        0.000000            0.000000
+                                     473        0.000000            0.000000
+                                     474        0.000000            0.000000
+                                     475        0.000000            0.000000
+                                     476        0.000000            0.000000
+                                     477        0.000000            0.000000
+                                     478        0.000000            0.000000
+                                     479        0.000000            0.000000
+                                     480        0.000000            0.000000
+                                     481        0.000000            0.000000
+                                     482        0.000000            0.000000
+                                     483        0.000000            0.000000
+                                     484        0.000000            0.000000
+                                     485        0.000000            0.000000
+                                     486        0.000000            0.000000
+                                     487        0.000000            0.000000
+                                     488        0.000000            0.000000
+                                     489        0.000000            0.000000
+                                     490        0.000000            0.000000
+                                     491        0.000000            0.000000
+                                     492        0.000000            0.000000
+                                     493        0.000000            0.000000
+                                     494        0.000000            0.000000
+                                     495        0.000000            0.000000
+                                     496        0.000000            0.000000
+                                     497        0.000000            0.000000
+                                     498        0.000000            0.000000
+                                     499        0.000000            0.000000
+                                     500        0.000000            0.000000
+                                     501        0.000000            0.000000
+                                     502        0.000000            0.000000
+                                     503        0.000000            0.000000
+                                     504        0.000000            0.000000
+                                     505        0.000000            0.000000
+                                     506        0.000000            0.000000
+                                     507        0.000000            0.000000
+                                     508        0.000000            0.000000
+                                     509        0.000000            0.000000
+                                     510        0.000000            0.000000
+                                     511        0.000000            0.000000
+                                     512        0.000000            0.000000
+                                     513        0.000000            0.000000
+                                     514        0.000000            0.000000
+                                     515        0.000000            0.000000
+                                     516        0.000000            0.000000
+                                     517        0.000000            0.000000
+                                     518        0.000000            0.000000
+                                     519        0.000000            0.000000
+                                     520        0.000000            0.000000
+                                     521        0.000000            0.000000
+                                     522        0.000000            0.000000
+                                     523        0.000000            0.000000
+                                     524        0.000000            0.000000
+                                     525        0.000000            0.000000
+                                     526        0.000000            0.000000
+                                     527        0.000000            0.000000
+                                     528        0.000000            0.000000
+                                     529        0.000000            0.000000
+                                     530        0.000000            0.000000
+                                     531        0.000000            0.000000
+                                     532        0.000000            0.000000
+                                     533        0.000000            0.000000
+                                     534        0.000000            0.000000
+                                     535        0.000000            0.000000
+                                     536        0.000000            0.000000
+                                     537        0.000000            0.000000
+                                     538        0.000000            0.000000
+                                     539        0.000000            0.000000
+                                     540        0.000000            0.000000
+                                     541        0.000000            0.000000
+                                     542        0.000000            0.000000
+                                     543        0.000000            0.000000
+                                     544        0.000000            0.000000
+                                     545        0.000000            0.000000
+                                     546        0.000000            0.000000
+                                     547        0.000000            0.000000
+                                     548        0.000000            0.000000
+                                     549        0.000000            0.000000
+                                     550        0.000000            0.000000
+                                     551        0.000000            0.000000
+                                     552        0.000000            0.000000
+                                     553        0.000000            0.000000
+                                     554        0.000000            0.000000
+                                     555        0.000000            0.000000
+                                     556        0.000000            0.000000
+                                     557        0.000000            0.000000
+                                     558        0.000000            0.000000
+                                     559        0.000000            0.000000
+                                     560        0.000000            0.000000
+                                     561        0.000000            0.000000
+                                     562        0.000000            0.000000
+                                     563        0.000000            0.000000
+                                     564        0.000000            0.000000
+                                     565        0.000000            0.000000
+                                     566        0.000000            0.000000
+                                     567        0.000000            0.000000
+                                     568        0.000000            0.000000
+                                     569        0.000000            0.000000
+                                     570        0.000000            0.000000
+                                     571        0.000000            0.000000
+                                     572        0.000000            0.000000
+                                     573        0.000000            0.000000
+                                     574        0.000000            0.000000
+                                     575        0.000000            0.000000
+                                     576        0.000000            0.000000
+                                     577        0.000000            0.000000
+                                     578        0.000000            0.000000
+                                     579        0.000000            0.000000
+                                     580        0.000000            0.000000
+                                     581        0.000000            0.000000
+                                     582        0.000000            0.000000
+                                     583        0.000000            0.000000
+                                     584        0.000000            0.000000
+                                     585        0.000000            0.000000
+                                     586        0.000000            0.000000
+                                     587        0.000000            0.000000
+                                     588        0.000000            0.000000
+                                     589        0.000000            0.000000
+                                     590        0.000000            0.000000
+                                     591        0.000000            0.000000
+                                     592        0.000000            0.000000
+                                     593        0.000000            0.000000
+                                     594        0.000000            0.000000
+                                     595        0.000000            0.000000
+                                     596        0.000000            0.000000
+                                     597        0.000000            0.000000
+                                     598        0.000000            0.000000
+                                     599        0.000000            0.000000
+                                     600        0.000000            0.000000
+                                     601        0.000000            0.000000
+                                     602        0.000000            0.000000
+                                     603        0.000000            0.000000
+                                     604        0.000000            0.000000
+                                     605        0.000000            0.000000
+                                     606        0.000000            0.000000
+                                     607        0.000000            0.000000
+                                     608        0.000000            0.000000
+                                     609        0.000000            0.000000
+                                     610        0.000000            0.000000
+                                     611        0.000000            0.000000
+                                     612        0.000000            0.000000
+                                     613        0.000000            0.000000
+                                     614        0.000000            0.000000
+                                     615        0.000000            0.000000
+                                     616        0.000000            0.000000
+                                     617        0.000000            0.000000
+                                     618        0.000000            0.000000
+                                     619        0.000000            0.000000
+                                     620        0.000000            0.000000
+                                     621        0.000000            0.000000
+                                     622        0.000000            0.000000
+                                     623        0.000000            0.000000
+                                     624        0.000000            0.000000
+                                     625        0.000000            0.000000
+                                     626        0.000000            0.000000
+                                     627        0.000000            0.000000
+                                     628        0.000000            0.000000
+                                     629        0.000000            0.000000
+                                     630        0.000000            0.000000
+                                     631        0.000000            0.000000
+                                     632        0.000000            0.000000
+                                     633        0.000000            0.000000
+                                     634        0.000000            0.000000
+                                     635        0.000000            0.000000
+                                     636        0.000000            0.000000
+                                     637        0.000000            0.000000
+                                     638        0.000000            0.000000
+                                     639        0.000000            0.000000
+                                     640        0.000000            0.000000
+                                     641        0.000000            0.000000
+                                     642        0.000000            0.000000
+                                     643        0.000000            0.000000
+                                     644        0.000000            0.000000
+                                     645        0.000000            0.000000
+                                     646        0.000000            0.000000
+                                     647        0.000000            0.000000
+                                     648        0.000000            0.000000
+                                     649        0.000000            0.000000
+                                     650        0.000000            0.000000
+                                     651        0.000000            0.000000
+                                     652        0.000000            0.000000
+                                     653        0.000000            0.000000
+                                     654        0.000000            0.000000
+                                     655        0.000000            0.000000
+                                     656        0.000000            0.000000
+                                     657        0.000000            0.000000
+                                     658        0.000000            0.000000
+                                     659        0.000000            0.000000
+                                     660        0.000000            0.000000
+                                     661        0.000000            0.000000
+                                     662        0.000000            0.000000
+                                     663        0.000000            0.000000
+                                     664        0.000000            0.000000
+                                     665        0.000000            0.000000
+                                     666        0.000000            0.000000
+                                     667        0.000000            0.000000
+                                     668        0.000000            0.000000
+                                     669        0.000000            0.000000
+                                     670        0.000000            0.000000
+                                     671        0.000000            0.000000
+                                     672        0.000000            0.000000
+                                     673        5.000000            0.000000
+                                     674        10.00000            0.000000
+                                     675        20.00000            0.000000
+                                     676        22.00000            0.000000
+                                     677        27.00000            0.000000
+                                     678        35.00000            0.000000
+                                     679        39.00000            0.000000
+                                     680        48.00000            0.000000
+                                     681        52.00000            0.000000
+                                     682        52.00000            0.000000
+                                     683        40.00000            0.000000
+                                     684        53.00000            0.000000
+                                     685        57.00000            0.000000
+                                     686        53.00000            0.000000
+                                     687        57.00000            0.000000
+                                     688        54.00000            0.000000
+                                     689        58.00000            0.000000
+                                     690        5.000000            0.000000
+                                     691        10.00000            0.000000
+                                     692        20.00000            0.000000
+                                     693        22.00000            0.000000
+                                     694        27.00000            0.000000
+                                     695        35.00000            0.000000
+                                     696        39.00000            0.000000
+                                     697        48.00000            0.000000
+                                     698        52.00000            0.000000
+                                     699        52.00000            0.000000
+                                     700        40.00000            0.000000
+                                     701        53.00000            0.000000
+                                     702        57.00000            0.000000
+                                     703        53.00000            0.000000
+                                     704        57.00000            0.000000
+                                     705        54.00000            0.000000
+                                     706        58.00000            0.000000
+                                     707        5.000000            0.000000
+                                     708        5.000000            0.000000
+                                     709        20.00000            0.000000
+                                     710        0.000000            0.000000
+                                     711        27.00000            0.000000
+                                     712        13.00000            0.000000
+                                     713        39.00000            0.000000
+                                     714        48.00000            0.000000
+                                     715        52.00000            0.000000
+                                     716        52.00000            0.000000
+                                     717        40.00000            0.000000
+                                     718        53.00000            0.000000
+                                     719        57.00000            0.000000
+                                     720        53.00000            0.000000
+                                     721        57.00000            0.000000
+                                     722        54.00000            0.000000
+                                     723        58.00000            0.000000
+                                     724        5.000000            0.000000
+                                     725        5.000000            0.000000
+                                     726        10.00000            0.000000
+                                     727        22.00000            0.000000
+                                     728        27.00000            0.000000
+                                     729        35.00000            0.000000
+                                     730        39.00000            0.000000
+                                     731        48.00000            0.000000
+                                     732        52.00000            0.000000
+                                     733        52.00000            0.000000
+                                     734        40.00000            0.000000
+                                     735        53.00000            0.000000
+                                     736        57.00000            0.000000
+                                     737        53.00000            0.000000
+                                     738        57.00000            0.000000
+                                     739        54.00000            0.000000
+                                     740        58.00000            0.000000
+                                     741        5.000000            0.000000
+                                     742        5.000000            0.000000
+                                     743        10.00000            0.000000
+                                     744        20.00000            0.000000
+                                     745        27.00000            0.000000
+                                     746        1.000000            0.000000
+                                     747        39.00000            0.000000
+                                     748        48.00000            0.000000
+                                     749        52.00000            0.000000
+                                     750        52.00000            0.000000
+                                     751        40.00000            0.000000
+                                     752        53.00000            0.000000
+                                     753        57.00000            0.000000
+                                     754        53.00000            0.000000
+                                     755        57.00000            0.000000
+                                     756        54.00000            0.000000
+                                     757        58.00000            0.000000
+                                     758        5.000000            0.000000
+                                     759        5.000000            0.000000
+                                     760        10.00000            0.000000
+                                     761        20.00000            0.000000
+                                     762        22.00000            0.000000
+                                     763        35.00000            0.000000
+                                     764        39.00000            0.000000
+                                     765        48.00000            0.000000
+                                     766        52.00000            0.000000
+                                     767        52.00000            0.000000
+                                     768        40.00000            0.000000
+                                     769        53.00000            0.000000
+                                     770        57.00000            0.000000
+                                     771        53.00000            0.000000
+                                     772        57.00000            0.000000
+                                     773        54.00000            0.000000
+                                     774        58.00000            0.000000
+                                     775        5.000000            0.000000
+                                     776        5.000000            0.000000
+                                     777        10.00000            0.000000
+                                     778        20.00000            0.000000
+                                     779        22.00000            0.000000
+                                     780        27.00000            0.000000
+                                     781        39.00000            0.000000
+                                     782        48.00000            0.000000
+                                     783        52.00000            0.000000
+                                     784        52.00000            0.000000
+                                     785        40.00000            0.000000
+                                     786        53.00000            0.000000
+                                     787        57.00000            0.000000
+                                     788        53.00000            0.000000
+                                     789        57.00000            0.000000
+                                     790        54.00000            0.000000
+                                     791        58.00000            0.000000
+                                     792        5.000000            0.000000
+                                     793        5.000000            0.000000
+                                     794        10.00000            0.000000
+                                     795        20.00000            0.000000
+                                     796        22.00000            0.000000
+                                     797        27.00000            0.000000
+                                     798        35.00000            0.000000
+                                     799        48.00000            0.000000
+                                     800        52.00000            0.000000
+                                     801        52.00000            0.000000
+                                     802        40.00000            0.000000
+                                     803        53.00000            0.000000
+                                     804        57.00000            0.000000
+                                     805        53.00000            0.000000
+                                     806        57.00000            0.000000
+                                     807        54.00000            0.000000
+                                     808        58.00000            0.000000
+                                     809        5.000000            0.000000
+                                     810        5.000000            0.000000
+                                     811        10.00000            0.000000
+                                     812        20.00000            0.000000
+                                     813        22.00000            0.000000
+                                     814        27.00000            0.000000
+                                     815        35.00000            0.000000
+                                     816        39.00000            0.000000
+                                     817        52.00000            0.000000
+                                     818        52.00000            0.000000
+                                     819        40.00000            0.000000
+                                     820        53.00000            0.000000
+                                     821        57.00000            0.000000
+                                     822        53.00000            0.000000
+                                     823        57.00000            0.000000
+                                     824        54.00000            0.000000
+                                     825        58.00000            0.000000
+                                     826        5.000000            0.000000
+                                     827        5.000000            0.000000
+                                     828        10.00000            0.000000
+                                     829        20.00000            0.000000
+                                     830        22.00000            0.000000
+                                     831        27.00000            0.000000
+                                     832        35.00000            0.000000
+                                     833        39.00000            0.000000
+                                     834        48.00000            0.000000
+                                     835        52.00000            0.000000
+                                     836        40.00000            0.000000
+                                     837        53.00000            0.000000
+                                     838        57.00000            0.000000
+                                     839        53.00000            0.000000
+                                     840        57.00000            0.000000
+                                     841        54.00000            0.000000
+                                     842        58.00000            0.000000
+                                     843        5.000000            0.000000
+                                     844        5.000000            0.000000
+                                     845        10.00000            0.000000
+                                     846        20.00000            0.000000
+                                     847        22.00000            0.000000
+                                     848        27.00000            0.000000
+                                     849        35.00000            0.000000
+                                     850        39.00000            0.000000
+                                     851        48.00000            0.000000
+                                     852        52.00000            0.000000
+                                     853        40.00000            0.000000
+                                     854        53.00000            0.000000
+                                     855        57.00000            0.000000
+                                     856        53.00000            0.000000
+                                     857        57.00000            0.000000
+                                     858        54.00000            0.000000
+                                     859        58.00000            0.000000
+                                     860        5.000000            0.000000
+                                     861        5.000000            0.000000
+                                     862        10.00000            0.000000
+                                     863        20.00000            0.000000
+                                     864        22.00000            0.000000
+                                     865        27.00000            0.000000
+                                     866        35.00000            0.000000
+                                     867        39.00000            0.000000
+                                     868        48.00000            0.000000
+                                     869        52.00000            0.000000
+                                     870        52.00000            0.000000
+                                     871        53.00000            0.000000
+                                     872        57.00000            0.000000
+                                     873        53.00000            0.000000
+                                     874        57.00000            0.000000
+                                     875        54.00000            0.000000
+                                     876        58.00000            0.000000
+                                     877        5.000000            0.000000
+                                     878        5.000000            0.000000
+                                     879        10.00000            0.000000
+                                     880        20.00000            0.000000
+                                     881        22.00000            0.000000
+                                     882        27.00000            0.000000
+                                     883        35.00000            0.000000
+                                     884        39.00000            0.000000
+                                     885        48.00000            0.000000
+                                     886        52.00000            0.000000
+                                     887        52.00000            0.000000
+                                     888        40.00000            0.000000
+                                     889        57.00000            0.000000
+                                     890        53.00000            0.000000
+                                     891        57.00000            0.000000
+                                     892        54.00000            0.000000
+                                     893        58.00000            0.000000
+                                     894        5.000000            0.000000
+                                     895        5.000000            0.000000
+                                     896        10.00000            0.000000
+                                     897        20.00000            0.000000
+                                     898        22.00000            0.000000
+                                     899        27.00000            0.000000
+                                     900        35.00000            0.000000
+                                     901        39.00000            0.000000
+                                     902        48.00000            0.000000
+                                     903        52.00000            0.000000
+                                     904        52.00000            0.000000
+                                     905        40.00000            0.000000
+                                     906        53.00000            0.000000
+                                     907        53.00000            0.000000
+                                     908        57.00000            0.000000
+                                     909        54.00000            0.000000
+                                     910        58.00000            0.000000
+                                     911        5.000000            0.000000
+                                     912        5.000000            0.000000
+                                     913        10.00000            0.000000
+                                     914        20.00000            0.000000
+                                     915        22.00000            0.000000
+                                     916        27.00000            0.000000
+                                     917        35.00000            0.000000
+                                     918        39.00000            0.000000
+                                     919        48.00000            0.000000
+                                     920        52.00000            0.000000
+                                     921        52.00000            0.000000
+                                     922        40.00000            0.000000
+                                     923        53.00000            0.000000
+                                     924        57.00000            0.000000
+                                     925        57.00000            0.000000
+                                     926        54.00000            0.000000
+                                     927        58.00000            0.000000
+                                     928        5.000000            0.000000
+                                     929        5.000000            0.000000
+                                     930        10.00000            0.000000
+                                     931        20.00000            0.000000
+                                     932        22.00000            0.000000
+                                     933        27.00000            0.000000
+                                     934        35.00000            0.000000
+                                     935        39.00000            0.000000
+                                     936        48.00000            0.000000
+                                     937        52.00000            0.000000
+                                     938        52.00000            0.000000
+                                     939        40.00000            0.000000
+                                     940        53.00000            0.000000
+                                     941        57.00000            0.000000
+                                     942        53.00000            0.000000
+                                     943        54.00000            0.000000
+                                     944        58.00000            0.000000
+                                     945        5.000000            0.000000
+                                     946        5.000000            0.000000
+                                     947        10.00000            0.000000
+                                     948        20.00000            0.000000
+                                     949        22.00000            0.000000
+                                     950        27.00000            0.000000
+                                     951        35.00000            0.000000
+                                     952        39.00000            0.000000
+                                     953        48.00000            0.000000
+                                     954        52.00000            0.000000
+                                     955        52.00000            0.000000
+                                     956        40.00000            0.000000
+                                     957        53.00000            0.000000
+                                     958        57.00000            0.000000
+                                     959        53.00000            0.000000
+                                     960        57.00000            0.000000
+                                     961        58.00000            0.000000
+                                     962        5.000000            0.000000
+                                     963        5.000000            0.000000
+                                     964        10.00000            0.000000
+                                     965        20.00000            0.000000
+                                     966        22.00000            0.000000
+                                     967        27.00000            0.000000
+                                     968        35.00000            0.000000
+                                     969        39.00000            0.000000
+                                     970        48.00000            0.000000
+                                     971        52.00000            0.000000
+                                     972        52.00000            0.000000
+                                     973        40.00000            0.000000
+                                     974        53.00000            0.000000
+                                     975        57.00000            0.000000
+                                     976        53.00000            0.000000
+                                     977        57.00000            0.000000
+                                     978        54.00000            0.000000
+                                     979        0.000000            0.000000
+                                     980        0.000000            0.000000
+                                     981        0.000000            0.000000
+                                     982        1.000000            0.000000
+                                     983        1.000000            0.000000
+                                     984        0.000000            0.000000
+                                     985        3.000000            0.000000
+                                     986        0.000000            0.000000
+                                     987        0.000000            0.000000
+                                     988        0.000000            0.000000
+                                     989        0.000000            0.000000
+                                     990        0.000000            0.000000
+                                     991        0.000000            0.000000
+                                     992        0.000000            0.000000
+                                     993        0.000000            0.000000
+                                     994        0.000000            0.000000
+                                     995        0.000000            0.000000
+                                     996        0.000000            0.000000
+                                     997        0.000000            0.000000
+                                     998        0.000000            0.000000
+                                     999        0.000000            0.000000
+                                    1000        0.000000            0.000000
+                                    1001        0.000000            0.000000
+                                    1002        0.000000            0.000000
+                                    1003        0.000000            0.000000
+                                    1004        0.000000            0.000000
+                                    1005        0.000000            0.000000
+                                    1006        0.000000            0.000000
+                                    1007        0.000000            0.000000
+                                    1008        0.000000            0.000000
+                                    1009        0.000000            0.000000
+                                    1010        0.000000            0.000000
+                                    1011        0.000000            0.000000
+                                    1012        0.000000            0.000000
+                                    1013        0.000000            0.000000
+                                    1014        0.000000            0.000000
+                                    1015        58.00000           -1.000000
+
+ 
