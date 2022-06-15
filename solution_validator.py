@@ -13,6 +13,8 @@ class SolutionValidator:
         solver_latency,
         bootstrapped_operations,
         used_bootstrap_limited_model,
+        bootstrapping_start_times,
+        cores_used_to_bootstrap,
     ):
         self.operation_types = operation_types
         self.dependencies = dependencies
@@ -21,14 +23,15 @@ class SolutionValidator:
         self.bootstrapped_operations = bootstrapped_operations
         self.solver_latency = solver_latency
         self.used_bootstrap_limited_model = used_bootstrap_limited_model
+        self.bootstrapping_start_times = bootstrapping_start_times
+        self.cores_used_to_bootstrap = cores_used_to_bootstrap
         self.running_operations = {}
         self.bootstrapping_queue = []
         self.bootstrapping_operations = {}
+        self.clock_cycle = -1
 
     def validate_solution(self):
         self.bootstrapping_constraints_are_met()
-
-        clock_cycle = -1
 
         while self.program_is_not_complete():
             self.bootstrapping_operations = self.decrement_cycles_left_for(
@@ -50,12 +53,12 @@ class SolutionValidator:
             ready_operations = self.get_ready_operations()
             self.start_running_ready_operations(ready_operations)
 
-            clock_cycle += 1
+            self.clock_cycle += 1
 
-        if clock_cycle != self.solver_latency:
+        if self.clock_cycle != self.solver_latency:
             print("Error: The latencies mismatch")
             print("Solver latency: %d" % self.solver_latency)
-            print("Calculated latency: %d" % clock_cycle)
+            print("Calculated latency: %d" % self.clock_cycle)
         elif self.used_bootstrap_limited_model == "False":
             print("Unlimited ILP model results are correct")
             sys.exit(0)
@@ -116,7 +119,9 @@ class SolutionValidator:
                     [
                         core_is_available,
                         bootstrapping_operation,
-                    ] = self.check_if_bootstrapping_core_is_available(operation)
+                    ] = self.check_if_operation_bootstrapping_core_is_available(
+                        operation
+                    )
                     if core_is_available:
                         self.bootstrapping_operations[operation] = bootstrapping_latency
                         operations_to_remove.append(operation)
@@ -125,7 +130,7 @@ class SolutionValidator:
                             operation, bootstrapping_operation
                         )
                         sys.exit(0)
-                elif clock_cycle_is_later_than_operation_bootstrapping_start_time(
+                elif self.clock_cycle_is_later_than_operation_bootstrapping_start_time(
                     operation
                 ):
                     print_missed_bootstrapping_deadline_error(operation)
@@ -139,8 +144,18 @@ class SolutionValidator:
 
     def clock_cycle_matches_operation_bootstrapping_start_time(self, operation):
         return (
-            clock_cycle
-            == self.bootstrapping_start_times[bootstrapping_operations.index(operation)]
+            self.clock_cycle
+            == self.bootstrapping_start_times[
+                self.bootstrapped_operations.index(operation)
+            ]
+        )
+
+    def clock_cycle_is_later_than_operation_bootstrapping_start_time(self, operation):
+        return (
+            self.clock_cycle
+            > self.bootstrapping_start_times[
+                self.bootstrapped_operations.index(operation)
+            ]
         )
 
     def check_if_operation_bootstrapping_core_is_available(self, operation):
@@ -153,8 +168,8 @@ class SolutionValidator:
 
     def operations_bootstrap_on_same_core(self, op1, op2):
         return (
-            self.cores_used_to_bootstrap[bootstrapping_operations.index(op1)]
-            == self.cores_used_to_bootstrap[bootstrapping_operations.index(op2)]
+            self.cores_used_to_bootstrap[self.bootstrapped_operations.index(op1)]
+            == self.cores_used_to_bootstrap[self.bootstrapped_operations.index(op2)]
         )
 
     def print_bootstrapping_core_is_not_available_error(
@@ -166,7 +181,7 @@ class SolutionValidator:
                 bootrsapping_operation,
                 operation,
                 self.cores_used_to_bootstrap[
-                    self.bootstrapping_operations.index(operation)
+                    self.bootstrapped_operations.index(operation)
                 ],
             )
         )

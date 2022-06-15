@@ -15,17 +15,17 @@ results_file = open(results_filename, "r")
 results_lines = results_file.readlines()
 results_file.close()
 
-bootstrapped_operations = results_lines[0].split(",")
+bootstrapped_operations = results_lines[0].strip().split(",")
 solver_latency = int(results_lines[1])
 cores_used_to_bootstrap = []
 bootstrapping_start_times = []
-finish_times = []
 if used_bootstrap_limited_model == "True":
-    cores_used_to_bootstrap = [int(core) for core in results_lines[2].split(",")]
-    bootstrapping_start_times = [
-        int(start_time) for start_time in results_lines[3].split(",")
+    cores_used_to_bootstrap = [
+        int(core) for core in results_lines[2].strip().split(",")[:-1]
     ]
-    finish_times = [int(finish_time) for finish_time in results_lines[4].split(",")]
+    bootstrapping_start_times = [
+        int(start_time) for start_time in results_lines[3].strip().split(",")[:-1]
+    ]
 
 solution_validator = SolutionValidator(
     input_parser.operation_types,
@@ -34,7 +34,9 @@ solution_validator = SolutionValidator(
     input_parser.bootstrapping_paths,
     solver_latency,
     bootstrapped_operations,
-    used_bootstrap_limited_model
+    used_bootstrap_limited_model,
+    bootstrapping_start_times,
+    cores_used_to_bootstrap
 )
 
 solution_validator.validate_solution()
