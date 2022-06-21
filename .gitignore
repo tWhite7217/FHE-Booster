@@ -1,2 +1,9 @@
 *.LDT
 __pycache__/
+*.lgr
+*.eps
+*.vcg
+*.csv
+make_csv_from_results
+tgff_to_unprocessed_lingo
+*lex.yy*

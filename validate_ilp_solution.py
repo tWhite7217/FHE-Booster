@@ -16,7 +16,7 @@ results_lines = results_file.readlines()
 results_file.close()
 
 bootstrapped_operations = results_lines[0].strip().split(",")
-solver_latency = int(results_lines[1])
+solver_latency = int(results_lines[1].strip())
 cores_used_to_bootstrap = []
 bootstrapping_start_times = []
 if used_bootstrap_limited_model == "True":
@@ -36,7 +36,7 @@ solution_validator = SolutionValidator(
     bootstrapped_operations,
     used_bootstrap_limited_model,
     bootstrapping_start_times,
-    cores_used_to_bootstrap
+    cores_used_to_bootstrap,
 )
 
 solution_validator.validate_solution()
