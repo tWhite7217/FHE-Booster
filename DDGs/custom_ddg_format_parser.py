@@ -73,7 +73,8 @@ class InputParser:
                 next_dependency, level + 1
             )
             paths_to_return += [
-                path if level == 0 else path + [dependency]
+                # path if level == 0 else
+                path + [dependency]
                 for path in returned_paths
                 if len(path) > 0
             ]

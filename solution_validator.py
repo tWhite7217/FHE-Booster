@@ -55,6 +55,12 @@ class SolutionValidator:
             ready_operations = self.get_ready_operations()
             self.start_running_ready_operations(ready_operations)
 
+            # print(self.clock_cycle)
+            # print(self.uncompleted_operations)
+            # print(self.running_operations)
+            # print(self.bootstrapping_queue)
+            # print(self.bootstrapping_operations)
+
         if self.clock_cycle != self.solver_latency:
             print("Error: The latencies mismatch")
             print("Solver latency: %d" % self.solver_latency)
@@ -134,7 +140,7 @@ class SolutionValidator:
                 elif self.clock_cycle_is_later_than_operation_bootstrapping_start_time(
                     operation
                 ):
-                    print_missed_bootstrapping_deadline_error(operation)
+                    self.print_missed_bootstrapping_deadline_error(operation)
                     sys.exit(0)
             for operation in operations_to_remove:
                 self.bootstrapping_queue.remove(operation)
@@ -186,6 +192,9 @@ class SolutionValidator:
                 ],
             )
         )
+
+    def print_missed_bootstrapping_deadline_error(self, operation):
+        print("Error: Bootstrapping operation %s was did not start on time" % operation)
 
     def get_ready_operations(self):
         ready_operations = {
