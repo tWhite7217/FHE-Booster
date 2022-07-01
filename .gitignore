@@ -4,6 +4,9 @@ __pycache__/
 *.eps
 *.vcg
 *.csv
-make_csv_from_results
+validate_lgr_file
 tgff_to_unprocessed_lingo
+input_file_processor
 *lex.yy*
+.vscode/
+ddg_generator.tgffopt
