@@ -9,8 +9,9 @@
 #include "DDGs/custom_ddg_format_parser.h"
 
 std::vector<int> bootstrapped_operations;
-std::vector<int> bootstrap_start_times;
 std::vector<int> cores_used;
+std::vector<int> start_times;
+std::vector<int> bootstrap_start_times;
 
 int max_finish_time = 0;
 bool used_bootstrap_limited_model = false;
@@ -48,6 +49,8 @@ void remove_chars_from_string( std::string &str, std::vector<char> chars_to_remo
     bootstrapped_operations.push_back(operation_id2);
 }
 
+"BOOTSTRAP_FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {}
+
 "FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
     std::string yystring = std::string(yytext);
     remove_chars_from_string(yystring, {' ', '\t'});
@@ -64,12 +67,22 @@ void remove_chars_from_string( std::string &str, std::vector<char> chars_to_remo
     int right_parenthesis = yystring.find(")");
     std::string operation_id_str = yystring.substr(23, right_parenthesis-23);
     int operation_id = std::stoi(operation_id_str);
-    if(vector_contains_element(bootstrapped_operations, operation_id)) {
-        int b_start_time_front = right_parenthesis + 1;
-        std::string b_start_time_str = yystring.substr(b_start_time_front, yystring.size()-b_start_time_front);
-        int b_start_time = std::stoi(b_start_time_str);
-        bootstrap_start_times.push_back(b_start_time);
-    }
+    int b_start_time_front = right_parenthesis + 1;
+    std::string b_start_time_str = yystring.substr(b_start_time_front, yystring.size()-b_start_time_front);
+    int b_start_time = std::stoi(b_start_time_str);
+    bootstrap_start_times.push_back(b_start_time);
+}
+
+"START_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
+    std::string yystring = std::string(yytext);
+    remove_chars_from_string(yystring, {' ', '\t'});
+    int right_parenthesis = yystring.find(")");
+    std::string operation_id_str = yystring.substr(13, right_parenthesis-13);
+    int operation_id = std::stoi(operation_id_str);
+    int start_time_front = right_parenthesis + 1;
+    std::string start_time_str = yystring.substr(start_time_front, yystring.size()-start_time_front);
+    int start_time = std::stoi(start_time_str);
+    start_times.push_back(start_time);
 }
 
 "B2C( OP"[0-9]+", C"[0-9]+")"[ \t]+"1" {
@@ -99,16 +112,20 @@ int main(int argc, char** argv) {
 	}
 	yyin = fopen(argv[2], "r");
 	yylex();
-    auto input_parser = InputParser{3, true, used_some_children_model};
+    InputParser input_parser = InputParser{3, true, used_some_children_model};
     input_parser.parse_input(std::string(argv[1]));
+    std::vector<Operation> operations = input_parser.get_operations();
+    for (unsigned int i = 0; i < operations.size(); ++i) {
+        operations[i].start_time = start_times[i];
+        operations[i].bootstrap_start_time = bootstrap_start_times[i];
+    }
     auto solution_validator = SolutionValidator{{12,
-                                                 input_parser.get_operations(),
+                                                 operations,
                                                  input_parser.get_operation_type_to_latency_map(),
                                                  input_parser.get_bootstrapping_paths(),
                                                  max_finish_time,
                                                  bootstrapped_operations,
                                                  used_bootstrap_limited_model,
-                                                 bootstrap_start_times,
                                                  cores_used,
                                                  used_some_children_model}};
     solution_validator.validate_solution();

@@ -15,6 +15,8 @@ struct Operation
 {
     std::string type;
     std::vector<int> parent_ids;
+    int start_time;
+    int bootstrap_start_time;
 };
 
 template <typename T>

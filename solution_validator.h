@@ -20,7 +20,6 @@ public:
         int solver_latency;
         std::vector<int> bootstrapped_operation_ids;
         bool used_bootstrap_limited_model;
-        std::vector<int> bootstrapping_start_times;
         std::vector<int> cores_used_to_bootstrap;
         bool used_some_children_model;
     };
@@ -39,7 +38,7 @@ private:
     OperationIdToRemainingCyclesMap bootstrapping_operations;
     int clock_cycle = -1;
 
-    bool bootstrapping_constraints_are_met();
+    void check_bootstrapping_constraints_are_met();
     bool program_is_not_complete();
     OperationIdToRemainingCyclesMap decrement_cycles_left_for(OperationIdToRemainingCyclesMap);
     OperationIdToRemainingCyclesMap remove_finished_operations(OperationIdToRemainingCyclesMap);
@@ -51,8 +50,12 @@ private:
     bool operations_bootstrap_on_same_core(int, int);
     void print_bootstrapping_core_is_not_available_error(int, int);
     void print_missed_bootstrapping_deadline_error(int);
+    void print_missed_start_time_error(int);
     std::vector<int> get_ready_operations();
     bool operation_is_ready(int);
     void start_running_ready_operations(std::vector<int>);
     Operation get_operation_from_id(int id);
+    bool operation_is_waiting_on_parent_to_bootstrap(int, int);
+    bool parent_sends_bootstrapped_result_to_child(int, int);
+    bool operation_is_bootstrapped(int);
 };

@@ -16,14 +16,7 @@ SolutionValidator::SolutionValidator(SolutionValidatorConfig config) : config{co
 
 void SolutionValidator::validate_solution()
 {
-    // if (config.used_some_children_model)
-    // {
-    //     bootstrapping_constraints_are_met_for_some_children_model();
-    // }
-    // else
-    // {
-    bootstrapping_constraints_are_met();
-    // }
+    check_bootstrapping_constraints_are_met();
 
     while (program_is_not_complete())
     {
@@ -41,10 +34,31 @@ void SolutionValidator::validate_solution()
         start_running_ready_operations(ready_operations);
 
         // std::cout << clock_cycle << std::endl;
-        // std::cout << self.unstarted_operations << std::endl;
-        // std::cout << self.running_operations << std::endl;
-        // std::cout << self.operations_ready_to_bootstrap << std::endl;
-        // std::cout << self.bootstrapping_operations << std::endl;
+        // std::cout << "Unstarted: ";
+        // for (auto operation_id : unstarted_operations)
+        // {
+        //     std::cout << operation_id << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "Running: ";
+        // for (auto [operation_id, cycles_left] : running_operations)
+        // {
+        //     std::cout << operation_id << "," << cycles_left << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "Ready to BS: ";
+        // for (auto operation_id : operations_ready_to_bootstrap)
+        // {
+        //     std::cout << operation_id << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "Bootstrapping: ";
+        // for (auto [operation_id, cycles_left] : bootstrapping_operations)
+        // {
+        //     std::cout << operation_id << "," << cycles_left << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << std::endl;
     }
 
     if (clock_cycle != config.solver_latency)
@@ -59,19 +73,40 @@ void SolutionValidator::validate_solution()
     }
 }
 
-bool SolutionValidator::bootstrapping_constraints_are_met()
+void SolutionValidator::check_bootstrapping_constraints_are_met()
 {
     for (auto path : config.bootstrapping_paths)
     {
         bool path_satisfied = false;
-        for (auto bootstrapped_operation_id : config.bootstrapped_operation_ids)
+        if (config.used_some_children_model)
         {
-            if (vector_contains_element(path, bootstrapped_operation_id))
+            for (auto i = 0;
+                 i < config.bootstrapped_operation_ids.size() && !path_satisfied;
+                 i += 2)
             {
-                path_satisfied = true;
-                break;
+                for (auto j = 0; j < path.size() - 1; j++)
+                {
+                    if (config.bootstrapped_operation_ids[i] == path[j] &&
+                        config.bootstrapped_operation_ids[i + 1] == path[j + 1])
+                    {
+                        path_satisfied = true;
+                        break;
+                    }
+                }
             }
         }
+        else
+        {
+            for (auto bootstrapped_operation_id : config.bootstrapped_operation_ids)
+            {
+                if (vector_contains_element(path, bootstrapped_operation_id))
+                {
+                    path_satisfied = true;
+                    break;
+                }
+            }
+        }
+
         if (!path_satisfied)
         {
             std::cout << "Error: The following path was not satisfied" << std::endl;
@@ -85,6 +120,10 @@ bool SolutionValidator::bootstrapping_constraints_are_met()
         }
     }
 }
+
+// void SolutionValidator::bootstrapping_constraints_are_met_for_some_children_model()
+// {
+// }
 
 bool SolutionValidator::program_is_not_complete()
 {
@@ -120,10 +159,29 @@ void SolutionValidator::add_necessary_running_operations_to_bootstrapping_queue(
 {
     for (auto [operation_id, cycles_left] : running_operations)
     {
-        if (cycles_left == 0 && vector_contains_element(config.bootstrapped_operation_ids, operation_id))
+        if (cycles_left == 0 && operation_is_bootstrapped(operation_id))
         {
             operations_ready_to_bootstrap.push_back(operation_id);
         }
+    }
+}
+
+bool SolutionValidator::operation_is_bootstrapped(int operation_id)
+{
+    if (config.used_some_children_model)
+    {
+        for (auto i = 0; i < config.bootstrapped_operation_ids.size(); i += 2)
+        {
+            if (config.bootstrapped_operation_ids[i] == operation_id)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    else
+    {
+        return vector_contains_element(config.bootstrapped_operation_ids, operation_id);
     }
 }
 
@@ -172,12 +230,12 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
 
 bool SolutionValidator::clock_cycle_matches_operation_bootstrapping_start_time(int operation_id)
 {
-    return clock_cycle == config.bootstrapping_start_times[operation_id];
+    return clock_cycle == get_operation_from_id(operation_id).bootstrap_start_time;
 }
 
 bool SolutionValidator::clock_cycle_is_later_than_operation_bootstrapping_start_time(int operation_id)
 {
-    return clock_cycle > config.bootstrapping_start_times[operation_id];
+    return clock_cycle > get_operation_from_id(operation_id).bootstrap_start_time;
 }
 
 std::pair<bool, int> SolutionValidator::check_if_operation_bootstrapping_core_is_available(int operation_id)
@@ -207,6 +265,11 @@ void SolutionValidator::print_missed_bootstrapping_deadline_error(int operation_
     std::cout << "Error: Bootstrapping operation " << operation_id << " did not start on time" << std::endl;
 }
 
+void SolutionValidator::print_missed_start_time_error(int operation_id)
+{
+    std::cout << "Error: Operation " << operation_id << " did not start on time" << std::endl;
+}
+
 std::vector<int> SolutionValidator::get_ready_operations()
 {
     std::vector<int> ready_operations;
@@ -226,20 +289,55 @@ bool SolutionValidator::operation_is_ready(int operation_id)
         if (
             vector_contains_element(unstarted_operations, parent_id) ||
             unordered_map_contains_key(running_operations, parent_id) ||
-            vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
-            unordered_map_contains_key(bootstrapping_operations, parent_id))
+            operation_is_waiting_on_parent_to_bootstrap(operation_id, parent_id))
         {
             return false;
         }
     return true;
 }
 
+bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(int operation_id, int parent_id)
+{
+    if (!config.used_some_children_model || parent_sends_bootstrapped_result_to_child(parent_id, operation_id))
+    {
+        {
+            return vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
+                   unordered_map_contains_key(bootstrapping_operations, parent_id);
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool SolutionValidator::parent_sends_bootstrapped_result_to_child(int parent_id, int child_id)
+{
+    for (auto i = 0; i < config.bootstrapped_operation_ids.size(); i += 2)
+    {
+        if (config.bootstrapped_operation_ids[i] == parent_id &&
+            config.bootstrapped_operation_ids[i + 1] == child_id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void SolutionValidator::start_running_ready_operations(std::vector<int> ready_operations)
 {
     for (auto operation_id : ready_operations)
     {
-        running_operations[operation_id] = config.operation_type_to_latency_map[get_operation_from_id(operation_id).type];
-        remove_element_from_vector(unstarted_operations, operation_id);
+        if (get_operation_from_id(operation_id).start_time == clock_cycle)
+        {
+            running_operations[operation_id] = config.operation_type_to_latency_map[get_operation_from_id(operation_id).type];
+            remove_element_from_vector(unstarted_operations, operation_id);
+        }
+        else if (get_operation_from_id(operation_id).start_time < clock_cycle)
+        {
+            print_missed_start_time_error(operation_id);
+            exit(0);
+        }
     }
 }
 

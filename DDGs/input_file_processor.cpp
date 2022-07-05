@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
     output_file << "~" << std::endl;
 
-    int operation_id = 0;
+    int operation_id = 1;
     for (auto operation : operations)
     {
         for (auto parent_id : operation.parent_ids)
