@@ -24,28 +24,58 @@ void remove_chars_from_string( std::string &str, std::vector<char> chars_to_remo
    }
 }
 
+int extract_number_from_string(std::string str, size_t start_index, size_t end_index) {
+    auto num_digits = end_index - start_index;
+    std::string num_as_string = str.substr(start_index, num_digits);
+    int num = std::stoi(num_as_string);
+    return num;
+}
+
+int get_first_operation_id(char *yytext) {
+    std::string yystring = std::string(yytext);
+    auto operation_start_index = yystring.find("OP") + 2;
+    auto operation_end_index = yystring.find(",");
+    if (operation_end_index == std::string::npos) {
+        operation_end_index = yystring.find(")");
+    }
+    return extract_number_from_string(yystring, operation_start_index, operation_end_index);
+}
+
+int get_second_operation_id(char *yytext) {
+    std::string yystring = std::string(yytext);
+    auto operation_start_index = yystring.rfind("OP") + 2;
+    auto operation_end_index = yystring.find(")");
+    return extract_number_from_string(yystring, operation_start_index, operation_end_index);
+}
+
+int get_core_num(char *yytext) {
+    std::string yystring = std::string(yytext);
+    auto core_start_index = yystring.find(", C") + 3;
+    auto core_end_index = yystring.find(")");
+    return extract_number_from_string(yystring, core_start_index, core_end_index);
+}
+
+int get_time(char *yytext) {
+    std::string yystring = std::string(yytext);
+    remove_chars_from_string(yystring, {' ', '\t'});
+    auto time_start_index = yystring.find(")") + 1;
+    auto time_end_index = yystring.size();
+    return extract_number_from_string(yystring, time_start_index, time_end_index);
+}
+
 %}
 
 %%
 
 "BOOTSTRAPPED( OP"[0-9]+")"[ \t]+"1" {
-    std::string yystring = std::string(yytext);
-    int right_parenthesis = yystring.find(")");
-    std::string operation_id_str = yystring.substr(16, right_parenthesis-16);
-    int operation_id = std::stoi(operation_id_str);
+    int operation_id = get_first_operation_id(yytext);
     bootstrapped_operations.push_back(operation_id);
 }
 
 "BOOTSTRAPPED( OP"[0-9]+", OP"[0-9]+")"[ \t]+"1" {
     used_some_children_model = true;
-    std::string yystring = std::string(yytext);
-    int comma = yystring.find(",");
-    int right_parenthesis = yystring.find(")");
-    std::string operation_id_str1 = yystring.substr(16, comma-16);
-    int operation_id1 = std::stoi(operation_id_str1);
-    int operation2_start = comma+4;
-    std::string operation_id_str2 = yystring.substr(operation2_start, right_parenthesis-operation2_start);
-    int operation_id2 = std::stoi(operation_id_str2);
+    int operation_id1 = get_first_operation_id(yytext);
+    int operation_id2 = get_second_operation_id(yytext);
     bootstrapped_operations.push_back(operation_id1);
     bootstrapped_operations.push_back(operation_id2);
 }
@@ -53,50 +83,24 @@ void remove_chars_from_string( std::string &str, std::vector<char> chars_to_remo
 "BOOTSTRAP_FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {}
 
 "FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
-    std::string yystring = std::string(yytext);
-    remove_chars_from_string(yystring, {' ', '\t'});
-    int right_parenthesis = yystring.find(")");
-    int finish_time_front = right_parenthesis + 1;
-    std::string finish_time_string = yystring.substr(finish_time_front, yystring.size()-finish_time_front);
-    int finish_time = std::stoi(finish_time_string);
+    int finish_time = get_time(yytext);
     max_finish_time = std::max(max_finish_time, finish_time);
 }
 
 "BOOTSTRAP_START_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
-    std::string yystring = std::string(yytext);
-    remove_chars_from_string(yystring, {' ', '\t'});
-    int right_parenthesis = yystring.find(")");
-    std::string operation_id_str = yystring.substr(23, right_parenthesis-23);
-    int operation_id = std::stoi(operation_id_str);
-    int b_start_time_front = right_parenthesis + 1;
-    std::string b_start_time_str = yystring.substr(b_start_time_front, yystring.size()-b_start_time_front);
-    int b_start_time = std::stoi(b_start_time_str);
+    int b_start_time = get_time(yytext);
     bootstrap_start_times.push_back(b_start_time);
 }
 
 "START_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
-    std::string yystring = std::string(yytext);
-    remove_chars_from_string(yystring, {' ', '\t'});
-    int right_parenthesis = yystring.find(")");
-    std::string operation_id_str = yystring.substr(13, right_parenthesis-13);
-    int operation_id = std::stoi(operation_id_str);
-    int start_time_front = right_parenthesis + 1;
-    std::string start_time_str = yystring.substr(start_time_front, yystring.size()-start_time_front);
-    int start_time = std::stoi(start_time_str);
+    int start_time = get_time(yytext);
     start_times.push_back(start_time);
 }
 
 "B2C( OP"[0-9]+", C"[0-9]+")"[ \t]+"1" {
     used_bootstrap_limited_model = true;
-    std::string yystring = std::string(yytext);
-    remove_chars_from_string(yystring, {' ', '\t'});
-    int comma = yystring.find(",");
-    std::string operation_id_str = yystring.substr(6, comma-6);
-    int operation_id = std::stoi(operation_id_str);
-    int right_parenthesis = yystring.find(")");
-    int core_num_front = yystring.find("C", 3) + 1;
-    std::string core_num_str = yystring.substr(core_num_front, right_parenthesis-core_num_front);
-    int core_num = std::stoi(core_num_str);
+    int operation_id = get_first_operation_id(yytext);
+    int core_num = get_core_num(yytext);
     cores_used[operation_id] = core_num;
 }
 
@@ -119,7 +123,7 @@ int main(int argc, char** argv) {
     InputParser input_parser = InputParser{3, true, used_some_children_model};
     input_parser.parse_input(std::string(argv[1]));
     std::vector<Operation> operations = input_parser.get_operations();
-    for (unsigned int i = 0; i < operations.size(); ++i) {
+    for (unsigned int i = 0; i < operations.size(); i++) {
         operations[i].start_time = start_times[i];
         operations[i].bootstrap_start_time = bootstrap_start_times[i];
     }
