@@ -20,7 +20,6 @@ public:
         int solver_latency;
         std::vector<int> bootstrapped_operation_ids;
         bool used_bootstrap_limited_model;
-        std::vector<int> cores_used_to_bootstrap;
         bool used_some_children_model;
     };
 

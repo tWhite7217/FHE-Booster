@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include <string>
 #include <algorithm>
 
@@ -9,9 +10,9 @@
 #include "DDGs/custom_ddg_format_parser.h"
 
 std::vector<int> bootstrapped_operations;
-std::vector<int> cores_used;
 std::vector<int> start_times;
 std::vector<int> bootstrap_start_times;
+std::map<int, int> cores_used;
 
 int max_finish_time = 0;
 bool used_bootstrap_limited_model = false;
@@ -89,11 +90,14 @@ void remove_chars_from_string( std::string &str, std::vector<char> chars_to_remo
     used_bootstrap_limited_model = true;
     std::string yystring = std::string(yytext);
     remove_chars_from_string(yystring, {' ', '\t'});
-    int core_num_front = yystring.find("C", 3) + 1;
+    int comma = yystring.find(",");
+    std::string operation_id_str = yystring.substr(6, comma-6);
+    int operation_id = std::stoi(operation_id_str);
     int right_parenthesis = yystring.find(")");
+    int core_num_front = yystring.find("C", 3) + 1;
     std::string core_num_str = yystring.substr(core_num_front, right_parenthesis-core_num_front);
     int core_num = std::stoi(core_num_str);
-    cores_used.push_back(core_num);
+    cores_used[operation_id] = core_num;
 }
 
 . {}
@@ -119,6 +123,9 @@ int main(int argc, char** argv) {
         operations[i].start_time = start_times[i];
         operations[i].bootstrap_start_time = bootstrap_start_times[i];
     }
+    for (auto [operation_id, core_num] : cores_used) {
+        operations[operation_id-1].core_num = core_num;
+    }
     auto solution_validator = SolutionValidator{{12,
                                                  operations,
                                                  input_parser.get_operation_type_to_latency_map(),
@@ -126,7 +133,6 @@ int main(int argc, char** argv) {
                                                  max_finish_time,
                                                  bootstrapped_operations,
                                                  used_bootstrap_limited_model,
-                                                 cores_used,
                                                  used_some_children_model}};
     solution_validator.validate_solution();
 	return 0;

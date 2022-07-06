@@ -17,6 +17,7 @@ struct Operation
     std::vector<int> parent_ids;
     int start_time;
     int bootstrap_start_time;
+    int core_num;
 };
 
 template <typename T>

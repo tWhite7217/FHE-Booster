@@ -252,12 +252,12 @@ std::pair<bool, int> SolutionValidator::check_if_operation_bootstrapping_core_is
 
 bool SolutionValidator::operations_bootstrap_on_same_core(int op_id1, int op_id2)
 {
-    return config.cores_used_to_bootstrap[op_id1] == config.cores_used_to_bootstrap[op_id2];
+    return get_operation_from_id(op_id1).core_num == get_operation_from_id(op_id2).core_num;
 }
 
 void SolutionValidator::print_bootstrapping_core_is_not_available_error(int operation_id, int bootrsapping_operation_id)
 {
-    std::cout << "Error: Bootstrapping operation " << bootrsapping_operation_id << " was not completed before operation " << operation_id << " started bootstrapping on core " << config.cores_used_to_bootstrap[operation_id] << std::endl;
+    std::cout << "Error: Bootstrapping operation " << bootrsapping_operation_id << " was not completed before operation " << operation_id << " started bootstrapping on core " << get_operation_from_id(operation_id).core_num << std::endl;
 }
 
 void SolutionValidator::print_missed_bootstrapping_deadline_error(int operation_id)
