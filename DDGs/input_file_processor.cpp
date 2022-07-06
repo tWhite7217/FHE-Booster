@@ -1,47 +1,62 @@
 #include "custom_ddg_format_parser.h"
 
+#include <functional>
+
 const int bootstrapping_latency = 12;
 const int bootstrapping_path_length = 3;
-const int num_bootstrapping_cores = 1;
 
-int main(int argc, char *argv[])
+bool allow_bootstrapping_to_only_some_children;
+std::string input_file_path;
+std::string output_file_path;
+
+std::map<std::string, int> operation_type_to_latency_map;
+std::vector<Operation> operations;
+std::vector<std::vector<int>> bootstrapping_paths;
+
+std::fstream output_file;
+
+void read_command_line_args(int argc, char **argv)
 {
-    if (argc != 4)
-    {
-        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <allow_bootstrapping_to_only_some_children>" << std::endl;
-        return 1;
-    }
+    input_file_path = std::string{argv[1]};
+    output_file_path = std::string{argv[2]};
+    allow_bootstrapping_to_only_some_children = (std::string(argv[3]) == "True");
+}
 
-    auto input_filename = std::string{argv[1]};
-    auto output_filename = std::string{argv[2]};
-    bool allow_bootstrapping_to_only_some_children = (std::string(argv[3]) == "True");
-
+void get_info_from_input_parser()
+{
     auto input_parser = InputParser(bootstrapping_path_length, false, allow_bootstrapping_to_only_some_children);
-    input_parser.parse_input(input_filename);
+    input_parser.parse_input(input_file_path);
 
-    auto operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
-    auto operations = input_parser.get_operations();
-    auto bootstrapping_paths = input_parser.get_bootstrapping_paths();
+    operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
+    operations = input_parser.get_operations();
+    bootstrapping_paths = input_parser.get_bootstrapping_paths();
+}
 
-    std::fstream output_file;
-    output_file.open(output_filename, std::ios::out);
+void write_data_separator_to_file()
+{
+    output_file << "~" << std::endl;
+}
 
+void write_operation_type_latencies_to_output_file()
+{
     int i = 0;
     for (auto [operation_type, latency] : operation_type_to_latency_map)
     {
         output_file << "T" << i << " " << latency << std::endl;
         i++;
     }
+}
 
-    output_file << "~" << std::endl;
-
+void write_operation_list_to_output_file()
+{
     for (auto i = 1; i <= operations.size(); i++)
     {
         output_file << "OP" << i << std::endl;
     }
+}
 
-    output_file << "~" << std::endl;
-
+void write_operation_types_to_output_file()
+{
     for (auto operation : operations)
     {
         auto operation_type_num = std::distance(operation_type_to_latency_map.begin(), operation_type_to_latency_map.find(operation.type));
@@ -58,9 +73,10 @@ int main(int argc, char *argv[])
         }
         output_file << std::endl;
     }
+}
 
-    output_file << "~" << std::endl;
-
+void write_operation_dependencies_to_output_file()
+{
     int operation_id = 1;
     for (auto operation : operations)
     {
@@ -70,13 +86,15 @@ int main(int argc, char *argv[])
         }
         operation_id++;
     }
+}
 
-    output_file << "~" << std::endl;
-
+void write_bootstrapping_latency_to_output_file()
+{
     output_file << bootstrapping_latency << std::endl;
+}
 
-    output_file << "~" << std::endl;
-
+void write_bootstrapping_constraints_to_output_file()
+{
     for (auto path : bootstrapping_paths)
     {
         std::string constraint_string;
@@ -99,12 +117,33 @@ int main(int argc, char *argv[])
         constraint_string += ">= 1;";
         output_file << constraint_string << std::endl;
     }
+}
 
-    output_file << "~" << std::endl;
-
-    if (num_bootstrapping_cores > 0)
+int main(int argc, char *argv[])
+{
+    if (argc != 4)
     {
-        output_file << "C1..C" << num_bootstrapping_cores << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <allow_bootstrapping_to_only_some_children>" << std::endl;
+        return 1;
+    }
+
+    read_command_line_args(argc, argv);
+    get_info_from_input_parser();
+
+    output_file.open(output_file_path, std::ios::out);
+
+    std::vector<std::function<void()>> write_functions = {
+        write_operation_type_latencies_to_output_file,
+        write_operation_list_to_output_file,
+        write_operation_types_to_output_file,
+        write_operation_dependencies_to_output_file,
+        write_bootstrapping_latency_to_output_file,
+        write_bootstrapping_constraints_to_output_file};
+
+    for (auto write_function : write_functions)
+    {
+        write_function();
+        write_data_separator_to_file();
     }
 
     output_file.close();
