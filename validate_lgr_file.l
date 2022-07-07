@@ -120,7 +120,9 @@ int main(int argc, char** argv) {
 	}
 	yyin = fopen(argv[2], "r");
 	yylex();
-    InputParser input_parser = InputParser{3, true, used_some_children_model};
+    const int bootstrapping_path_length = 3;
+    const int addition_divider = 1;
+    InputParser input_parser = InputParser{bootstrapping_path_length, true, used_some_children_model, addition_divider};
     input_parser.parse_input(std::string(argv[1]));
     std::vector<Operation> operations = input_parser.get_operations();
     for (unsigned int i = 0; i < operations.size(); i++) {

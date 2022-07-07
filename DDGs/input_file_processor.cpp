@@ -3,7 +3,8 @@
 #include <functional>
 
 const int bootstrapping_latency = 12;
-const int bootstrapping_path_length = 3;
+const int bootstrapping_path_threshold = 3;
+const int addition_divider = 1;
 
 bool allow_bootstrapping_to_only_some_children;
 std::string input_file_path;
@@ -24,7 +25,7 @@ void read_command_line_args(int argc, char **argv)
 
 void get_info_from_input_parser()
 {
-    auto input_parser = InputParser(bootstrapping_path_length, false, allow_bootstrapping_to_only_some_children);
+    auto input_parser = InputParser(bootstrapping_path_threshold, false, allow_bootstrapping_to_only_some_children, addition_divider);
     input_parser.parse_input(input_file_path);
 
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();

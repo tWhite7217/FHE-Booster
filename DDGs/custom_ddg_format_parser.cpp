@@ -2,10 +2,11 @@
 
 #include "custom_ddg_format_parser.h"
 
-InputParser::InputParser(int bootstrapping_path_length, bool is_for_validation, bool allow_bootstrapping_to_some_children_only)
-    : bootstrapping_path_length{bootstrapping_path_length},
+InputParser::InputParser(int bootstrapping_path_threshold, bool is_for_validation, bool allow_bootstrapping_to_some_children_only, int addition_divider)
+    : bootstrapping_path_threshold{bootstrapping_path_threshold},
       is_for_validation{is_for_validation},
-      allow_bootstrapping_to_some_children_only{allow_bootstrapping_to_some_children_only} {}
+      allow_bootstrapping_to_some_children_only{allow_bootstrapping_to_some_children_only},
+      addition_divider{addition_divider} {}
 
 std::map<std::string, int> InputParser::get_operation_type_to_latency_map() { return operation_type_to_latency_map; }
 std::vector<Operation> InputParser::get_operations() { return operations; }
@@ -34,6 +35,8 @@ void InputParser::parse_input(std::string filename)
         remove_last_operation_from_bootstrapping_paths();
         remove_duplicate_bootstrapping_paths();
     }
+
+    remove_redundant_bootstrapping_paths();
 }
 
 Operation InputParser::get_operation_from_id(int id)
@@ -105,14 +108,23 @@ void InputParser::create_bootstrapping_paths()
 {
     for (auto operation_id = 1; operation_id <= operations.size(); operation_id++)
     {
-        auto bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation_id, 0);
+        std::vector<std::vector<int>> bootstrapping_paths_to_add;
+        if (get_operation_from_id(operation_id).type == "MUL")
+        {
+            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation_id, 1, 0);
+        }
+        else
+        {
+            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation_id, 0, 1);
+        }
         bootstrapping_paths.insert(bootstrapping_paths.end(), bootstrapping_paths_to_add.begin(), bootstrapping_paths_to_add.end());
     }
 }
 
-std::vector<std::vector<int>> InputParser::create_bootstrapping_paths_helper(int operation_id, int level)
+std::vector<std::vector<int>> InputParser::create_bootstrapping_paths_helper(int operation_id, int num_multiplications, int num_additions)
 {
-    if (level == bootstrapping_path_length)
+    float path_cost = (num_multiplications + (float)num_additions / addition_divider);
+    if (path_cost > bootstrapping_path_threshold)
     {
         return {{operation_id}};
     }
@@ -124,7 +136,15 @@ std::vector<std::vector<int>> InputParser::create_bootstrapping_paths_helper(int
     std::vector<std::vector<int>> paths_to_return;
     for (auto parent_id : get_operation_from_id(operation_id).parent_ids)
     {
-        auto paths_to_add = create_bootstrapping_paths_helper(parent_id, level + 1);
+        std::vector<std::vector<int>> paths_to_add;
+        if (get_operation_from_id(parent_id).type == "MUL")
+        {
+            paths_to_add = create_bootstrapping_paths_helper(parent_id, num_multiplications + 1, num_additions);
+        }
+        else
+        {
+            paths_to_add = create_bootstrapping_paths_helper(parent_id, num_multiplications, num_additions + 1);
+        }
         for (auto path : paths_to_add)
         {
             path.push_back(operation_id);
@@ -144,14 +164,44 @@ void InputParser::create_bootstrapping_paths_for_validation()
         all_backward_paths.insert(all_backward_paths.end(), backward_paths_from_operation.begin(), backward_paths_from_operation.end());
     }
 
+    std::vector<std::vector<int>> paths_above_threshold;
     for (auto &path : all_backward_paths)
     {
-        if (path.size() == bootstrapping_path_length + 1)
+        if (get_path_cost(path) > bootstrapping_path_threshold)
         {
             std::reverse(path.begin(), path.end());
-            bootstrapping_paths.push_back(path);
+            paths_above_threshold.push_back(path);
         }
     }
+
+    auto i = 0;
+    for (auto path : paths_above_threshold)
+    {
+        path.pop_back();
+        if (get_path_cost(path) <= bootstrapping_path_threshold)
+        {
+            bootstrapping_paths.push_back(paths_above_threshold[i]);
+        }
+        i++;
+    }
+}
+
+float InputParser::get_path_cost(std::vector<int> path)
+{
+    int num_multiplications = 0;
+    int num_additions = 0;
+    for (auto operation_id : path)
+    {
+        if (get_operation_from_id(operation_id).type == "MUL")
+        {
+            num_multiplications++;
+        }
+        else
+        {
+            num_additions++;
+        }
+    }
+    return num_multiplications + (float)num_additions / addition_divider;
 }
 
 std::vector<std::vector<int>> InputParser::depth_first_search(std::vector<int> current_path, std::vector<std::vector<int>> backward_paths)
@@ -167,10 +217,7 @@ std::vector<std::vector<int>> InputParser::depth_first_search(std::vector<int> c
             backward_paths = depth_first_search(new_path, backward_paths);
         }
     }
-    else
-    {
-        backward_paths.push_back(current_path);
-    }
+    backward_paths.push_back(current_path);
     return backward_paths;
 }
 
@@ -189,10 +236,66 @@ void InputParser::remove_duplicate_bootstrapping_paths()
         return;
     }
 
-    auto logical_end = std::unique(bootstrapping_paths.begin(), bootstrapping_paths.end(),
-                                   [](auto &a, auto &b)
-                                   { return std::equal(a.begin(), a.end(), b.begin()); });
+    std::sort(bootstrapping_paths.begin(), bootstrapping_paths.end());
+
+    auto logical_end = std::unique(bootstrapping_paths.begin(), bootstrapping_paths.end());
 
     bootstrapping_paths.erase(logical_end,
                               bootstrapping_paths.end());
+}
+
+void InputParser::remove_redundant_bootstrapping_paths()
+{
+    size_t min_path_length = std::numeric_limits<size_t>::max();
+    for (auto path : bootstrapping_paths)
+    {
+        min_path_length = std::min(min_path_length, path.size());
+    }
+
+    std::vector<size_t> indices_to_remove;
+    for (auto i = 0; i < bootstrapping_paths.size(); i++)
+    {
+        if (bootstrapping_paths[i].size() > min_path_length)
+        {
+            if (path_is_redundant(i))
+            {
+                indices_to_remove.push_back(i);
+            }
+        }
+    }
+
+    int num_redundant_paths = indices_to_remove.size();
+    for (int i = num_redundant_paths - 1; i >= 0; i--)
+    {
+        bootstrapping_paths.erase(bootstrapping_paths.begin() + indices_to_remove[i]);
+    }
+}
+
+bool InputParser::path_is_redundant(size_t path_index)
+{
+    auto test_path = bootstrapping_paths[path_index];
+    auto test_path_size = test_path.size();
+    for (auto i = 0; i < bootstrapping_paths.size(); i++)
+    {
+        auto path_i = bootstrapping_paths[i];
+        auto path_i_size = path_i.size();
+        auto size_difference = test_path_size - path_i_size;
+        if (i != path_index && size_difference > 0)
+        {
+            bool test_path_contains_path_i = true;
+            for (auto k = 0; k < path_i_size; k++)
+            {
+                if (!vector_contains_element(test_path, path_i[k]))
+                {
+                    test_path_contains_path_i = false;
+                    break;
+                }
+            }
+            if (test_path_contains_path_i)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
