@@ -282,20 +282,39 @@ bool InputParser::path_is_redundant(size_t path_index)
         auto size_difference = test_path_size - path_i_size;
         if (i != path_index && size_difference > 0)
         {
-            bool test_path_contains_path_i = true;
-            for (auto k = 0; k < path_i_size; k++)
-            {
-                if (!vector_contains_element(test_path, path_i[k]))
-                {
-                    test_path_contains_path_i = false;
-                    break;
-                }
-            }
-            if (test_path_contains_path_i)
+            if (larger_path_contains_smaller_path(test_path, path_i))
             {
                 return true;
             }
         }
     }
     return false;
+}
+
+bool InputParser::larger_path_contains_smaller_path(std::vector<int> larger_path, std::vector<int> smaller_path)
+{
+    if (allow_bootstrapping_to_some_children_only)
+    {
+        for (auto i = 0; i < larger_path.size() - 1; i++)
+        {
+            for (auto j = 0; j < smaller_path.size() - 1; j++)
+            {
+                if (larger_path[i] != smaller_path[j] || larger_path[i + 1] != smaller_path[j + 1])
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (auto i = 0; i < smaller_path.size(); i++)
+        {
+            if (!vector_contains_element(larger_path, smaller_path[i]))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }

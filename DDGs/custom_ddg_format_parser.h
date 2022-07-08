@@ -40,5 +40,6 @@ private:
     void remove_duplicate_bootstrapping_paths();
     void remove_redundant_bootstrapping_paths();
     bool path_is_redundant(size_t);
+    bool larger_path_contains_smaller_path(std::vector<int>, std::vector<int>);
     float get_path_cost(std::vector<int>);
 };
