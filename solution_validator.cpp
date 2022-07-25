@@ -121,10 +121,6 @@ void SolutionValidator::check_bootstrapping_constraints_are_met()
     }
 }
 
-// void SolutionValidator::bootstrapping_constraints_are_met_for_some_children_model()
-// {
-// }
-
 bool SolutionValidator::program_is_not_complete()
 {
     return (unstarted_operations.size() > 0) ||
