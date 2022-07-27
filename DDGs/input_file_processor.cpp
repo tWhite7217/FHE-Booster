@@ -2,16 +2,12 @@
 
 #include <functional>
 
-const int bootstrapping_latency = 12;
-const int bootstrapping_path_threshold = 3;
-const int addition_divider = 1;
-
 bool allow_bootstrapping_to_only_some_children;
 std::string input_file_path;
 std::string output_file_path;
 
 std::map<std::string, int> operation_type_to_latency_map;
-std::vector<Operation> operations;
+OperationList operations;
 std::vector<std::vector<int>> bootstrapping_paths;
 
 std::fstream output_file;

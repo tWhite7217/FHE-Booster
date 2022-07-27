@@ -1,288 +1,326 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <set>
-#include <map>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <list>
-#include <queue>
-#include <algorithm>
-#include <boost/range/irange.hpp>
-#include <boost/range/adaptor/reversed.hpp>
+#include "list_scheduling.h"
+#include "DDGs/custom_ddg_format_parser.h"
 
-void update_earliest_start_time(Instruction *instruction)
+#include <numeric>
+
+ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path)
 {
-    for (auto earlier_id : instruction->block_dependences)
+    lgr_parser.switchIstream(lgr_file_path);
+    lgr_parser.lex();
+    used_selective_model = lgr_parser.used_selective_model;
+
+    InputParser input_parser = InputParser(false, used_selective_model);
+    input_parser.parse_input(dag_file_path);
+
+    operations = input_parser.get_operations();
+    operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
+    bootstrapping_paths = input_parser.get_bootstrapping_paths();
+}
+
+void ListScheduler::update_earliest_start_time(Operation &operation)
+{
+    for (auto parent_id : operation.parent_ids)
     {
-        Instruction *earlier_instruction = get_instruction_pointer_from_id(earlier_id);
+        auto parent_operation = operations.get(parent_id);
+        int parent_latency = operation_type_to_latency_map[parent_operation.type];
+        if (lgr_parser.operation_is_bootstrapped(parent_id, operation.id))
+        {
+            parent_latency += bootstrapping_latency;
+        }
         int possible_est =
-            earlier_instruction->earliest_start_time +
-            earlier_instruction->latency;
-        if (possible_est > instruction->earliest_start_time)
+            parent_operation.earliest_start_time +
+            parent_latency;
+        if (possible_est > operation.earliest_start_time)
         {
-            instruction->earliest_start_time = possible_est;
+            operation.earliest_start_time = possible_est;
         }
     }
 }
 
-int get_earliest_end_time_of_basic_block(auto basic_block)
+int ListScheduler::get_earliest_possible_program_end_time()
 {
-    int earliest_end_time = 0;
-    for (auto instruction : basic_block)
+    int earliest_possible_program_end_time = 0;
+    for (auto operation : operations.get_iterable_list())
     {
-        int possible_end_time = instruction.earliest_start_time + instruction.latency;
-        if (possible_end_time > earliest_end_time)
+        auto latency = operation_type_to_latency_map[operation.type];
+        int operation_earliest_end_time = operation.earliest_start_time + latency;
+        if (operation_earliest_end_time > earliest_possible_program_end_time)
         {
-            earliest_end_time = possible_end_time;
+            earliest_possible_program_end_time = operation_earliest_end_time;
         }
     }
-    return earliest_end_time;
+    return earliest_possible_program_end_time;
 }
 
-void update_latest_start_time(Instruction *instruction, int earliest_end_time)
+void ListScheduler::generate_child_ids()
 {
-    if (instruction->block_dependent_instructions.empty())
+    for (auto &operation : operations.get_iterable_list())
     {
-        instruction->latest_start_time =
-            earliest_end_time - instruction->latency;
+        for (auto potential_child_operation : operations.get_iterable_list())
+        {
+            if (vector_contains_element(potential_child_operation.parent_ids, operation.id))
+            {
+                operation.child_ids.push_back(potential_child_operation.id);
+            }
+        }
+    }
+}
+
+void ListScheduler::update_latest_start_time(Operation &operation, int earliest_possible_program_end_time)
+{
+    if (operation.child_ids.empty())
+    {
+        operation.latest_start_time =
+            earliest_possible_program_end_time - operation_type_to_latency_map[operation.type];
     }
     else
     {
-        for (auto later_id : instruction->block_dependent_instructions)
+        for (auto child_id : operation.child_ids)
         {
-            Instruction *later_instruction = get_instruction_pointer_from_id(later_id);
+            Operation child_operation = operations.get(child_id);
+            int child_latency = operation_type_to_latency_map[child_operation.type];
+            if (lgr_parser.operation_is_bootstrapped(child_id))
+            {
+                child_latency += bootstrapping_latency;
+            }
             int possible_lst =
-                later_instruction->latest_start_time -
-                later_instruction->latency;
-            if (possible_lst < instruction->latest_start_time)
+                child_operation.latest_start_time -
+                child_latency;
+            if (possible_lst < operation.latest_start_time)
             {
-                instruction->latest_start_time = possible_lst;
+                operation.latest_start_time = possible_lst;
             }
         }
     }
 }
 
-void update_ESTs_and_LSTs_of_basic_block(int i)
+void ListScheduler::update_all_ESTs_and_LSTs()
 {
-    auto num_instructions = int(basic_blocks[i].size());
+    auto num_operations = operations.size();
 
-    auto forward_range = boost::irange(num_instructions);
-    auto backward_range = boost::adaptors::reverse(forward_range);
+    auto forward_range = std::vector{num_operations};
+    std::iota(forward_range.begin(), forward_range.end(), 1);
 
-    for (auto j : forward_range)
+    for (auto id : forward_range)
     {
-        update_earliest_start_time(get_instruction_pointer_from_id({i, j}));
+        update_earliest_start_time(operations.get(id));
     }
 
-    int earliest_end_time = get_earliest_end_time_of_basic_block(basic_blocks[i]);
+    int earliest_end_time = get_earliest_possible_program_end_time();
 
-    for (auto j : backward_range)
+    auto backward_range = forward_range;
+    std::reverse(backward_range.begin(), backward_range.end());
+
+    for (auto id : backward_range)
     {
-        update_latest_start_time(get_instruction_pointer_from_id({i, j}), earliest_end_time);
+        update_latest_start_time(operations.get(id), earliest_end_time);
     }
 }
 
-void update_all_ESTs_and_LSTs()
+void ListScheduler::update_all_ranks()
 {
-    for (auto i : boost::irange(basic_blocks.size()))
+    for (auto &operation : operations.get_iterable_list())
     {
-        update_ESTs_and_LSTs_of_basic_block(i);
+        operation.rank = operation.latest_start_time - operation.earliest_start_time;
     }
 }
 
-void update_all_ranks()
+std::vector<int> ListScheduler::get_priority_list()
 {
-    for (auto i : boost::irange(basic_blocks.size()))
-    {
-        auto num_instructions = int(basic_blocks[i].size());
-        for (auto j : boost::irange(num_instructions))
-        {
-            Instruction *instruction = get_instruction_pointer_from_id({i, j});
-            instruction->rank = instruction->latest_start_time - instruction->earliest_start_time;
-        }
-    }
-}
+    std::vector<int> priority_list = std::vector<int>(operations.size());
+    std::iota(priority_list.begin(), priority_list.end(), 1);
 
-std::list<InstructionID> get_basic_block_priority_list(auto basic_block)
-{
-    std::list<InstructionID> priority_list;
-    for (auto instruction_to_place : basic_block)
-    {
-        auto i = priority_list.begin();
-        bool inserted = false;
-        for (auto id : priority_list)
-        {
-            Instruction *instruction_in_list = get_instruction_pointer_from_id(id);
-            if (instruction_in_list->rank > instruction_to_place.rank)
-            {
-                priority_list.insert(i, instruction_to_place.id);
-                inserted = true;
-                break;
-            }
-            i++;
-        }
-        if (!inserted)
-        {
-            priority_list.push_back(instruction_to_place.id);
-        }
-    }
+    std::sort(priority_list.begin(), priority_list.end(),
+              [this](int a, int b)
+              {
+                  auto operation_a = operations.get(a);
+                  auto operation_b = operations.get(b);
+                  return operation_a.rank > operation_b.rank;
+              });
     return priority_list;
 }
 
-std::map<InstructionID, int> initialize_pred_count(auto basic_block)
+std::map<int, int> ListScheduler::initialize_pred_count()
 {
-    std::map<InstructionID, int> pred_count;
-    for (auto instruction : basic_block)
+    std::map<int, int> pred_count;
+    for (auto operation : operations.get_iterable_list())
     {
-        pred_count[instruction.id] = instruction.block_dependences.size();
+        pred_count[operation.id] = operation.parent_ids.size();
     }
     return pred_count;
 }
 
-std::set<InstructionID> initialize_ready_instructions(auto pred_count)
+std::set<int> ListScheduler::initialize_ready_operations(std::map<int, int> pred_count)
 {
-    std::set<InstructionID> ready_instructions;
+    std::set<int> ready_operations;
     for (const auto [id, count] : pred_count)
     {
         if (count == 0)
         {
-            ready_instructions.insert(id);
+            ready_operations.insert(id);
         }
     }
-    return ready_instructions;
+    return ready_operations;
 }
 
-void create_reordered_basic_blocks()
+void ListScheduler::create_schedule()
 {
-    for (auto block : basic_blocks)
+    std::vector<int> priority_list = get_priority_list();
+    std::map<int, int> pred_count = initialize_pred_count();
+    std::set<int> ready_operations = initialize_ready_operations(pred_count);
+
+    while (!ready_operations.empty())
     {
-        std::list<InstructionID> priority_list = get_basic_block_priority_list(block);
-        std::map<InstructionID, int> pred_count = initialize_pred_count(block);
-        std::set<InstructionID> ready_instructions = initialize_ready_instructions(pred_count);
-        reordered_basic_blocks.emplace_back();
-        while (!ready_instructions.empty())
+        for (const auto id : priority_list)
         {
-            for (const auto id : priority_list)
+            if (set_contains_element(ready_operations, id))
             {
-                if (ready_instructions.find(id) != ready_instructions.end())
+                schedule.push_back(id);
+                ready_operations.erase(id);
+
+                auto operation = operations.get(id);
+                for (auto child_id : operation.child_ids)
                 {
-                    Instruction *instruction = get_instruction_pointer_from_id(id);
-                    reordered_basic_blocks.back().push_back(*instruction);
-                    ready_instructions.erase(id);
-                    for (auto dependent_id : instruction->block_dependent_instructions)
+                    pred_count[child_id]--;
+                    if (pred_count[child_id] == 0)
                     {
-                        pred_count[dependent_id] -= 1;
-                        if (pred_count[dependent_id] == 0)
-                        {
-                            ready_instructions.insert(dependent_id);
-                        }
+                        ready_operations.insert(child_id);
                     }
-                    break;
                 }
             }
         }
     }
-    for (auto block : reordered_basic_blocks)
+}
+
+bool ListScheduler::operation_is_ready(int next_operation_id, std::map<int, int> running_operations, std::vector<int> ordered_unstarted_operations, std::map<int, int> bootstrapping_operations)
+{
+    auto operation = operations.get(next_operation_id);
+    for (auto parent_id : operation.parent_ids)
     {
-        for (auto instruction : block)
+        if (map_contains_key(running_operations, parent_id) ||
+            vector_contains_element(ordered_unstarted_operations, parent_id) ||
+            (lgr_parser.operation_is_bootstrapped(parent_id, next_operation_id) &&
+             map_contains_key(bootstrapping_operations, parent_id)))
         {
-            std::cout << instruction.text << "\n";
+            return false;
         }
     }
+    return true;
 }
 
-bool instruction_depends_on_other_instruction(Instruction instruction, Instruction other_instruction)
-{
-    auto dependences = instruction.general_dependences;
-    return std::find(dependences.begin(), dependences.end(), other_instruction.id) != dependences.end();
-}
-
-Instruction get_next_ready_instruction(auto &instruction_queue, Instruction other_running_instruction, int running_time_left)
-{
-    if (!instruction_queue.empty())
-    {
-        Instruction next_instruction = instruction_queue.front();
-        if (running_time_left > 0)
-        {
-            if (instruction_depends_on_other_instruction(next_instruction, other_running_instruction))
-            {
-                return Instruction();
-            }
-        }
-        instruction_queue.pop();
-        return next_instruction;
-    }
-    return Instruction();
-}
-
-int get_latency(auto blocks)
+void ListScheduler::generate_start_times_and_solver_latency(int num_cores)
 {
     int clock_cycle = 0;
-    Instruction running_instruction_1;
-    int running_time_left_1 = 0;
-    Instruction running_instruction_2;
-    int running_time_left_2 = 0;
-    std::queue<Instruction> instruction_queue;
-    for (auto block : blocks)
+    std::map<int, int> running_operations;
+    std::map<int, int> bootstrapping_operations;
+    std::vector<int> ordered_unstarted_operations = schedule;
+
+    while (!ordered_unstarted_operations.empty())
     {
-        for (auto instruction : block)
+        // std::cout << "ordered_unstarted_operations size: " << ordered_unstarted_operations.size() << std::endl;
+        // std::cout << "Clock cycle: " << clock_cycle << std::endl;
+
+        std::set<int> unstarted_ids_to_remove;
+
+        for (auto id : ordered_unstarted_operations)
         {
-            if (instruction.latency != 0)
+            if (operation_is_ready(id, running_operations, ordered_unstarted_operations, bootstrapping_operations))
             {
-                instruction_queue.push(instruction);
+                Operation &next_operation = operations.get(id);
+                next_operation.start_time = clock_cycle;
+                running_operations[id] = operation_type_to_latency_map[next_operation.type];
+                unstarted_ids_to_remove.insert(id);
             }
         }
-    }
-    while (!instruction_queue.empty())
-    {
-        running_time_left_1 = std::max(0, running_time_left_1 - 1);
-        running_time_left_2 = std::max(0, running_time_left_1 - 1);
-        if (running_time_left_1 == 0)
-        {
-            running_instruction_1 = get_next_ready_instruction(instruction_queue, running_instruction_2, running_time_left_2);
-            running_time_left_1 = running_instruction_1.latency;
-        }
 
-        if (running_time_left_2 == 0)
+        for (auto id : unstarted_ids_to_remove)
         {
-            running_instruction_2 = get_next_ready_instruction(instruction_queue, running_instruction_1, running_time_left_1);
-            running_time_left_2 = running_instruction_2.latency;
+            remove_element_from_vector(ordered_unstarted_operations, id);
         }
 
         clock_cycle++;
+
+        std::set<int> bootstrapping_ids_to_remove;
+
+        for (auto &[id, time_left] : bootstrapping_operations)
+        {
+            time_left--;
+            if (time_left == 0)
+            {
+                bootstrapping_ids_to_remove.insert(id);
+            }
+        }
+
+        for (auto id : bootstrapping_ids_to_remove)
+        {
+            bootstrapping_operations.erase(id);
+        }
+
+        std::set<int> running_ids_to_remove;
+
+        for (auto &[id, time_left] : running_operations)
+        {
+            time_left--;
+            if (time_left == 0)
+            {
+                if (lgr_parser.operation_is_bootstrapped(id))
+                {
+                    bootstrapping_operations[id] = bootstrapping_latency;
+                }
+                running_ids_to_remove.insert(id);
+            }
+        }
+
+        for (auto id : running_ids_to_remove)
+        {
+            running_operations.erase(id);
+        }
     }
-    clock_cycle += std::max(running_time_left_1, running_time_left_2);
-    return clock_cycle;
+    clock_cycle += map_max_value(running_operations);
+    // std::cout << "Clock cycle: " << clock_cycle << std::endl;
+    solver_latency = clock_cycle;
 }
 
-int main()
+void ListScheduler::write_lgr_like_format(std::string output_file_path)
+{
+    std::ofstream output_file;
+    output_file.open(output_file_path, std::ios::out);
+
+    for (auto id : lgr_parser.bootstrapped_operation_ids)
+    {
+        output_file << "BOOTSTRAPPED( OP" << id << ") 1" << std::endl;
+    }
+
+    for (auto operation : operations.get_iterable_list())
+    {
+        output_file << "START_TIME( OP" << operation.id << ") " << operation.start_time << std::endl;
+    }
+
+    output_file << "FINISH_TIME( OP0) " << solver_latency << std::endl;
+
+    output_file.close();
+}
+
+int main(int argc, char **argv)
 {
     if (argc != 4)
     {
-        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <allow_bootstrapping_to_only_some_children>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file> <output_file>" << std::endl;
         return 1;
     }
 
-    dag_file_path = std::string{argv[1]};
-    bootstrapped_tasks_file_path = std::string{argv[1]};
-    output_file_path = std::string{argv[2]};
-    allow_bootstrapping_to_only_some_children = (std::string(argv[3]) == "True");
+    std::string dag_file_path = std::string(argv[1]);
+    std::string lgr_file_path = std::string(argv[2]);
+    std::string output_file_path = std::string(argv[3]);
 
-    addition_divider = 1;
+    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path);
 
-    InputParser input_parser = InputParser{bootstrapping_path_length, false, used_some_children_model, addition_divider};
-    input_parser.parse_input_file(dag_file_path);
+    list_scheduler.generate_child_ids();
+    list_scheduler.update_all_ESTs_and_LSTs();
+    list_scheduler.update_all_ranks();
+    list_scheduler.create_schedule();
+    list_scheduler.generate_start_times_and_solver_latency(1);
+    list_scheduler.write_lgr_like_format(output_file_path);
 
-    
-
-    update_all_ESTs_and_LSTs();
-    update_all_ranks();
-    create_reordered_basic_blocks();
-    int original_schedule_latency = get_latency(basic_blocks);
-    printf("original schedule latency: %d\n", original_schedule_latency);
-    int new_schedule_latency = get_latency(reordered_basic_blocks);
-    printf("new schedule latency: %d\n", new_schedule_latency);
-    print_c_code(basic_blocks);
     return 0;
 }

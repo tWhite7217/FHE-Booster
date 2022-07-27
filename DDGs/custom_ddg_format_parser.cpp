@@ -2,14 +2,12 @@
 
 #include "custom_ddg_format_parser.h"
 
-InputParser::InputParser(int bootstrapping_path_threshold, bool is_for_validation, bool allow_bootstrapping_to_some_children_only, int addition_divider)
-    : bootstrapping_path_threshold{bootstrapping_path_threshold},
-      is_for_validation{is_for_validation},
-      allow_bootstrapping_to_some_children_only{allow_bootstrapping_to_some_children_only},
-      addition_divider{addition_divider} {}
+InputParser::InputParser(bool is_for_validation, bool allow_bootstrapping_to_some_children_only)
+    : is_for_validation{is_for_validation},
+      allow_bootstrapping_to_some_children_only{allow_bootstrapping_to_some_children_only} {}
 
 std::map<std::string, int> InputParser::get_operation_type_to_latency_map() { return operation_type_to_latency_map; }
-std::vector<Operation> InputParser::get_operations() { return operations; }
+OperationList InputParser::get_operations() { return operations; }
 std::vector<std::vector<int>> InputParser::get_bootstrapping_paths() { return bootstrapping_paths; }
 
 void InputParser::parse_input(std::string filename)
@@ -37,15 +35,6 @@ void InputParser::parse_input(std::string filename)
     }
 
     remove_redundant_bootstrapping_paths();
-}
-
-Operation InputParser::get_operation_from_id(int id)
-{
-    if (id < 1 || id > operations.size())
-    {
-        throw std::runtime_error("Invalid operation id");
-    }
-    return operations[id - 1];
 }
 
 void InputParser::parse_lines(std::fstream &input_file)
@@ -89,7 +78,7 @@ void InputParser::parse_operation_and_its_dependences(std::vector<std::string> l
     {
         parent_ids.push_back(std::stoi(line[i]));
     }
-    operations.push_back(Operation{type, parent_ids});
+    operations.add(Operation{type, parent_ids, int(operations.size()) + 1});
 }
 
 std::vector<std::string> InputParser::get_string_list_from_line(std::string line)
@@ -109,7 +98,7 @@ void InputParser::create_bootstrapping_paths()
     for (auto operation_id = 1; operation_id <= operations.size(); operation_id++)
     {
         std::vector<std::vector<int>> bootstrapping_paths_to_add;
-        if (get_operation_from_id(operation_id).type == "MUL")
+        if (operations.get(operation_id).type == "MUL")
         {
             bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation_id, 1, 0);
         }
@@ -128,16 +117,16 @@ std::vector<std::vector<int>> InputParser::create_bootstrapping_paths_helper(int
     {
         return {{operation_id}};
     }
-    else if (get_operation_from_id(operation_id).parent_ids.size() == 0)
+    else if (operations.get(operation_id).parent_ids.size() == 0)
     {
         return {};
     }
 
     std::vector<std::vector<int>> paths_to_return;
-    for (auto parent_id : get_operation_from_id(operation_id).parent_ids)
+    for (auto parent_id : operations.get(operation_id).parent_ids)
     {
         std::vector<std::vector<int>> paths_to_add;
-        if (get_operation_from_id(parent_id).type == "MUL")
+        if (operations.get(parent_id).type == "MUL")
         {
             paths_to_add = create_bootstrapping_paths_helper(parent_id, num_multiplications + 1, num_additions);
         }
@@ -192,7 +181,7 @@ float InputParser::get_path_cost(std::vector<int> path)
     int num_additions = 0;
     for (auto operation_id : path)
     {
-        if (get_operation_from_id(operation_id).type == "MUL")
+        if (operations.get(operation_id).type == "MUL")
         {
             num_multiplications++;
         }
@@ -207,9 +196,9 @@ float InputParser::get_path_cost(std::vector<int> path)
 std::vector<std::vector<int>> InputParser::depth_first_search(std::vector<int> current_path, std::vector<std::vector<int>> backward_paths)
 {
     auto current_end_of_path = current_path.back();
-    if (get_operation_from_id(current_end_of_path).parent_ids.size() > 0)
+    if (operations.get(current_end_of_path).parent_ids.size() > 0)
     {
-        for (auto parent_id : get_operation_from_id(current_end_of_path).parent_ids)
+        for (auto parent_id : operations.get(current_end_of_path).parent_ids)
         {
             std::vector<int> new_path;
             std::copy(current_path.begin(), current_path.end(), std::back_inserter(new_path));

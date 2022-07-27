@@ -1,16 +1,48 @@
 // import sys
 
-// bootstrapping_latency = 12
-
 #include <iostream>
 #include <numeric>
 // #include <algorithm>
 
 #include "solution_validator.h"
 
-SolutionValidator::SolutionValidator(SolutionValidatorConfig config) : config{config}
+SolutionValidator::SolutionValidator(std::string dag_file_path, std::string lgr_file_path)
 {
-    unstarted_operations.resize(config.operations.size());
+    lgr_parser.switchIstream(lgr_file_path);
+    lgr_parser.lex();
+
+    input_parser = InputParser(true, lgr_parser.used_selective_model);
+    input_parser.parse_input(std::string(dag_file_path));
+    operations = input_parser.get_operations();
+
+    if (operations.size() != lgr_parser.start_times.size())
+    {
+        std::cout << "The number of operations in the input file does not match the number of operations in the LGR file.\n";
+        exit(0);
+    }
+
+    int i = 0;
+    for (auto &operation : operations.get_iterable_list())
+    {
+        operation.start_time = lgr_parser.start_times[i];
+        i++;
+    }
+
+    if (lgr_parser.bootstrap_start_times.size() > 0)
+    {
+        int i = 0;
+        for (auto &operation : operations.get_iterable_list())
+        {
+            operation.start_time = lgr_parser.bootstrap_start_times[i];
+            i++;
+        }
+    }
+    for (auto [operation_id, core_num] : lgr_parser.cores_used)
+    {
+        operations.get(operation_id).core_num = core_num;
+    }
+
+    unstarted_operations.resize(operations.size());
     std::iota(unstarted_operations.begin(), unstarted_operations.end(), 1);
 }
 
@@ -61,10 +93,10 @@ void SolutionValidator::validate_solution()
         // std::cout << std::endl;
     }
 
-    if (clock_cycle != config.solver_latency)
+    if (clock_cycle != lgr_parser.max_finish_time)
     {
         std::cout << "Error: The latencies mismatch" << std::endl;
-        std::cout << "Solver latency: " << config.solver_latency << std::endl;
+        std::cout << "Solver latency: " << lgr_parser.max_finish_time << std::endl;
         std::cout << "Calculated latency: " << clock_cycle << std::endl;
     }
     else
@@ -75,19 +107,19 @@ void SolutionValidator::validate_solution()
 
 void SolutionValidator::check_bootstrapping_constraints_are_met()
 {
-    for (auto path : config.bootstrapping_paths)
+    for (auto path : input_parser.get_bootstrapping_paths())
     {
         bool path_satisfied = false;
-        if (config.used_some_children_model)
+        if (lgr_parser.used_selective_model)
         {
             for (auto i = 0;
-                 i < config.bootstrapped_operation_ids.size() && !path_satisfied;
+                 i < lgr_parser.bootstrapped_operation_ids.size() && !path_satisfied;
                  i += 2)
             {
                 for (auto j = 0; j < path.size() - 1; j++)
                 {
-                    if (config.bootstrapped_operation_ids[i] == path[j] &&
-                        config.bootstrapped_operation_ids[i + 1] == path[j + 1])
+                    if (lgr_parser.bootstrapped_operation_ids[i] == path[j] &&
+                        lgr_parser.bootstrapped_operation_ids[i + 1] == path[j + 1])
                     {
                         path_satisfied = true;
                         break;
@@ -97,7 +129,7 @@ void SolutionValidator::check_bootstrapping_constraints_are_met()
         }
         else
         {
-            for (auto bootstrapped_operation_id : config.bootstrapped_operation_ids)
+            for (auto bootstrapped_operation_id : lgr_parser.bootstrapped_operation_ids)
             {
                 if (vector_contains_element(path, bootstrapped_operation_id))
                 {
@@ -155,35 +187,16 @@ void SolutionValidator::add_necessary_running_operations_to_bootstrapping_queue(
 {
     for (auto [operation_id, cycles_left] : running_operations)
     {
-        if (cycles_left == 0 && operation_is_bootstrapped(operation_id))
+        if (cycles_left == 0 && lgr_parser.operation_is_bootstrapped(operation_id))
         {
             operations_ready_to_bootstrap.push_back(operation_id);
         }
     }
 }
 
-bool SolutionValidator::operation_is_bootstrapped(int operation_id)
-{
-    if (config.used_some_children_model)
-    {
-        for (auto i = 0; i < config.bootstrapped_operation_ids.size(); i += 2)
-        {
-            if (config.bootstrapped_operation_ids[i] == operation_id)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    else
-    {
-        return vector_contains_element(config.bootstrapped_operation_ids, operation_id);
-    }
-}
-
 void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
 {
-    if (config.used_bootstrap_limited_model)
+    if (lgr_parser.used_bootstrap_limited_model)
     {
         std::vector<int> operations_to_remove;
         for (auto operation_id : operations_ready_to_bootstrap)
@@ -194,7 +207,7 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
                     check_if_operation_bootstrapping_core_is_available(operation_id);
                 if (core_is_available)
                 {
-                    bootstrapping_operations[operation_id] = config.bootstrapping_latency;
+                    bootstrapping_operations[operation_id] = bootstrapping_latency;
                     operations_to_remove.push_back(operation_id);
                 }
                 else
@@ -218,7 +231,7 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
     {
         for (auto operation_id : operations_ready_to_bootstrap)
         {
-            bootstrapping_operations[operation_id] = config.bootstrapping_latency;
+            bootstrapping_operations[operation_id] = bootstrapping_latency;
         }
         operations_ready_to_bootstrap.clear();
     }
@@ -226,19 +239,19 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
 
 bool SolutionValidator::clock_cycle_matches_operation_bootstrapping_start_time(int operation_id)
 {
-    return clock_cycle == get_operation_from_id(operation_id).bootstrap_start_time;
+    return clock_cycle == operations.get(operation_id).bootstrap_start_time;
 }
 
 bool SolutionValidator::clock_cycle_is_later_than_operation_bootstrapping_start_time(int operation_id)
 {
-    return clock_cycle > get_operation_from_id(operation_id).bootstrap_start_time;
+    return clock_cycle > operations.get(operation_id).bootstrap_start_time;
 }
 
 std::pair<bool, int> SolutionValidator::check_if_operation_bootstrapping_core_is_available(int operation_id)
 {
     for (auto [bootstrapping_operation_id, _] : bootstrapping_operations)
     {
-        if (operations_bootstrap_on_same_core(operation_id, bootstrapping_operation_id))
+        if (lgr_parser.operations_bootstrap_on_same_core(operation_id, bootstrapping_operation_id))
         {
             return std::pair{false, bootstrapping_operation_id};
         }
@@ -246,14 +259,9 @@ std::pair<bool, int> SolutionValidator::check_if_operation_bootstrapping_core_is
     return std::pair{true, -1};
 }
 
-bool SolutionValidator::operations_bootstrap_on_same_core(int op_id1, int op_id2)
-{
-    return get_operation_from_id(op_id1).core_num == get_operation_from_id(op_id2).core_num;
-}
-
 void SolutionValidator::print_bootstrapping_core_is_not_available_error(int operation_id, int bootrsapping_operation_id)
 {
-    std::cout << "Error: Bootstrapping operation " << bootrsapping_operation_id << " was not completed before operation " << operation_id << " started bootstrapping on core " << get_operation_from_id(operation_id).core_num << std::endl;
+    std::cout << "Error: Bootstrapping operation " << bootrsapping_operation_id << " was not completed before operation " << operation_id << " started bootstrapping on core " << operations.get(operation_id).core_num << std::endl;
 }
 
 void SolutionValidator::print_missed_bootstrapping_deadline_error(int operation_id)
@@ -261,9 +269,10 @@ void SolutionValidator::print_missed_bootstrapping_deadline_error(int operation_
     std::cout << "Error: Bootstrapping operation " << operation_id << " did not start on time" << std::endl;
 }
 
-void SolutionValidator::print_missed_start_time_error(int operation_id)
+void SolutionValidator::print_missed_start_time_error(int operation_id, int clock_cycle)
 {
     std::cout << "Error: Operation " << operation_id << " did not start on time" << std::endl;
+    std::cout << "Expected start time " << operations.get(operation_id).start_time << ". Actual start time " << clock_cycle << std::endl;
 }
 
 std::vector<int> SolutionValidator::get_ready_operations()
@@ -281,7 +290,7 @@ std::vector<int> SolutionValidator::get_ready_operations()
 
 bool SolutionValidator::operation_is_ready(int operation_id)
 {
-    for (auto parent_id : get_operation_from_id(operation_id).parent_ids)
+    for (auto parent_id : operations.get(operation_id).parent_ids)
         if (
             vector_contains_element(unstarted_operations, parent_id) ||
             unordered_map_contains_key(running_operations, parent_id) ||
@@ -294,54 +303,40 @@ bool SolutionValidator::operation_is_ready(int operation_id)
 
 bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(int operation_id, int parent_id)
 {
-    if (!config.used_some_children_model || parent_sends_bootstrapped_result_to_child(parent_id, operation_id))
-    {
-        {
-            return vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
-                   unordered_map_contains_key(bootstrapping_operations, parent_id);
-        }
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool SolutionValidator::parent_sends_bootstrapped_result_to_child(int parent_id, int child_id)
-{
-    for (auto i = 0; i < config.bootstrapped_operation_ids.size(); i += 2)
-    {
-        if (config.bootstrapped_operation_ids[i] == parent_id &&
-            config.bootstrapped_operation_ids[i + 1] == child_id)
-        {
-            return true;
-        }
-    }
-    return false;
+    return lgr_parser.operation_is_bootstrapped(parent_id, operation_id) &&
+           (vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
+            unordered_map_contains_key(bootstrapping_operations, parent_id));
 }
 
 void SolutionValidator::start_running_ready_operations(std::vector<int> ready_operations)
 {
     for (auto operation_id : ready_operations)
     {
-        if (get_operation_from_id(operation_id).start_time == clock_cycle)
+        if (operations.get(operation_id).start_time == clock_cycle)
         {
-            running_operations[operation_id] = config.operation_type_to_latency_map[get_operation_from_id(operation_id).type];
+            running_operations[operation_id] = input_parser.get_operation_type_to_latency_map()[operations.get(operation_id).type];
             remove_element_from_vector(unstarted_operations, operation_id);
         }
-        else if (get_operation_from_id(operation_id).start_time < clock_cycle)
+        else if (operations.get(operation_id).start_time < clock_cycle)
         {
-            print_missed_start_time_error(operation_id);
+            print_missed_start_time_error(operation_id, clock_cycle);
             exit(0);
         }
     }
 }
 
-Operation SolutionValidator::get_operation_from_id(int id)
+int main(int argc, char **argv)
 {
-    if (id < 1 || id > config.operations.size())
+    if (argc < 3)
     {
-        throw std::runtime_error("Invalid operation id");
+        std::cout << "Two files must be provided in the command line.\n";
+        return 0;
     }
-    return config.operations[id - 1];
+
+    std::string dag_file_path = std::string{argv[1]};
+    std::string lgr_file_path = std::string{argv[2]};
+
+    auto solution_validator = SolutionValidator(dag_file_path, lgr_file_path);
+    solution_validator.validate_solution();
+    return 0;
 }

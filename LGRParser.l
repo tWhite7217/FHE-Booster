@@ -4,15 +4,15 @@
 
 "BOOTSTRAPPED( OP"[0-9]+")"[ \t]+"1" {
     int operation_id = get_first_operation_id(matched());
-    bootstrapped_operations.push_back(operation_id);
+    bootstrapped_operation_ids.push_back(operation_id);
 }
 
 "BOOTSTRAPPED( OP"[0-9]+", OP"[0-9]+")"[ \t]+"1" {
-    used_some_children_model = true;
+    used_selective_model = true;
     int operation_id1 = get_first_operation_id(matched());
     int operation_id2 = get_second_operation_id(matched());
-    bootstrapped_operations.push_back(operation_id1);
-    bootstrapped_operations.push_back(operation_id2);
+    bootstrapped_operation_ids.push_back(operation_id1);
+    bootstrapped_operation_ids.push_back(operation_id2);
 }
 
 "BOOTSTRAP_FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {}

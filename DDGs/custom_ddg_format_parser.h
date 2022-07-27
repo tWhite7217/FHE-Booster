@@ -12,22 +12,19 @@
 class InputParser
 {
 public:
-    InputParser(int, bool, bool, int);
+    InputParser(bool, bool);
     void parse_input(std::string);
     std::map<std::string, int> get_operation_type_to_latency_map();
-    std::vector<Operation> get_operations();
+    OperationList get_operations();
     std::vector<std::vector<int>> get_bootstrapping_paths();
 
 private:
-    int bootstrapping_path_threshold;
-    int addition_divider;
     std::map<std::string, int> operation_type_to_latency_map;
     bool is_for_validation;
     bool allow_bootstrapping_to_some_children_only;
-    std::vector<Operation> operations;
+    OperationList operations;
     std::vector<std::vector<int>> bootstrapping_paths;
 
-    Operation get_operation_from_id(int);
     void parse_lines(std::fstream &);
     void parse_operation_type(std::vector<std::string>);
     void parse_operation_and_its_dependences(std::vector<std::string>);
