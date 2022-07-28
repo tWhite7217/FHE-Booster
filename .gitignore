@@ -12,3 +12,5 @@ input_file_processor
 ddg_generator.tgffopt
 lex.cc
 LGRParserBase.h
+list_scheduler
+solution_validator
