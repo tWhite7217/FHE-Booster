@@ -21,26 +21,7 @@ SolutionValidator::SolutionValidator(std::string dag_file_path, std::string lgr_
         exit(0);
     }
 
-    int i = 0;
-    for (auto &operation : operations.get_iterable_list())
-    {
-        operation.start_time = lgr_parser.start_times[i];
-        i++;
-    }
-
-    if (lgr_parser.bootstrap_start_times.size() > 0)
-    {
-        int i = 0;
-        for (auto &operation : operations.get_iterable_list())
-        {
-            operation.start_time = lgr_parser.bootstrap_start_times[i];
-            i++;
-        }
-    }
-    for (auto [operation_id, core_num] : lgr_parser.cores_used)
-    {
-        operations.get(operation_id).core_num = core_num;
-    }
+    lgr_parser.add_info_to_operation_list(operations);
 
     unstarted_operations.resize(operations.size());
     std::iota(unstarted_operations.begin(), unstarted_operations.end(), 1);

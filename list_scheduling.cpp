@@ -1,7 +1,4 @@
 #include "list_scheduling.h"
-#include "DDGs/custom_ddg_format_parser.h"
-
-#include <numeric>
 
 ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path)
 {

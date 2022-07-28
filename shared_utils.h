@@ -1,10 +1,14 @@
-#pragma once
+
+#ifndef shared_utils_INCLUDED_
+#define shared_utils_INCLUDED_
 
 #include <vector>
 #include <set>
+#include <map>
 #include <unordered_map>
 #include <string>
 #include <algorithm>
+#include <stdexcept>
 
 // enum class OperationType
 // {
@@ -93,10 +97,15 @@ void remove_element_from_vector(std::vector<T> &vector, const T &element)
 }
 
 template <typename T, typename S>
-bool map_max_value(const std::map<T, S> &map)
+S map_max_value(const std::map<T, S> &map)
 {
     auto max_it = std::max_element(map.begin(), map.end(),
-                                   [](const std::pair<int, int> &a, const std::pair<int, int> &b)
+                                   [](const std::pair<T, S> &a, const std::pair<T, S> &b)
                                    { return a.second < b.second; });
     return max_it->second;
 }
+
+void remove_chars_from_string(std::string &, std::vector<char>);
+int extract_number_from_string(std::string, size_t, size_t);
+
+#endif

@@ -24,8 +24,8 @@ public:
 
     // My public members
     std::vector<int> bootstrapped_operation_ids;
-    std::vector<int> start_times;
-    std::vector<int> bootstrap_start_times;
+    std::map<int, int> start_times;
+    std::map<int, int> bootstrap_start_times;
     std::map<int, int> cores_used;
 
     int max_finish_time = 0;
@@ -36,6 +36,7 @@ public:
     bool operation_is_bootstrapped(int, int);
     std::function<bool(int)> get_checker_for_selective_model(int, int);
     bool operations_bootstrap_on_same_core(int, int);
+    void add_info_to_operation_list(OperationList &);
 
 private:
     int lex_();
@@ -50,11 +51,6 @@ private:
     // be exec'ed after the rules's actions.
 
     // My private members
-    OperationList operations;
-    std::vector<std::vector<int>> bootstrapping_paths;
-
-    void remove_chars_from_string(std::string &, std::vector<char>);
-    int extract_number_from_string(std::string, size_t, size_t);
     int get_first_operation_id(std::string);
     int get_second_operation_id(std::string);
     int get_core_num(std::string);

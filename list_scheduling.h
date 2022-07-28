@@ -1,10 +1,12 @@
 #include "LGRParser.h"
+#include "DDGs/custom_ddg_format_parser.h"
 #include "shared_utils.h"
 
 #include <vector>
 #include <map>
 #include <queue>
 #include <set>
+#include <numeric>
 
 class ListScheduler
 {

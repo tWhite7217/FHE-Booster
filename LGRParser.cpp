@@ -2,22 +2,6 @@
 
 #include "LGRParser.h"
 
-void LGRParser::remove_chars_from_string(std::string &str, std::vector<char> chars_to_remove)
-{
-    for (unsigned int i = 0; i < chars_to_remove.size(); ++i)
-    {
-        str.erase(remove(str.begin(), str.end(), chars_to_remove[i]), str.end());
-    }
-}
-
-int LGRParser::extract_number_from_string(std::string str, size_t start_index, size_t end_index)
-{
-    auto num_digits = end_index - start_index;
-    std::string num_as_string = str.substr(start_index, num_digits);
-    int num = std::stoi(num_as_string);
-    return num;
-}
-
 int LGRParser::get_first_operation_id(std::string yystring)
 {
     auto operation_start_index = yystring.find("OP") + 2;
@@ -53,7 +37,7 @@ int LGRParser::get_time(std::string yystring)
 
 bool LGRParser::operations_bootstrap_on_same_core(int op_id1, int op_id2)
 {
-    return operations.get(op_id1).core_num == operations.get(op_id2).core_num;
+    return cores_used[op_id1] == cores_used[op_id2];
 }
 
 bool LGRParser::operation_is_bootstrapped(int operation_id)
@@ -98,5 +82,23 @@ std::function<bool(int)> LGRParser::get_checker_for_selective_model(int operatio
             return bootstrapped_operation_ids[i] == operation_id &&
                    bootstrapped_operation_ids[i + 1] == child_id;
         };
+    }
+}
+
+void LGRParser::add_info_to_operation_list(OperationList &operations)
+{
+    for (auto [operation_id, start_time] : start_times)
+    {
+        operations.get(operation_id).start_time = start_time;
+    }
+
+    for (auto [operation_id, bootstrap_start_time] : bootstrap_start_times)
+    {
+        operations.get(operation_id).bootstrap_start_time = bootstrap_start_time;
+    }
+
+    for (auto [operation_id, core_num] : cores_used)
+    {
+        operations.get(operation_id).core_num = core_num;
     }
 }

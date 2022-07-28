@@ -24,12 +24,14 @@
 
 "BOOTSTRAP_START_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
     int b_start_time = get_time(matched());
-    bootstrap_start_times.push_back(b_start_time);
+    int operation_id = get_first_operation_id(matched());
+    bootstrap_start_times[operation_id] = b_start_time;
 }
 
 "START_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {
     int start_time = get_time(matched());
-    start_times.push_back(start_time);
+    int operation_id = get_first_operation_id(matched());
+    start_times[operation_id] = start_time;
 }
 
 "B2C( OP"[0-9]+", C"[0-9]+")"[ \t]+"1" {
