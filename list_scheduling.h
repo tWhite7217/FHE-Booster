@@ -31,6 +31,11 @@ private:
     std::vector<std::vector<int>> bootstrapping_paths;
     LGRParser lgr_parser;
 
+    std::map<int, int> running_operations;
+    std::map<int, int> bootstrapping_operations;
+    std::vector<int> ordered_unstarted_operations;
+    int clock_cycle;
+
     void update_earliest_start_time(Operation &);
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(Operation &, int);
@@ -38,4 +43,9 @@ private:
     std::map<int, int> initialize_pred_count();
     std::set<int> initialize_ready_operations(std::map<int, int>);
     bool operation_is_ready(int, std::map<int, int>, std::vector<int>, std::map<int, int>);
+    std::set<int> handle_started_operations(std::map<int, int> &);
+    void decrement_cycles_left(std::map<int, int> &);
+    std::set<int> get_finished_operations(std::map<int, int> &);
+    void start_ready_operations();
+    void start_bootstrapping_necessary_operations(std::set<int>);
 };

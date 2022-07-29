@@ -207,75 +207,84 @@ bool ListScheduler::operation_is_ready(int next_operation_id, std::map<int, int>
 
 void ListScheduler::generate_start_times_and_solver_latency(int num_cores)
 {
-    int clock_cycle = 0;
-    std::map<int, int> running_operations;
-    std::map<int, int> bootstrapping_operations;
-    std::vector<int> ordered_unstarted_operations = schedule;
+    clock_cycle = 0;
+    running_operations.clear();
+    bootstrapping_operations.clear();
+    ordered_unstarted_operations = schedule;
 
     while (!ordered_unstarted_operations.empty())
     {
-        // std::cout << "ordered_unstarted_operations size: " << ordered_unstarted_operations.size() << std::endl;
-        // std::cout << "Clock cycle: " << clock_cycle << std::endl;
-
-        std::set<int> unstarted_ids_to_remove;
-
-        for (auto id : ordered_unstarted_operations)
-        {
-            if (operation_is_ready(id, running_operations, ordered_unstarted_operations, bootstrapping_operations))
-            {
-                Operation &next_operation = operations.get(id);
-                next_operation.start_time = clock_cycle;
-                running_operations[id] = operation_type_to_latency_map[next_operation.type];
-                unstarted_ids_to_remove.insert(id);
-            }
-        }
-
-        for (auto id : unstarted_ids_to_remove)
-        {
-            remove_element_from_vector(ordered_unstarted_operations, id);
-        }
+        start_ready_operations();
 
         clock_cycle++;
 
-        std::set<int> bootstrapping_ids_to_remove;
+        handle_started_operations(bootstrapping_operations);
 
-        for (auto &[id, time_left] : bootstrapping_operations)
-        {
-            time_left--;
-            if (time_left == 0)
-            {
-                bootstrapping_ids_to_remove.insert(id);
-            }
-        }
-
-        for (auto id : bootstrapping_ids_to_remove)
-        {
-            bootstrapping_operations.erase(id);
-        }
-
-        std::set<int> running_ids_to_remove;
-
-        for (auto &[id, time_left] : running_operations)
-        {
-            time_left--;
-            if (time_left == 0)
-            {
-                if (lgr_parser.operation_is_bootstrapped(id))
-                {
-                    bootstrapping_operations[id] = bootstrapping_latency;
-                }
-                running_ids_to_remove.insert(id);
-            }
-        }
-
-        for (auto id : running_ids_to_remove)
-        {
-            running_operations.erase(id);
-        }
+        auto finished_running_ids = handle_started_operations(running_operations);
+        start_bootstrapping_necessary_operations(finished_running_ids);
     }
     clock_cycle += map_max_value(running_operations);
-    // std::cout << "Clock cycle: " << clock_cycle << std::endl;
     solver_latency = clock_cycle;
+}
+
+std::set<int> ListScheduler::handle_started_operations(std::map<int, int> &started_operations)
+{
+    decrement_cycles_left(started_operations);
+    auto finished_ids = get_finished_operations(started_operations);
+    remove_key_subset_from_map(started_operations, finished_ids);
+    return finished_ids;
+}
+
+void ListScheduler::start_ready_operations()
+{
+    std::set<int> started_operation_ids;
+
+    for (auto id : ordered_unstarted_operations)
+    {
+        if (operation_is_ready(id, running_operations, ordered_unstarted_operations, bootstrapping_operations))
+        {
+            Operation &next_operation = operations.get(id);
+            next_operation.start_time = clock_cycle;
+            running_operations[id] = operation_type_to_latency_map[next_operation.type];
+            started_operation_ids.insert(id);
+        }
+    }
+
+    remove_element_subset_from_vector(ordered_unstarted_operations, started_operation_ids);
+}
+
+void ListScheduler::decrement_cycles_left(std::map<int, int> &started_operations)
+{
+    for (auto &[id, time_left] : started_operations)
+    {
+        time_left--;
+    }
+}
+
+std::set<int> ListScheduler::get_finished_operations(std::map<int, int> &started_operations)
+{
+    std::set<int> finished_ids;
+
+    for (auto &[id, time_left] : started_operations)
+    {
+        if (time_left == 0)
+        {
+            finished_ids.insert(id);
+        }
+    }
+
+    return finished_ids;
+}
+
+void ListScheduler::start_bootstrapping_necessary_operations(std::set<int> operation_ids)
+{
+    for (auto id : operation_ids)
+    {
+        if (lgr_parser.operation_is_bootstrapped(id))
+        {
+            bootstrapping_operations[id] = bootstrapping_latency;
+        }
+    }
 }
 
 void ListScheduler::write_lgr_like_format(std::string output_file_path)

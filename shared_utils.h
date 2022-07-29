@@ -96,6 +96,15 @@ void remove_element_from_vector(std::vector<T> &vector, const T &element)
     vector.erase(op_position);
 }
 
+template <typename T>
+void remove_element_subset_from_vector(std::vector<T> &vector, const std::set<T> element_subset)
+{
+    for (auto &element : element_subset)
+    {
+        remove_element_from_vector(vector, element);
+    }
+}
+
 template <typename T, typename S>
 S map_max_value(const std::map<T, S> &map)
 {
@@ -103,6 +112,15 @@ S map_max_value(const std::map<T, S> &map)
                                    [](const std::pair<T, S> &a, const std::pair<T, S> &b)
                                    { return a.second < b.second; });
     return max_it->second;
+}
+
+template <typename T, typename S>
+void remove_key_subset_from_map(std::map<T, S> &map, const std::set<T> key_subset)
+{
+    for (auto key : key_subset)
+    {
+        map.erase(key);
+    }
 }
 
 void remove_chars_from_string(std::string &, std::vector<char>);
