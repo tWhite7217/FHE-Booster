@@ -13,17 +13,20 @@ class ListScheduler
 public:
     std::vector<int> schedule;
 
-    ListScheduler(std::string, std::string);
+    ListScheduler(std::string, std::string, int);
 
     void create_schedule();
     void generate_child_ids();
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
-    void generate_start_times_and_solver_latency(int);
+    void generate_start_times_and_solver_latency();
     void write_lgr_like_format(std::string);
 
 private:
     int solver_latency;
+
+    int num_cores;
+    std::vector<int> cores;
 
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
@@ -36,6 +39,17 @@ private:
     std::vector<int> ordered_unstarted_operations;
     int clock_cycle;
 
+    struct RankCmp
+    {
+        bool operator()(const int &id_a, const int &id_b) const
+        {
+            return operations.get(id_a).rank < operations.get(id_b).rank;
+        }
+    };
+    std::set<int, RankCmp> bootstrapping_queue;
+
+    std::function<void()> start_bootstrapping_ready_operations;
+
     void update_earliest_start_time(Operation &);
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(Operation &, int);
@@ -47,5 +61,9 @@ private:
     void decrement_cycles_left(std::map<int, int> &);
     std::set<int> get_finished_operations(std::map<int, int> &);
     void start_ready_operations();
-    void start_bootstrapping_necessary_operations(std::set<int>);
+    void add_necessary_operations_to_bootstrapping_queue(std::set<int>);
+    // void start_bootstrapping_ready_operations();
+    void start_bootstrapping_ready_operations_for_unlimited_model();
+    void start_bootstrapping_ready_operations_for_limited_model();
+    int get_available_bootstrap_core_num();
 };

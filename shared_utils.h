@@ -27,8 +27,8 @@ struct Operation
     int id;
     std::vector<int> child_ids;
     int start_time;
-    int bootstrap_start_time;
-    int core_num;
+    int bootstrap_start_time = 0;
+    int core_num = 0;
     int earliest_start_time;
     int latest_start_time;
     int rank;
