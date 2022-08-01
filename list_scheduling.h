@@ -1,6 +1,7 @@
 #include "LGRParser.h"
 #include "DDGs/custom_ddg_format_parser.h"
 #include "shared_utils.h"
+#include "bootstrapping_path_generator.h"
 
 #include <vector>
 #include <map>
@@ -11,12 +12,12 @@
 class ListScheduler
 {
 public:
-    std::vector<int> schedule;
+    std::vector<OperationPtr> schedule;
 
     ListScheduler(std::string, std::string, int);
 
     void create_schedule();
-    void generate_child_ids();
+    void generate_child_ptrs();
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
     void generate_start_times_and_solver_latency();
@@ -31,37 +32,38 @@ private:
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
     bool used_selective_model;
-    std::vector<std::vector<int>> bootstrapping_paths;
+    std::vector<std::vector<OperationPtr>> bootstrapping_paths;
     LGRParser lgr_parser;
 
-    std::map<int, int> running_operations;
-    std::map<int, int> bootstrapping_operations;
-    std::vector<int> ordered_unstarted_operations;
+    std::map<OperationPtr, int> running_operations;
+    std::map<OperationPtr, int> bootstrapping_operations;
+    std::vector<OperationPtr> ordered_unstarted_operations;
     int clock_cycle;
 
     struct RankCmp
     {
-        bool operator()(const int &id_a, const int &id_b) const
+        bool operator()(const OperationPtr &a, const OperationPtr &b) const
         {
-            return operations.get(id_a).rank < operations.get(id_b).rank;
+            return a->rank < b->rank;
         }
     };
-    std::set<int, RankCmp> bootstrapping_queue;
+    std::set<OperationPtr, RankCmp> bootstrapping_queue;
 
     std::function<void()> start_bootstrapping_ready_operations;
 
-    void update_earliest_start_time(Operation &);
+    std::vector<OperationPtr> get_operations_in_dag_order();
+    void update_earliest_start_time(OperationPtr);
     int get_earliest_possible_program_end_time();
-    void update_latest_start_time(Operation &, int);
-    std::vector<int> get_priority_list();
-    std::map<int, int> initialize_pred_count();
-    std::set<int> initialize_ready_operations(std::map<int, int>);
-    bool operation_is_ready(int, std::map<int, int>, std::vector<int>, std::map<int, int>);
-    std::set<int> handle_started_operations(std::map<int, int> &);
-    void decrement_cycles_left(std::map<int, int> &);
-    std::set<int> get_finished_operations(std::map<int, int> &);
+    void update_latest_start_time(OperationPtr, int);
+    std::vector<OperationPtr> get_priority_list();
+    std::map<OperationPtr, int> initialize_pred_count();
+    std::set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);
+    bool operation_is_ready(OperationPtr);
+    std::set<OperationPtr> handle_started_operations(std::map<OperationPtr, int> &);
+    void decrement_cycles_left(std::map<OperationPtr, int> &);
+    std::set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
     void start_ready_operations();
-    void add_necessary_operations_to_bootstrapping_queue(std::set<int>);
+    void add_necessary_operations_to_bootstrapping_queue(std::set<OperationPtr>);
     // void start_bootstrapping_ready_operations();
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();

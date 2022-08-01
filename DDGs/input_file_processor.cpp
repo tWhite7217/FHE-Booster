@@ -1,14 +1,15 @@
 #include "custom_ddg_format_parser.h"
+#include "bootstrapping_path_generator.h"
 
 #include <functional>
 
-bool allow_bootstrapping_to_only_some_children;
+bool using_selective_model;
 std::string input_file_path;
 std::string output_file_path;
 
 std::map<std::string, int> operation_type_to_latency_map;
 OperationList operations;
-std::vector<std::vector<int>> bootstrapping_paths;
+std::vector<std::vector<OperationPtr>> bootstrapping_paths;
 
 std::fstream output_file;
 
@@ -16,17 +17,14 @@ void read_command_line_args(int argc, char **argv)
 {
     input_file_path = std::string{argv[1]};
     output_file_path = std::string{argv[2]};
-    allow_bootstrapping_to_only_some_children = (std::string(argv[3]) == "True");
+    using_selective_model = (std::string(argv[3]) == "True");
 }
 
 void get_info_from_input_parser()
 {
-    auto input_parser = InputParser(bootstrapping_path_threshold, false, allow_bootstrapping_to_only_some_children, addition_divider);
-    input_parser.parse_input(input_file_path);
-
+    InputParser input_parser;
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
     operations = input_parser.get_operations();
-    bootstrapping_paths = input_parser.get_bootstrapping_paths();
 }
 
 void write_data_separator_to_file()
@@ -56,7 +54,7 @@ void write_operation_types_to_output_file()
 {
     for (auto operation : operations)
     {
-        auto operation_type_num = std::distance(operation_type_to_latency_map.begin(), operation_type_to_latency_map.find(operation.type));
+        auto operation_type_num = std::distance(operation_type_to_latency_map.begin(), operation_type_to_latency_map.find(operation->type));
         for (auto i = 0; i < operation_type_to_latency_map.size(); i++)
         {
             if (i == operation_type_num)
@@ -74,14 +72,12 @@ void write_operation_types_to_output_file()
 
 void write_operation_dependencies_to_output_file()
 {
-    int operation_id = 1;
     for (auto operation : operations)
     {
-        for (auto parent_id : operation.parent_ids)
+        for (auto parent : operation->parent_ptrs)
         {
-            output_file << "OP" << parent_id << " OP" << operation_id << std::endl;
+            output_file << "OP" << parent << " OP" << operation->id << std::endl;
         }
-        operation_id++;
     }
 }
 
@@ -95,18 +91,18 @@ void write_bootstrapping_constraints_to_output_file()
     for (auto path : bootstrapping_paths)
     {
         std::string constraint_string;
-        if (allow_bootstrapping_to_only_some_children)
+        if (using_selective_model)
         {
             for (auto i = 0; i < path.size() - 1; i++)
             {
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]) + ", " + std::to_string(path[i + 1]) + ") + ";
+                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ", " + std::to_string(path[i + 1]->id) + ") + ";
             }
         }
         else
         {
             for (auto i = 0; i < path.size(); i++)
             {
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]) + ") + ";
+                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ") + ";
             }
         }
         constraint_string.pop_back();
@@ -120,12 +116,15 @@ int main(int argc, char *argv[])
 {
     if (argc != 4)
     {
-        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <allow_bootstrapping_to_only_some_children>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <using_selective_model>" << std::endl;
         return 1;
     }
 
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
+
+    BootstrappingPathGenerator path_generator(operations, using_selective_model);
+    bootstrapping_paths = path_generator.generate_bootstrapping_paths();
 
     output_file.open(output_file_path, std::ios::out);
 

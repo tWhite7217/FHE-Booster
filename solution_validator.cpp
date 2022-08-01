@@ -8,23 +8,17 @@
 
 SolutionValidator::SolutionValidator(std::string dag_file_path, std::string lgr_file_path)
 {
-    lgr_parser.switchIstream(lgr_file_path);
-    lgr_parser.lex();
-
-    input_parser = InputParser(true, lgr_parser.used_selective_model);
-    input_parser.parse_input(std::string(dag_file_path));
+    input_parser.parse_input_to_generate_operations(dag_file_path);
     operations = input_parser.get_operations();
 
-    if (operations.size() != lgr_parser.start_times.size())
-    {
-        std::cout << "The number of operations in the input file does not match the number of operations in the LGR file.\n";
-        exit(0);
-    }
+    lgr_parser.switchIstream(lgr_file_path);
+    lgr_parser.set_operations(operations);
+    lgr_parser.lex();
 
-    lgr_parser.add_info_to_operation_list(operations);
+    BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
+    bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
 
-    unstarted_operations.resize(operations.size());
-    std::iota(unstarted_operations.begin(), unstarted_operations.end(), 1);
+    unstarted_operations = operations;
 }
 
 void SolutionValidator::validate_solution()
@@ -88,19 +82,19 @@ void SolutionValidator::validate_solution()
 
 void SolutionValidator::check_bootstrapping_constraints_are_met()
 {
-    for (auto path : input_parser.get_bootstrapping_paths())
+    for (auto path : bootstrapping_paths)
     {
         bool path_satisfied = false;
         if (lgr_parser.used_selective_model)
         {
             for (auto i = 0;
-                 i < lgr_parser.bootstrapped_operation_ids.size() && !path_satisfied;
+                 i < lgr_parser.bootstrapped_operations.size() && !path_satisfied;
                  i += 2)
             {
                 for (auto j = 0; j < path.size() - 1; j++)
                 {
-                    if (lgr_parser.bootstrapped_operation_ids[i] == path[j] &&
-                        lgr_parser.bootstrapped_operation_ids[i + 1] == path[j + 1])
+                    if (lgr_parser.bootstrapped_operations[i] == path[j] &&
+                        lgr_parser.bootstrapped_operations[i + 1] == path[j + 1])
                     {
                         path_satisfied = true;
                         break;
@@ -110,7 +104,7 @@ void SolutionValidator::check_bootstrapping_constraints_are_met()
         }
         else
         {
-            for (auto bootstrapped_operation_id : lgr_parser.bootstrapped_operation_ids)
+            for (auto bootstrapped_operation_id : lgr_parser.bootstrapped_operations)
             {
                 if (vector_contains_element(path, bootstrapped_operation_id))
                 {
@@ -142,7 +136,7 @@ bool SolutionValidator::program_is_not_complete()
            (bootstrapping_operations.size() > 0);
 }
 
-SolutionValidator::OperationIdToRemainingCyclesMap SolutionValidator::decrement_cycles_left_for(OperationIdToRemainingCyclesMap operation_map)
+SolutionValidator::OperationPtrToRemainingCyclesMap SolutionValidator::decrement_cycles_left_for(OperationPtrToRemainingCyclesMap operation_map)
 {
     for (auto [operation, cycles_left] : operation_map)
     {
@@ -151,9 +145,9 @@ SolutionValidator::OperationIdToRemainingCyclesMap SolutionValidator::decrement_
     return operation_map;
 }
 
-SolutionValidator::OperationIdToRemainingCyclesMap SolutionValidator::remove_finished_operations(OperationIdToRemainingCyclesMap operation_map)
+SolutionValidator::OperationPtrToRemainingCyclesMap SolutionValidator::remove_finished_operations(OperationPtrToRemainingCyclesMap operation_map)
 {
-    OperationIdToRemainingCyclesMap new_operation_map;
+    OperationPtrToRemainingCyclesMap new_operation_map;
     for (auto [operation, cycles_left] : operation_map)
     {
         if (cycles_left > 0)
@@ -166,11 +160,11 @@ SolutionValidator::OperationIdToRemainingCyclesMap SolutionValidator::remove_fin
 
 void SolutionValidator::add_necessary_running_operations_to_bootstrapping_queue()
 {
-    for (auto [operation_id, cycles_left] : running_operations)
+    for (auto [operation, cycles_left] : running_operations)
     {
-        if (cycles_left == 0 && lgr_parser.operation_is_bootstrapped(operation_id))
+        if (cycles_left == 0 && lgr_parser.operation_is_bootstrapped(operation))
         {
-            operations_ready_to_bootstrap.push_back(operation_id);
+            operations_ready_to_bootstrap.push_back(operation);
         }
     }
 }
@@ -179,27 +173,27 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
 {
     if (lgr_parser.used_bootstrap_limited_model)
     {
-        std::vector<int> operations_to_remove;
-        for (auto operation_id : operations_ready_to_bootstrap)
+        std::vector<OperationPtr> operations_to_remove;
+        for (auto operation : operations_ready_to_bootstrap)
         {
-            if (clock_cycle_matches_operation_bootstrapping_start_time(operation_id))
+            if (clock_cycle_matches_operation_bootstrapping_start_time(operation))
             {
                 auto [core_is_available, bootstrapping_operation] =
-                    check_if_operation_bootstrapping_core_is_available(operation_id);
+                    check_if_operation_bootstrapping_core_is_available(operation);
                 if (core_is_available)
                 {
-                    bootstrapping_operations[operation_id] = bootstrapping_latency;
-                    operations_to_remove.push_back(operation_id);
+                    bootstrapping_operations[operation] = bootstrapping_latency;
+                    operations_to_remove.push_back(operation);
                 }
                 else
                 {
-                    print_bootstrapping_core_is_not_available_error(operation_id, bootstrapping_operation);
+                    print_bootstrapping_core_is_not_available_error(operation, bootstrapping_operation);
                     exit(0);
                 }
             }
-            else if (clock_cycle_is_later_than_operation_bootstrapping_start_time(operation_id))
+            else if (clock_cycle_is_later_than_operation_bootstrapping_start_time(operation))
             {
-                print_missed_bootstrapping_deadline_error(operation_id);
+                print_missed_bootstrapping_deadline_error(operation);
                 exit(0);
             }
         }
@@ -218,89 +212,89 @@ void SolutionValidator::start_bootstrapping_ready_operations_from_queue()
     }
 }
 
-bool SolutionValidator::clock_cycle_matches_operation_bootstrapping_start_time(int operation_id)
+bool SolutionValidator::clock_cycle_matches_operation_bootstrapping_start_time(OperationPtr operation)
 {
-    return clock_cycle == operations.get(operation_id).bootstrap_start_time;
+    return clock_cycle == operation->bootstrap_start_time;
 }
 
-bool SolutionValidator::clock_cycle_is_later_than_operation_bootstrapping_start_time(int operation_id)
+bool SolutionValidator::clock_cycle_is_later_than_operation_bootstrapping_start_time(OperationPtr operation)
 {
-    return clock_cycle > operations.get(operation_id).bootstrap_start_time;
+    return clock_cycle > operation->bootstrap_start_time;
 }
 
-std::pair<bool, int> SolutionValidator::check_if_operation_bootstrapping_core_is_available(int operation_id)
+std::pair<bool, OperationPtr> SolutionValidator::check_if_operation_bootstrapping_core_is_available(OperationPtr operation)
 {
-    for (auto [bootstrapping_operation_id, _] : bootstrapping_operations)
+    for (auto [bootstrapping_operation, _] : bootstrapping_operations)
     {
-        if (lgr_parser.operations_bootstrap_on_same_core(operation_id, bootstrapping_operation_id))
+        if (operations_bootstrap_on_same_core(operation, bootstrapping_operation))
         {
-            return std::pair{false, bootstrapping_operation_id};
+            return std::pair{false, bootstrapping_operation};
         }
     }
-    return std::pair{true, -1};
+    return std::pair{true, nullptr};
 }
 
-void SolutionValidator::print_bootstrapping_core_is_not_available_error(int operation_id, int bootrsapping_operation_id)
+void SolutionValidator::print_bootstrapping_core_is_not_available_error(OperationPtr operation, OperationPtr bootstrapping_operation)
 {
-    std::cout << "Error: Bootstrapping operation " << bootrsapping_operation_id << " was not completed before operation " << operation_id << " started bootstrapping on core " << operations.get(operation_id).core_num << std::endl;
+    std::cout << "Error: Bootstrapping operation " << bootstrapping_operation->id << " was not completed before operation " << operation->id << " started bootstrapping on core " << operation->core_num << std::endl;
 }
 
-void SolutionValidator::print_missed_bootstrapping_deadline_error(int operation_id)
+void SolutionValidator::print_missed_bootstrapping_deadline_error(OperationPtr operation)
 {
-    std::cout << "Error: Bootstrapping operation " << operation_id << " did not start on time" << std::endl;
+    std::cout << "Error: Bootstrapping operation " << operation->id << " did not start on time" << std::endl;
 }
 
-void SolutionValidator::print_missed_start_time_error(int operation_id, int clock_cycle)
+void SolutionValidator::print_missed_start_time_error(OperationPtr operation, int clock_cycle)
 {
-    std::cout << "Error: Operation " << operation_id << " did not start on time" << std::endl;
-    std::cout << "Expected start time " << operations.get(operation_id).start_time << ". Actual start time " << clock_cycle << std::endl;
+    std::cout << "Error: Operation " << operation->id << " did not start on time" << std::endl;
+    std::cout << "Expected start time " << operation->start_time << ". Actual start time " << clock_cycle << std::endl;
 }
 
-std::vector<int> SolutionValidator::get_ready_operations()
+std::vector<OperationPtr> SolutionValidator::get_ready_operations()
 {
-    std::vector<int> ready_operations;
-    for (auto operation_id : unstarted_operations)
+    std::vector<OperationPtr> ready_operations;
+    for (auto operation : unstarted_operations)
     {
-        if (operation_is_ready(operation_id))
+        if (operation_is_ready(operation))
         {
-            ready_operations.push_back(operation_id);
+            ready_operations.push_back(operation);
         }
     }
     return ready_operations;
 }
 
-bool SolutionValidator::operation_is_ready(int operation_id)
+bool SolutionValidator::operation_is_ready(OperationPtr operation)
 {
-    for (auto parent_id : operations.get(operation_id).parent_ids)
+    for (auto parent : operation->parent_ptrs)
         if (
-            vector_contains_element(unstarted_operations, parent_id) ||
-            unordered_map_contains_key(running_operations, parent_id) ||
-            operation_is_waiting_on_parent_to_bootstrap(operation_id, parent_id))
+            vector_contains_element(unstarted_operations, parent) ||
+            unordered_map_contains_key(running_operations, parent) ||
+            operation_is_waiting_on_parent_to_bootstrap(operation, parent))
         {
             return false;
         }
     return true;
 }
 
-bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(int operation_id, int parent_id)
+bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(OperationPtr operation_id, OperationPtr parent_id)
 {
     return lgr_parser.operation_is_bootstrapped(parent_id, operation_id) &&
            (vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
             unordered_map_contains_key(bootstrapping_operations, parent_id));
 }
 
-void SolutionValidator::start_running_ready_operations(std::vector<int> ready_operations)
+void SolutionValidator::start_running_ready_operations(std::vector<OperationPtr> ready_operations)
 {
-    for (auto operation_id : ready_operations)
+    for (auto operation : ready_operations)
     {
-        if (operations.get(operation_id).start_time == clock_cycle)
+        if (operation->start_time == clock_cycle)
         {
-            running_operations[operation_id] = input_parser.get_operation_type_to_latency_map()[operations.get(operation_id).type];
-            remove_element_from_vector(unstarted_operations, operation_id);
+            running_operations[operation] = input_parser.get_operation_type_to_latency_map()[operation->type];
+            remove_element_from_vector(unstarted_operations, operation);
         }
-        else if (operations.get(operation_id).start_time < clock_cycle)
+        else if (operation->start_time < clock_cycle)
         {
-            print_missed_start_time_error(operation_id, clock_cycle);
+            print_missed_start_time_error(operation, clock_cycle);
             exit(0);
         }
     }

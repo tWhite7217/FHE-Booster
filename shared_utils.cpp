@@ -15,3 +15,17 @@ int extract_number_from_string(std::string str, size_t start_index, size_t end_i
     int num = std::stoi(num_as_string);
     return num;
 }
+
+bool operations_bootstrap_on_same_core(OperationPtr op1, OperationPtr op2)
+{
+    return op1->core_num == op2->core_num;
+}
+
+OperationPtr get_operation_ptr_from_id(OperationList operations, int id)
+{
+    if (id < 1 || id > operations.size())
+    {
+        throw std::runtime_error("Invalid operation id");
+    }
+    return operations[id - 1];
+}

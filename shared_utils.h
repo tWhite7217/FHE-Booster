@@ -9,6 +9,7 @@
 #include <string>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
 
 // enum class OperationType
 // {
@@ -20,12 +21,16 @@ const int bootstrapping_latency = 12;
 const int addition_divider = 1;
 const int bootstrapping_path_threshold = 3;
 
+struct Operation;
+
+using OperationPtr = std::shared_ptr<Operation>;
+
 struct Operation
 {
     std::string type;
-    std::vector<int> parent_ids;
+    std::vector<OperationPtr> parent_ptrs;
     int id;
-    std::vector<int> child_ids;
+    std::vector<OperationPtr> child_ptrs;
     int start_time;
     int bootstrap_start_time = 0;
     int core_num = 0;
@@ -34,36 +39,11 @@ struct Operation
     int rank;
 };
 
-class OperationList
-{
-public:
-    Operation &get(int id)
-    {
-        if (id < 1 || id > operations.size())
-        {
-            throw std::runtime_error("Invalid operation id");
-        }
-        return operations[id - 1];
-    }
+using OperationList = std::vector<OperationPtr>;
 
-    size_t size()
-    {
-        return operations.size();
-    }
+OperationPtr get_operation_ptr_from_id(OperationList, int);
 
-    void add(Operation operation)
-    {
-        operations.push_back(operation);
-    }
-
-    std::vector<Operation> &get_iterable_list()
-    {
-        return operations;
-    }
-
-private:
-    std::vector<Operation> operations;
-};
+bool operations_bootstrap_on_same_core(OperationPtr, OperationPtr);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)
@@ -97,7 +77,7 @@ void remove_element_from_vector(std::vector<T> &vector, const T &element)
 }
 
 template <typename T>
-void remove_element_subset_from_vector(std::vector<T> &vector, const std::set<T> element_subset)
+void remove_element_subset_from_vector(std::vector<T> &vector, const std::set<T> &element_subset)
 {
     for (auto &element : element_subset)
     {
