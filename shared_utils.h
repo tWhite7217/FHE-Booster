@@ -51,8 +51,8 @@ bool vector_contains_element(const std::vector<T> &vector, const T &element)
     return std::find(vector.begin(), vector.end(), element) != vector.end();
 }
 
-template <typename T>
-bool set_contains_element(const std::set<T> &set, const T &element)
+template <typename T, typename S>
+bool set_contains_element(const std::set<T, S> &set, const T &element)
 {
     return set.find(element) != set.end();
 }

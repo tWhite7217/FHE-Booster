@@ -216,7 +216,8 @@ bool ListScheduler::operation_is_ready(OperationPtr operation)
         if (map_contains_key(running_operations, parent) ||
             vector_contains_element(ordered_unstarted_operations, parent) ||
             (lgr_parser.operation_is_bootstrapped(parent, operation) &&
-             map_contains_key(bootstrapping_operations, parent)))
+             (set_contains_element(bootstrapping_queue, parent) ||
+              map_contains_key(bootstrapping_operations, parent))))
         {
             return false;
         }
@@ -320,9 +321,9 @@ void ListScheduler::start_bootstrapping_ready_operations_for_unlimited_model()
 void ListScheduler::start_bootstrapping_ready_operations_for_limited_model()
 {
     auto available_core_num = get_available_bootstrap_core_num();
-    while (available_core_num != -1)
+    while (available_core_num != -1 && !bootstrapping_queue.empty())
     {
-        auto operation = *bootstrapping_queue.begin();
+        auto operation = *(bootstrapping_queue.begin());
         operation->bootstrap_start_time = clock_cycle;
         operation->core_num = available_core_num;
         bootstrapping_operations[operation] = bootstrapping_latency;
