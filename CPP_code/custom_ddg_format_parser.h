@@ -7,7 +7,7 @@
 #include <string>
 #include <map>
 
-#include "../shared_utils.h"
+#include "shared_utils.h"
 
 class InputParser
 {

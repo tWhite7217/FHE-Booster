@@ -6,7 +6,7 @@
 #include <functional>
 
 #include "shared_utils.h"
-#include "DDGs/custom_ddg_format_parser.h"
+#include "custom_ddg_format_parser.h"
 #include "LGRParser.h"
 #include "bootstrapping_path_generator.h"
 

@@ -58,6 +58,12 @@ bool set_contains_element(const std::set<T, S> &set, const T &element)
 }
 
 template <typename T, typename S>
+bool multiset_contains_element(const std::multiset<T, S> &set, const T &element)
+{
+    return set.find(element) != set.end();
+}
+
+template <typename T, typename S>
 bool map_contains_key(const std::map<T, S> &map, const T &element)
 {
     return map.find(element) != map.end();

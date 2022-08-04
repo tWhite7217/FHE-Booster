@@ -107,35 +107,61 @@ void ListScheduler::update_latest_start_time(OperationPtr operation, int earlies
 
 void ListScheduler::update_all_ESTs_and_LSTs()
 {
-    auto operations_in_dag_order = get_operations_in_dag_order();
+    // auto operations_in_topological_order = get_operations_in_topological_order();
+    // TGFF puts operations in topological order so we do not need to do that here
+    auto operations_in_topological_order = operations;
 
-    for (auto operation : operations_in_dag_order)
+    for (auto operation : operations_in_topological_order)
     {
         update_earliest_start_time(operation);
     }
 
     int earliest_program_end_time = get_earliest_possible_program_end_time();
 
-    auto operations_in_reverse_dag_order = operations_in_dag_order;
-    std::reverse(operations_in_reverse_dag_order.begin(), operations_in_reverse_dag_order.end());
+    auto operations_in_reverse_topological_order = operations_in_topological_order;
+    std::reverse(operations_in_reverse_topological_order.begin(), operations_in_reverse_topological_order.end());
 
-    for (auto operation : operations_in_reverse_dag_order)
+    for (auto operation : operations_in_reverse_topological_order)
     {
         update_latest_start_time(operation, earliest_program_end_time);
     }
 }
 
-std::vector<OperationPtr> ListScheduler::get_operations_in_dag_order()
+std::vector<OperationPtr> ListScheduler::get_operations_in_topological_order()
 {
-    std::vector<OperationPtr> operations_in_dag_order;
-    for (auto operation : operations)
+    std::vector<OperationPtr> unvisited_operations = operations;
+    std::vector<OperationPtr> operations_in_topological_order;
+
+    while (!unvisited_operations.empty())
     {
-        if (operation->parent_ptrs.empty())
+        auto operation_it = unvisited_operations.begin();
+        while (operation_it != unvisited_operations.end())
         {
-            operations_in_dag_order.push_back(operation);
+            auto operation = *operation_it;
+            bool operation_is_ready = true;
+
+            for (auto potential_parent_operation : unvisited_operations)
+            {
+                if (vector_contains_element(operation->parent_ptrs, potential_parent_operation))
+                {
+                    operation_is_ready = false;
+                    break;
+                }
+            }
+
+            if (operation_is_ready)
+            {
+                operations_in_topological_order.push_back(operation);
+                operation_it = unvisited_operations.erase(operation_it);
+            }
+            else
+            {
+                operation_it++;
+            }
         }
     }
-    return operations_in_dag_order;
+
+    return operations_in_topological_order;
 }
 
 void ListScheduler::update_all_ranks()
@@ -216,7 +242,7 @@ bool ListScheduler::operation_is_ready(OperationPtr operation)
         if (map_contains_key(running_operations, parent) ||
             vector_contains_element(ordered_unstarted_operations, parent) ||
             (lgr_parser.operation_is_bootstrapped(parent, operation) &&
-             (set_contains_element(bootstrapping_queue, parent) ||
+             (multiset_contains_element(bootstrapping_queue, parent) ||
               map_contains_key(bootstrapping_operations, parent))))
         {
             return false;
@@ -233,7 +259,7 @@ void ListScheduler::generate_start_times_and_solver_latency()
     bootstrapping_queue.clear();
     ordered_unstarted_operations = schedule;
 
-    while (!ordered_unstarted_operations.empty())
+    while (program_is_not_finished())
     {
         start_ready_operations();
 
@@ -245,8 +271,16 @@ void ListScheduler::generate_start_times_and_solver_latency()
         add_necessary_operations_to_bootstrapping_queue(finished_running_ids);
         start_bootstrapping_ready_operations();
     }
-    clock_cycle += map_max_value(running_operations);
+    // clock_cycle += map_max_value(running_operations);
     solver_latency = clock_cycle;
+}
+
+bool ListScheduler::program_is_not_finished()
+{
+    return !ordered_unstarted_operations.empty() ||
+           !bootstrapping_queue.empty() ||
+           !bootstrapping_operations.empty() ||
+           !running_operations.empty();
 }
 
 std::set<OperationPtr> ListScheduler::handle_started_operations(std::map<OperationPtr, int> &started_operations)
@@ -278,7 +312,6 @@ void ListScheduler::decrement_cycles_left(std::map<OperationPtr, int> &started_o
 {
     for (auto &[operation, time_left] : started_operations)
     {
-
         time_left--;
     }
 }
@@ -354,9 +387,21 @@ void ListScheduler::write_lgr_like_format(std::string output_file_path)
     std::ofstream output_file;
     output_file.open(output_file_path, std::ios::out);
 
-    for (auto operation : lgr_parser.bootstrapped_operations)
+    if (used_selective_model)
     {
-        output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
+        for (auto i = 0; i < lgr_parser.bootstrapped_operations.size(); i += 2)
+        {
+            auto bootstrapped_operation = lgr_parser.bootstrapped_operations[i];
+            auto child_operation = lgr_parser.bootstrapped_operations[i + 1];
+            output_file << "BOOTSTRAPPED( OP" << bootstrapped_operation->id << ", OP" << child_operation->id << ") 1" << std::endl;
+        }
+    }
+    else
+    {
+        for (auto operation : lgr_parser.bootstrapped_operations)
+        {
+            output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
+        }
     }
 
     for (auto operation : operations)

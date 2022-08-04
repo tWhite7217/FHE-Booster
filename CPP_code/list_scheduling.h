@@ -1,5 +1,5 @@
 #include "LGRParser.h"
-#include "DDGs/custom_ddg_format_parser.h"
+#include "custom_ddg_format_parser.h"
 #include "shared_utils.h"
 #include "bootstrapping_path_generator.h"
 
@@ -47,11 +47,11 @@ private:
             return a->rank < b->rank;
         }
     };
-    std::set<OperationPtr, RankCmp> bootstrapping_queue;
+    std::multiset<OperationPtr, RankCmp> bootstrapping_queue;
 
     std::function<void()> start_bootstrapping_ready_operations;
 
-    std::vector<OperationPtr> get_operations_in_dag_order();
+    std::vector<OperationPtr> get_operations_in_topological_order();
     void update_earliest_start_time(OperationPtr);
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(OperationPtr, int);
@@ -68,4 +68,5 @@ private:
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_available_bootstrap_core_num();
+    bool program_is_not_finished();
 };
