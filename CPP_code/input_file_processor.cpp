@@ -23,6 +23,7 @@ void read_command_line_args(int argc, char **argv)
 void get_info_from_input_parser()
 {
     InputParser input_parser;
+    input_parser.parse_input_to_generate_operations(input_file_path);
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
     operations = input_parser.get_operations();
 }
@@ -76,7 +77,7 @@ void write_operation_dependencies_to_output_file()
     {
         for (auto parent : operation->parent_ptrs)
         {
-            output_file << "OP" << parent << " OP" << operation->id << std::endl;
+            output_file << "OP" << parent->id << " OP" << operation->id << std::endl;
         }
     }
 }

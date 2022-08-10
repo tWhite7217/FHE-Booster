@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
+#include <iostream>
 
 // enum class OperationType
 // {
@@ -28,8 +29,8 @@ using OperationPtr = std::shared_ptr<Operation>;
 struct Operation
 {
     std::string type;
-    std::vector<OperationPtr> parent_ptrs;
     int id;
+    std::vector<OperationPtr> parent_ptrs;
     std::vector<OperationPtr> child_ptrs;
     int start_time;
     int bootstrap_start_time = 0;
@@ -111,5 +112,6 @@ void remove_key_subset_from_map(std::map<T, S> &map, const std::set<T> key_subse
 
 void remove_chars_from_string(std::string &, std::vector<char>);
 int extract_number_from_string(std::string, size_t, size_t);
+void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
 
 #endif

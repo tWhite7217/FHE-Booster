@@ -35,21 +35,20 @@ std::unordered_map<OperationType, std::string> operation_strings = {
 
 void create_output() {
     for (auto& [operation_type, latency] : operation_latencies) {
-        output += operation_strings[operation_type] + " " + std::to_string(latency) + "\n";
+        output += operation_strings[operation_type] + "," + std::to_string(latency) + "\n";
     }
 
     output += "~\n";
     
     for (auto& operation : operations) {
-        output += "OP" + std::to_string(operation->id) + " ";
-        output += operation_strings[operation->type] + " ";
+        output += std::to_string(operation->id) + ",";
+        output += operation_strings[operation->type];
         if (operation->depends_on.size() > 0) {
-            output += "[";
+            output += ",";
             for (auto& dependency : operation->depends_on) {
-                output += "OP" + std::to_string(dependency->id) + ", ";
+                output += std::to_string(dependency->id) + ",";
             }
-            output = output.substr(0, output.size() - 2);
-            output += "]";
+            output = output.substr(0, output.size() - 1);
         }
         output += "\n";
     }

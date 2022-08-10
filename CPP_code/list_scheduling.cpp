@@ -8,6 +8,8 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
+    add_child_ptrs_to_operation_list_with_existing_parent_ptrs(operations);
+
     lgr_parser.switchIstream(lgr_file_path);
     lgr_parser.set_operations(operations);
     lgr_parser.lex();
@@ -62,20 +64,6 @@ int ListScheduler::get_earliest_possible_program_end_time()
         }
     }
     return earliest_possible_program_end_time;
-}
-
-void ListScheduler::generate_child_ptrs()
-{
-    for (auto operation : operations)
-    {
-        for (auto potential_child_operation : operations)
-        {
-            if (vector_contains_element(potential_child_operation->parent_ptrs, operation))
-            {
-                operation->child_ptrs.push_back(potential_child_operation);
-            }
-        }
-    }
 }
 
 void ListScheduler::update_latest_start_time(OperationPtr operation, int earliest_possible_program_end_time)
@@ -386,6 +374,8 @@ void ListScheduler::write_lgr_like_format(std::string output_file_path)
 {
     std::ofstream output_file;
     output_file.open(output_file_path, std::ios::out);
+
+    output_file << "Objective value: " << solver_latency << ".0" << std::endl;
 
     if (used_selective_model)
     {

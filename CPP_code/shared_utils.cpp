@@ -29,3 +29,14 @@ OperationPtr get_operation_ptr_from_id(OperationList operations, int id)
     }
     return operations[id - 1];
 }
+
+void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList operations)
+{
+    for (auto operation : operations)
+    {
+        for (auto parent : operation->parent_ptrs)
+        {
+            parent->child_ptrs.push_back(operation);
+        }
+    }
+}

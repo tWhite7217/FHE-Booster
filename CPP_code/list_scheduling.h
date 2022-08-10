@@ -17,7 +17,6 @@ public:
     ListScheduler(std::string, std::string, int);
 
     void create_schedule();
-    void generate_child_ptrs();
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
     void generate_start_times_and_solver_latency();

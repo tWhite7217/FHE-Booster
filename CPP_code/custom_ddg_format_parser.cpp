@@ -58,7 +58,7 @@ void InputParser::parse_operation_and_its_dependences(std::vector<std::string> l
         auto parent_ptr = get_operation_ptr_from_id(operations, parent_id);
         parent_ptrs.push_back(parent_ptr);
     }
-    operations.emplace_back(new Operation{type, parent_ptrs, int(operations.size()) + 1});
+    operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
 }
 
 std::vector<std::string> InputParser::get_string_list_from_line(std::string line)

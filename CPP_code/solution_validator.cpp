@@ -118,9 +118,9 @@ void SolutionValidator::check_bootstrapping_constraints_are_met()
         {
             std::cout << "Error: The following path was not satisfied" << std::endl;
             std::cout << "Path: ";
-            for (auto operation_id : path)
+            for (auto operation : path)
             {
-                std::cout << operation_id << ", ";
+                std::cout << operation->id << ", ";
             }
             std::cout << std::endl;
             exit(0);
