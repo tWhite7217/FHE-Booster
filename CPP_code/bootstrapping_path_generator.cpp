@@ -219,26 +219,16 @@ bool BootstrappingPathGenerator::larger_path_contains_smaller_path(std::vector<O
 {
     if (using_selective_model)
     {
-        for (auto i = 0; i < larger_path.size() - 1; i++)
-        {
-            for (auto j = 0; j < smaller_path.size() - 1; j++)
-            {
-                if (larger_path[i] != smaller_path[j] || larger_path[i + 1] != smaller_path[j + 1])
-                {
-                    return false;
-                }
-            }
-        }
+        larger_path.pop_back();
     }
-    else
+
+    for (auto i = 0; i < smaller_path.size(); i++)
     {
-        for (auto i = 0; i < smaller_path.size(); i++)
+        if (!vector_contains_element(larger_path, smaller_path[i]))
         {
-            if (!vector_contains_element(larger_path, smaller_path[i]))
-            {
-                return false;
-            }
+            return false;
         }
     }
+    
     return true;
 }

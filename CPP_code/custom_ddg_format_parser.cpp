@@ -13,6 +13,8 @@ void InputParser::parse_input_to_generate_operations(std::string filename)
     parse_lines(input_file);
 
     input_file.close();
+
+    add_child_ptrs_to_operation_list_with_existing_parent_ptrs(operations);
 }
 
 void InputParser::parse_lines(std::fstream &input_file)

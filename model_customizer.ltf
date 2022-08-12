@@ -1,4 +1,0 @@
-TAKE D:\LINGO64_19\FHE_Model\FHE_Model_min_bootstrapping.lng
-ALTER ALL 'custom_graph1'random_graph202'
-ALTER ALL 'C1..C1'C1..C'
-    DIVERT D:\LINGO64_19\FHE_Model\results\random_graph202\rg202_min_bootstrapping.lgr

@@ -21,8 +21,13 @@ public:
     void update_all_ranks();
     void generate_start_times_and_solver_latency();
     void write_lgr_like_format(std::string);
+    void choose_operations_to_bootstrap();
 
 private:
+    const int num_paths_multiplier = 12;
+    const int rank_multiplier = 2;
+    const int num_children_multiplier = 3;
+
     int solver_latency;
 
     int num_cores;
@@ -30,7 +35,6 @@ private:
 
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
-    bool used_selective_model;
     std::vector<std::vector<OperationPtr>> bootstrapping_paths;
     LGRParser lgr_parser;
 
@@ -68,4 +72,7 @@ private:
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_available_bootstrap_core_num();
     bool program_is_not_finished();
+    void choose_operation_to_bootstrap_based_on_score();
+    int get_score(OperationPtr);
+    int get_num_bootstrapping_paths_containing_operation(OperationPtr);
 };

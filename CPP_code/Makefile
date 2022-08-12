@@ -17,6 +17,10 @@ list_scheduler: list_scheduling.cpp list_scheduling.h $(shared_depenedencies) $(
 	flexc++ LGRParser.l
 	g++ -o list_scheduler list_scheduling.cpp $(shared_source_files) $(lgr_parser_source_files) -std=c++17
 
+limited_to_selective_converter: limited_to_selective_converter.cpp limited_to_selective_converter.h $(shared_depenedencies) $(lgr_parser_dependencies)
+	flexc++ LGRParser.l
+	g++ -o limited_to_selective_converter limited_to_selective_converter.cpp $(shared_source_files) $(lgr_parser_source_files) -std=c++17
+
 input_file_processor: input_file_processor.cpp $(shared_depenedencies)
 	g++ -o input_file_processor input_file_processor.cpp $(shared_source_files) -std=c++17
 

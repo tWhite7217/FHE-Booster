@@ -82,49 +82,26 @@ void SolutionValidator::validate_solution()
 
 void SolutionValidator::check_bootstrapping_constraints_are_met()
 {
-    for (auto path : bootstrapping_paths)
+    int unsatisfied_path_index;
+    if (lgr_parser.used_selective_model)
     {
-        bool path_satisfied = false;
-        if (lgr_parser.used_selective_model)
-        {
-            for (auto i = 0;
-                 i < lgr_parser.bootstrapped_operations.size() && !path_satisfied;
-                 i += 2)
-            {
-                for (auto j = 0; j < path.size() - 1; j++)
-                {
-                    if (lgr_parser.bootstrapped_operations[i] == path[j] &&
-                        lgr_parser.bootstrapped_operations[i + 1] == path[j + 1])
-                    {
-                        path_satisfied = true;
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (auto bootstrapped_operation_id : lgr_parser.bootstrapped_operations)
-            {
-                if (vector_contains_element(path, bootstrapped_operation_id))
-                {
-                    path_satisfied = true;
-                    break;
-                }
-            }
-        }
+        unsatisfied_path_index = find_unsatisfied_bootstrapping_path_index_for_selective_model(bootstrapping_paths);
+    }
+    else
+    {
+        unsatisfied_path_index = find_unsatisfied_bootstrapping_path_index(bootstrapping_paths);
+    }
 
-        if (!path_satisfied)
+    if (unsatisfied_path_index != -1)
+    {
+        std::cout << "Error: The following path was not satisfied" << std::endl;
+        std::cout << "Path: ";
+        for (auto operation : bootstrapping_paths[unsatisfied_path_index])
         {
-            std::cout << "Error: The following path was not satisfied" << std::endl;
-            std::cout << "Path: ";
-            for (auto operation : path)
-            {
-                std::cout << operation->id << ", ";
-            }
-            std::cout << std::endl;
-            exit(0);
+            std::cout << operation->id << ", ";
         }
+        std::cout << std::endl;
+        exit(0);
     }
 }
 

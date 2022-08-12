@@ -35,8 +35,16 @@ OperationPtr GraphGenerator::add_random_operation_to_operations(int operation_id
 
 void GraphGenerator::add_random_parents_to_operation(OperationPtr operation, double two_parent_probability)
 {
-    double rand_decimal = ((double)rand_gen()) / RAND_MAX;
-    int num_parents = rand_decimal > two_parent_probability ? 1 : 2;
+    int num_parents;
+    if (operations.size() == 2)
+    {
+        num_parents = 1;
+    }
+    else
+    {
+        double rand_decimal = ((double)rand_gen()) / RAND_MAX;
+        num_parents = rand_decimal > two_parent_probability ? 1 : 2;
+    }
 
     int i = 0;
     int prev_parent_index = -1;
@@ -147,4 +155,5 @@ int main(int argc, char *argv[])
     graph_generator.write_graph_to_txt_file(output_file_base_path + ".txt");
     std::cout << "txt created" << std::endl;
     graph_generator.write_graph_to_vcg_file(output_file_base_path + ".vcg");
+    std::cout << "vcg created" << std::endl;
 }

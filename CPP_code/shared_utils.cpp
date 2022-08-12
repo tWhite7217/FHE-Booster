@@ -40,3 +40,64 @@ void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList op
         }
     }
 }
+
+bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &bootstrapping_paths)
+{
+    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths) == -1;
+}
+
+bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrapping_paths)
+{
+    return find_unsatisfied_bootstrapping_path_index_for_selective_model(bootstrapping_paths) == -1;
+}
+
+int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootstrapping_paths)
+{
+    for (auto i = 0; i < bootstrapping_paths.size(); ++i)
+    {
+        auto path = bootstrapping_paths[i];
+        bool path_satisfied = false;
+        for (auto operation : path)
+        {
+            if (operation_is_bootstrapped(operation))
+            {
+                path_satisfied = true;
+                break;
+            }
+        }
+
+        if (!path_satisfied)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int find_unsatisfied_bootstrapping_path_index_for_selective_model(std::vector<OperationList> &bootstrapping_paths)
+{
+    for (auto i = 0; i < bootstrapping_paths.size(); ++i)
+    {
+        auto path = bootstrapping_paths[i];
+        bool path_satisfied = false;
+        for (auto j = 0; j < path.size() - 1; j++)
+        {
+            if (vector_contains_element(path[j]->child_ptrs_that_receive_bootstrapped_result, path[j + 1]))
+            {
+                path_satisfied = true;
+                break;
+            }
+        }
+
+        if (!path_satisfied)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool operation_is_bootstrapped(OperationPtr operation)
+{
+    return operation->child_ptrs_that_receive_bootstrapped_result.size() > 0;
+}

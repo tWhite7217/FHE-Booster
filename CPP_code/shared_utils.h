@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <memory>
 #include <iostream>
+#include <fstream>
 
 // enum class OperationType
 // {
@@ -32,6 +33,7 @@ struct Operation
     int id;
     std::vector<OperationPtr> parent_ptrs;
     std::vector<OperationPtr> child_ptrs;
+    std::vector<OperationPtr> child_ptrs_that_receive_bootstrapped_result;
     int start_time;
     int bootstrap_start_time = 0;
     int core_num = 0;
@@ -113,5 +115,11 @@ void remove_key_subset_from_map(std::map<T, S> &map, const std::set<T> key_subse
 void remove_chars_from_string(std::string &, std::vector<char>);
 int extract_number_from_string(std::string, size_t, size_t);
 void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
+bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &);
+bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &);
+int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &);
+int find_unsatisfied_bootstrapping_path_index_for_selective_model(std::vector<OperationList> &);
+bool operation_is_bootstrapped(OperationPtr);
+void write_lgr_like_format(std::string, OperationList);
 
 #endif

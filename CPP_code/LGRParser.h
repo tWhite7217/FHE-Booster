@@ -23,16 +23,11 @@ public:
     int lex();
 
     // My public members
-    std::vector<OperationPtr> bootstrapped_operations;
-
     int max_finish_time = 0;
     bool used_bootstrap_limited_model = false;
     bool used_selective_model = false;
 
     void set_operations(OperationList &);
-    bool operation_is_bootstrapped(OperationPtr);
-    bool operation_is_bootstrapped(OperationPtr, OperationPtr);
-    bool operations_bootstrap_on_same_core(int, int);
 
 private:
     int lex_();
@@ -49,7 +44,6 @@ private:
     // My private members
     OperationList operations;
 
-    std::function<bool(int)> get_checker_for_selective_model(OperationPtr, OperationPtr);
     OperationPtr get_first_operation_ptr(std::string);
     OperationPtr get_second_operation_ptr(std::string);
     int get_first_operation_id(std::string);

@@ -8,14 +8,14 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    add_child_ptrs_to_operation_list_with_existing_parent_ptrs(operations);
+    if (lgr_file_path != "NULL")
+    {
+        lgr_parser.switchIstream(lgr_file_path);
+        lgr_parser.set_operations(operations);
+        lgr_parser.lex();
+    }
 
-    lgr_parser.switchIstream(lgr_file_path);
-    lgr_parser.set_operations(operations);
-    lgr_parser.lex();
-    used_selective_model = lgr_parser.used_selective_model;
-
-    BootstrappingPathGenerator path_generator(operations, used_selective_model);
+    BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
     bootstrapping_paths = path_generator.generate_bootstrapping_paths();
 
     if (num_cores > 0)
@@ -37,7 +37,7 @@ void ListScheduler::update_earliest_start_time(OperationPtr operation)
     for (auto parent : operation->parent_ptrs)
     {
         int parent_latency = operation_type_to_latency_map[parent->type];
-        if (lgr_parser.operation_is_bootstrapped(parent, operation))
+        if (vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation))
         {
             parent_latency += bootstrapping_latency;
         }
@@ -68,6 +68,8 @@ int ListScheduler::get_earliest_possible_program_end_time()
 
 void ListScheduler::update_latest_start_time(OperationPtr operation, int earliest_possible_program_end_time)
 {
+    operation->latest_start_time = std::numeric_limits<decltype(operation->latest_start_time)>::max();
+
     if (operation->child_ptrs.empty())
     {
         operation->latest_start_time =
@@ -78,7 +80,7 @@ void ListScheduler::update_latest_start_time(OperationPtr operation, int earlies
         for (auto child : operation->child_ptrs)
         {
             int child_latency = operation_type_to_latency_map[child->type];
-            if (lgr_parser.operation_is_bootstrapped(child))
+            if (operation_is_bootstrapped(child))
             {
                 child_latency += bootstrapping_latency;
             }
@@ -102,6 +104,7 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     for (auto operation : operations_in_topological_order)
     {
         update_earliest_start_time(operation);
+        // std::cout << "EST of " << operation->id << " is " << operation->earliest_start_time << std::endl;
     }
 
     int earliest_program_end_time = get_earliest_possible_program_end_time();
@@ -112,6 +115,7 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     for (auto operation : operations_in_reverse_topological_order)
     {
         update_latest_start_time(operation, earliest_program_end_time);
+        // std::cout << "LST of " << operation->id << " is " << operation->latest_start_time << std::endl;
     }
 }
 
@@ -229,7 +233,7 @@ bool ListScheduler::operation_is_ready(OperationPtr operation)
     {
         if (map_contains_key(running_operations, parent) ||
             vector_contains_element(ordered_unstarted_operations, parent) ||
-            (lgr_parser.operation_is_bootstrapped(parent, operation) &&
+            (vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation) &&
              (multiset_contains_element(bootstrapping_queue, parent) ||
               map_contains_key(bootstrapping_operations, parent))))
         {
@@ -323,7 +327,7 @@ void ListScheduler::add_necessary_operations_to_bootstrapping_queue(std::set<Ope
 {
     for (auto operation : finished_running_operations)
     {
-        if (lgr_parser.operation_is_bootstrapped(operation))
+        if (operation_is_bootstrapped(operation))
         {
             bootstrapping_queue.insert(operation);
         }
@@ -373,24 +377,28 @@ int ListScheduler::get_available_bootstrap_core_num()
 void ListScheduler::write_lgr_like_format(std::string output_file_path)
 {
     std::ofstream output_file;
-    output_file.open(output_file_path, std::ios::out);
+    output_file.open(output_file_path);
 
     output_file << "Objective value: " << solver_latency << ".0" << std::endl;
 
-    if (used_selective_model)
+    if (lgr_parser.used_selective_model)
     {
-        for (auto i = 0; i < lgr_parser.bootstrapped_operations.size(); i += 2)
+        for (auto operation : operations)
         {
-            auto bootstrapped_operation = lgr_parser.bootstrapped_operations[i];
-            auto child_operation = lgr_parser.bootstrapped_operations[i + 1];
-            output_file << "BOOTSTRAPPED( OP" << bootstrapped_operation->id << ", OP" << child_operation->id << ") 1" << std::endl;
+            for (auto child : operation->child_ptrs_that_receive_bootstrapped_result)
+            {
+                output_file << "BOOTSTRAPPED( OP" << operation->id << ", OP" << child->id << ") 1" << std::endl;
+            }
         }
     }
     else
     {
-        for (auto operation : lgr_parser.bootstrapped_operations)
+        for (auto operation : operations)
         {
-            output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
+            if (operation_is_bootstrapped(operation))
+            {
+                output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
+            }
         }
     }
 
@@ -420,11 +428,73 @@ void ListScheduler::write_lgr_like_format(std::string output_file_path)
     output_file.close();
 }
 
+void ListScheduler::choose_operations_to_bootstrap()
+{
+    while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
+    {
+        update_all_ESTs_and_LSTs();
+        update_all_ranks();
+        choose_operation_to_bootstrap_based_on_score();
+    }
+}
+
+void ListScheduler::choose_operation_to_bootstrap_based_on_score()
+{
+    auto max_score = -1;
+    OperationPtr max_score_operation;
+    for (auto &operation : operations)
+    {
+        if (!operation_is_bootstrapped(operation))
+        {
+            auto score = get_score(operation);
+            if (score > max_score)
+            {
+                max_score = score;
+                max_score_operation = operation;
+            }
+        }
+    }
+
+    max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
+}
+
+int ListScheduler::get_score(OperationPtr operation)
+{
+    auto num_paths = get_num_bootstrapping_paths_containing_operation(operation);
+
+    if (num_paths == 0)
+    {
+        return -1;
+    }
+
+    return num_paths_multiplier * num_paths +
+           rank_multiplier * operation->rank +
+           num_children_multiplier * operation->child_ptrs.size();
+}
+
+int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr operation)
+{
+    int num_paths = 0;
+    for (auto path : bootstrapping_paths)
+    {
+        if (lgr_parser.used_selective_model)
+        {
+            path.pop_back();
+        }
+
+        if (vector_contains_element(path, operation))
+        {
+            num_paths++;
+        }
+    }
+    return num_paths;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 5)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file> <output_file> <num_cores>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores>" << std::endl;
         return 1;
     }
 
@@ -435,7 +505,10 @@ int main(int argc, char **argv)
 
     ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores);
 
-    list_scheduler.generate_child_ptrs();
+    if (lgr_file_path == "NULL")
+    {
+        list_scheduler.choose_operations_to_bootstrap();
+    }
     list_scheduler.update_all_ESTs_and_LSTs();
     list_scheduler.update_all_ranks();
     list_scheduler.create_schedule();
