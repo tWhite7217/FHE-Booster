@@ -2,11 +2,6 @@
 
 make list_scheduler
 
-source_lgr_suffix="min_bootstrapping"
-
-if [[ "$1" == "selective" ]]; then
-    source_lgr_suffix="min_bootstrapping_selective"
-fi
 
 source_lgr="NULL"
 source_lgr_suffix=""
@@ -14,6 +9,8 @@ source_lgr_suffix=""
 if [[ "$5" != "heuristic" ]]; then
     if [[ "$1" == "selective" ]]; then
         source_lgr_suffix="min_bootstrapping_selective.lgr"
+    elif [[ "$1" == "converted" ]]; then
+        source_lgr_suffix="min_bootstrapping_converted.lgr"
     else
         source_lgr_suffix="min_bootstrapping.lgr"
     fi

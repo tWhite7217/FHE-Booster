@@ -139,7 +139,7 @@ void SolutionValidator::add_necessary_running_operations_to_bootstrapping_queue(
 {
     for (auto [operation, cycles_left] : running_operations)
     {
-        if (cycles_left == 0 && lgr_parser.operation_is_bootstrapped(operation))
+        if (cycles_left == 0 && operation_is_bootstrapped(operation))
         {
             operations_ready_to_bootstrap.push_back(operation);
         }
@@ -253,11 +253,11 @@ bool SolutionValidator::operation_is_ready(OperationPtr operation)
     return true;
 }
 
-bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(OperationPtr operation_id, OperationPtr parent_id)
+bool SolutionValidator::operation_is_waiting_on_parent_to_bootstrap(OperationPtr operation, OperationPtr parent)
 {
-    return lgr_parser.operation_is_bootstrapped(parent_id, operation_id) &&
-           (vector_contains_element(operations_ready_to_bootstrap, parent_id) ||
-            unordered_map_contains_key(bootstrapping_operations, parent_id));
+    return vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation) &&
+           (vector_contains_element(operations_ready_to_bootstrap, parent) ||
+            unordered_map_contains_key(bootstrapping_operations, parent));
 }
 
 void SolutionValidator::start_running_ready_operations(std::vector<OperationPtr> ready_operations)

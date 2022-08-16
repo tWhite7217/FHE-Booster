@@ -17,16 +17,25 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_f
 
 void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
 {
+    int num_removed = 0;
     for (auto parent : operations)
     {
-        for (auto child : parent->child_ptrs_that_receive_bootstrapped_result)
+        auto child_it = parent->child_ptrs_that_receive_bootstrapped_result.begin();
+        while (child_it != parent->child_ptrs_that_receive_bootstrapped_result.end())
         {
+            auto child = *child_it;
             if (no_path_relies_on_parent_child_bootstrapping_pair(parent, child))
             {
-                remove_element_from_vector(parent->child_ptrs_that_receive_bootstrapped_result, child);
+                child_it = parent->child_ptrs_that_receive_bootstrapped_result.erase(child_it);
+                num_removed++;
+            }
+            else
+            {
+                child_it++;
             }
         }
     }
+    std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
 }
 
 bool LimitedToSelectiveConverter::no_path_relies_on_parent_child_bootstrapping_pair(OperationPtr &parent, OperationPtr &child)
@@ -47,7 +56,7 @@ bool LimitedToSelectiveConverter::path_relies_on_parent_child_bootstrapping_pair
     {
         auto other_parent = path[i];
         auto other_child = path[i + 1];
-        if (other_parent != parent && other_child != child)
+        if (other_parent != parent || other_child != child)
         {
             if (vector_contains_element(other_parent->child_ptrs_that_receive_bootstrapped_result, other_child))
             {
