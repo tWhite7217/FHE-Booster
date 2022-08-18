@@ -7,18 +7,16 @@ source_lgr="NULL"
 source_lgr_suffix=""
 
 if [[ "$5" != "heuristic" ]]; then
-    if [[ "$1" == "selective" ]]; then
-        source_lgr_suffix="min_bootstrapping_selective.lgr"
-    elif [[ "$1" == "converted" ]]; then
-        source_lgr_suffix="min_bootstrapping_converted.lgr"
-    else
+    if [[ "$1" == "limited" ]]; then
         source_lgr_suffix="min_bootstrapping.lgr"
+    else
+        source_lgr_suffix="min_bootstrapping_$1.lgr"
     fi
 fi
 
 result_file_suffix=""
 
-if [[ $(($4)) > 1 && ("$1" == "limited" || "$1" == "selective") ]]; then
+if [[ $(($4)) > 1 && ("$1" != "unlimited") ]]; then
     result_file_suffix="_$4_cores"
 fi
 
