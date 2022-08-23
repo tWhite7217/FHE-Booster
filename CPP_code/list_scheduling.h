@@ -16,12 +16,17 @@ public:
 
     ListScheduler(std::string, std::string, int);
 
+    OperationList get_operations();
+
+    void perform_list_scheduling();
+
     void create_schedule();
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
     void generate_start_times_and_solver_latency();
-    void write_lgr_like_format(std::string);
     void choose_operations_to_bootstrap();
+
+    void write_lgr_like_format(std::string);
 
 private:
     const int num_paths_multiplier = 12;
@@ -29,6 +34,8 @@ private:
     const int num_children_multiplier = 3;
 
     int solver_latency;
+
+    std::string lgr_file_path;
 
     int num_cores;
     std::vector<int> cores;
@@ -58,6 +65,7 @@ private:
     void update_earliest_start_time(OperationPtr);
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(OperationPtr, int);
+    void update_all_bootstrap_urgencies();
     std::vector<OperationPtr> get_priority_list();
     std::map<OperationPtr, int> initialize_pred_count();
     std::set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);
@@ -67,7 +75,7 @@ private:
     std::set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
     void start_ready_operations();
     void add_necessary_operations_to_bootstrapping_queue(std::set<OperationPtr>);
-    // void start_bootstrapping_ready_operations();
+    bool later_operation_exceeds_urgency_threshold(OperationPtr &, float &);
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_available_bootstrap_core_num();

@@ -2,7 +2,7 @@
 
 void remove_chars_from_string(std::string &str, std::vector<char> chars_to_remove)
 {
-    for (unsigned int i = 0; i < chars_to_remove.size(); ++i)
+    for (unsigned int i = 0; i < chars_to_remove.size(); i++)
     {
         str.erase(remove(str.begin(), str.end(), chars_to_remove[i]), str.end());
     }
@@ -43,30 +43,19 @@ void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList op
 
 bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &bootstrapping_paths)
 {
-    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths) == -1;
+    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths, bootstrapping_path_is_satisfied) == -1;
 }
 
 bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrapping_paths)
 {
-    return find_unsatisfied_bootstrapping_path_index_for_selective_model(bootstrapping_paths) == -1;
+    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths, bootstrapping_path_is_satisfied_for_selective_model) == -1;
 }
 
-int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootstrapping_paths)
+int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootstrapping_paths, std::function<bool(OperationList &)> path_is_satisfied)
 {
-    for (auto i = 0; i < bootstrapping_paths.size(); ++i)
+    for (int i = 0; i < bootstrapping_paths.size(); i++)
     {
-        auto path = bootstrapping_paths[i];
-        bool path_satisfied = false;
-        for (auto operation : path)
-        {
-            if (operation_is_bootstrapped(operation))
-            {
-                path_satisfied = true;
-                break;
-            }
-        }
-
-        if (!path_satisfied)
+        if (!path_is_satisfied(bootstrapping_paths[i]))
         {
             return i;
         }
@@ -74,30 +63,50 @@ int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootst
     return -1;
 }
 
-int find_unsatisfied_bootstrapping_path_index_for_selective_model(std::vector<OperationList> &bootstrapping_paths)
+bool bootstrapping_path_is_satisfied(OperationList &bootstrapping_path)
 {
-    for (auto i = 0; i < bootstrapping_paths.size(); ++i)
+    for (auto operation : bootstrapping_path)
     {
-        auto path = bootstrapping_paths[i];
-        bool path_satisfied = false;
-        for (auto j = 0; j < path.size() - 1; j++)
+        if (operation_is_bootstrapped(operation))
         {
-            if (vector_contains_element(path[j]->child_ptrs_that_receive_bootstrapped_result, path[j + 1]))
-            {
-                path_satisfied = true;
-                break;
-            }
-        }
-
-        if (!path_satisfied)
-        {
-            return i;
+            return true;
         }
     }
-    return -1;
+    return false;
+}
+
+
+bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &bootstrapping_path)
+{
+    for (auto i = 0; i < bootstrapping_path.size() - 1; i++)
+    {
+        if (vector_contains_element(bootstrapping_path[i]->child_ptrs_that_receive_bootstrapped_result, bootstrapping_path[i + 1]))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool operation_is_bootstrapped(OperationPtr operation)
 {
     return operation->child_ptrs_that_receive_bootstrapped_result.size() > 0;
+}
+
+float get_path_cost(std::vector<OperationPtr> path)
+{
+    int num_multiplications = 0;
+    int num_additions = 0;
+    for (auto operation : path)
+    {
+        if (operation->type == "MUL")
+        {
+            num_multiplications++;
+        }
+        else
+        {
+            num_additions++;
+        }
+    }
+    return num_multiplications + (float)num_additions / addition_divider;
 }

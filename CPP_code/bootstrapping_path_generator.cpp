@@ -99,24 +99,6 @@ void BootstrappingPathGenerator::create_raw_bootstrapping_paths_for_validation()
     }
 }
 
-float BootstrappingPathGenerator::get_path_cost(std::vector<OperationPtr> path)
-{
-    int num_multiplications = 0;
-    int num_additions = 0;
-    for (auto operation : path)
-    {
-        if (operation->type == "MUL")
-        {
-            num_multiplications++;
-        }
-        else
-        {
-            num_additions++;
-        }
-    }
-    return num_multiplications + (float)num_additions / addition_divider;
-}
-
 std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::depth_first_search(std::vector<OperationPtr> current_path, std::vector<std::vector<OperationPtr>> backward_paths)
 {
     auto current_end_of_path = current_path.back();

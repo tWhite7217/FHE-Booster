@@ -26,5 +26,4 @@ private:
     void remove_redundant_bootstrapping_paths();
     bool path_is_redundant(size_t);
     bool larger_path_contains_smaller_path(std::vector<OperationPtr>, std::vector<OperationPtr>);
-    float get_path_cost(std::vector<OperationPtr>);
 };

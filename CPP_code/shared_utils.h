@@ -12,6 +12,7 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <functional>
 
 // enum class OperationType
 // {
@@ -40,6 +41,7 @@ struct Operation
     int earliest_start_time;
     int latest_start_time;
     int rank;
+    float bootstrap_urgency;
 };
 
 using OperationList = std::vector<OperationPtr>;
@@ -117,9 +119,11 @@ int extract_number_from_string(std::string, size_t, size_t);
 void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
 bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &);
 bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &);
-int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &);
-int find_unsatisfied_bootstrapping_path_index_for_selective_model(std::vector<OperationList> &);
+int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
+bool bootstrapping_path_is_satisfied(OperationList &);
+bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
+float get_path_cost(OperationList);
 
 #endif
