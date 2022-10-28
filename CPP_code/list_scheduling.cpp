@@ -537,20 +537,21 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
 
 int ListScheduler::get_score(OperationPtr operation)
 {
-    // auto num_paths = get_num_bootstrapping_paths_containing_operation(operation);
+    auto num_paths = get_num_bootstrapping_paths_containing_operation(operation);
 
-    // if (num_paths == 0)
-    // {
-    //     return -1;
-    // }
+    if (num_paths == 0)
+    {
+        return -1;
+    }
+
+    return std::max(num_paths_multiplier * num_paths +
+                        rank_multiplier * operation->rank,
+                    0);
 
     // return num_paths_multiplier * num_paths +
-    //        rank_multiplier * operation->rank +
-    //        num_children_multiplier * operation->child_ptrs.size();
+    //        urgency_multiplier * operation->bootstrap_urgency;
 
-    // return operation->bootstrap_urgency / (operation->rank + 1);
-    // return operation->bootstrap_urgency - (operation->rank / 50);
-    return operation->bootstrap_urgency;
+    // return operation->bootstrap_urgency;
 }
 
 int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr operation)
@@ -563,7 +564,7 @@ int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr
             path.pop_back();
         }
 
-        if (vector_contains_element(path, operation))
+        if (vector_contains_element(path, operation) && !bootstrapping_path_is_satisfied(path))
         {
             num_paths++;
         }

@@ -83,14 +83,16 @@ void SolutionValidator::validate_solution()
 void SolutionValidator::check_bootstrapping_constraints_are_met()
 {
     int unsatisfied_path_index;
+    std::function<bool(OperationList &)> path_is_satisfied_function;
     if (lgr_parser.used_selective_model)
     {
-        unsatisfied_path_index = find_unsatisfied_bootstrapping_path_index_for_selective_model(bootstrapping_paths);
+        path_is_satisfied_function = bootstrapping_path_is_satisfied_for_selective_model;
     }
     else
     {
-        unsatisfied_path_index = find_unsatisfied_bootstrapping_path_index(bootstrapping_paths);
+        path_is_satisfied_function = bootstrapping_path_is_satisfied;
     }
+    unsatisfied_path_index = find_unsatisfied_bootstrapping_path_index(bootstrapping_paths, path_is_satisfied_function);
 
     if (unsatisfied_path_index != -1)
     {

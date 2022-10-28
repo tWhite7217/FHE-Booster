@@ -7,7 +7,7 @@ source_lgr="NULL"
 source_lgr_suffix=""
 
 if [[ "$6" != "heuristic" ]]; then
-    if [[ "$1" == "limited" ]]; then
+    if [[ "$1" == "limited" || "$1" == "unlimited" ]]; then
         source_lgr_suffix="min_bootstrapping.lgr"
     else
         source_lgr_suffix="min_bootstrapping_$1.lgr"

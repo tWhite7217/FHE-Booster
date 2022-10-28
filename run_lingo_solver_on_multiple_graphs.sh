@@ -14,6 +14,7 @@ do
     echo "TAKE D:\LINGO64_19\FHE_Model\FHE_Model_$1.lng
 ALTER ALL 'custom_graph1'random_graph$i'
 ALTER ALL 'C1..C1'C1..C$4'
+ALTER ALL 'BOOTSTRAPPING_LATENCY = 12;'BOOTSTRAPPING_LATENCY = $5;'
     DIVERT D:\LINGO64_19\FHE_Model\results\random_graph$i\rg${i}_$1$result_file_suffix.lgr" > model_customizer.ltf
     
     powershell.exe "RunLingo .\run_solver.ltf"

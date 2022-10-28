@@ -20,7 +20,7 @@
 //     MUL,
 // };
 
-const int bootstrapping_latency = 12;
+const int bootstrapping_latency = 300;
 const int addition_divider = 1;
 const int bootstrapping_path_threshold = 3;
 

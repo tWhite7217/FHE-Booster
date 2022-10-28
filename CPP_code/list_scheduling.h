@@ -29,9 +29,17 @@ public:
     void write_lgr_like_format(std::string);
 
 private:
-    const int num_paths_multiplier = 12;
-    const int rank_multiplier = 2;
-    const int num_children_multiplier = 3;
+    // use for num_paths with slack heuristic
+    // const int num_paths_multiplier = 12;
+    // const int rank_multiplier = 2;
+
+    // use for num_paths minus slack heuristic
+    const int num_paths_multiplier = 25;
+    const int rank_multiplier = -1;
+
+    // use for urgency and num_paths heuristic
+    // const int num_paths_multiplier = 5;
+    // const int urgency_multiplier = 10;
 
     int solver_latency;
 
