@@ -14,7 +14,7 @@ class ListScheduler
 public:
     std::vector<OperationPtr> schedule;
 
-    ListScheduler(std::string, std::string, int);
+    ListScheduler(std::string, std::string, int, bool);
 
     OperationList get_operations();
 
@@ -24,9 +24,11 @@ public:
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
     void generate_start_times_and_solver_latency();
+    void generate_core_assignments();
     void choose_operations_to_bootstrap();
 
     void write_lgr_like_format(std::string);
+    void write_assembly_like_format(std::string);
 
 private:
     // use for num_paths with slack heuristic
@@ -48,6 +50,9 @@ private:
     int num_cores;
     std::vector<int> cores;
 
+    bool create_core_assignments;
+    std::vector<std::string> core_schedules;
+
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
     std::vector<std::vector<OperationPtr>> bootstrapping_paths;
@@ -57,6 +62,8 @@ private:
     std::map<OperationPtr, int> bootstrapping_operations;
     std::vector<OperationPtr> ordered_unstarted_operations;
     int clock_cycle;
+
+    int constant_counter = 0;
 
     struct RankCmp
     {
@@ -83,12 +90,17 @@ private:
     std::set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
     void start_ready_operations();
     void add_necessary_operations_to_bootstrapping_queue(std::set<OperationPtr>);
+    void start_bootstrapping_necessary_operations(std::set<OperationPtr>);
     bool later_operation_exceeds_urgency_threshold(OperationPtr &, float &);
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
-    int get_available_bootstrap_core_num();
+    int get_best_core_for_operation(OperationPtr, int);
+    int get_available_core_num();
+    bool core_is_available(int);
     bool program_is_not_finished();
     void choose_operation_to_bootstrap_based_on_score();
     int get_score(OperationPtr);
     int get_num_bootstrapping_paths_containing_operation(OperationPtr);
+    std::string get_constant_arg();
+    std::string get_variable_arg(OperationPtr, int);
 };

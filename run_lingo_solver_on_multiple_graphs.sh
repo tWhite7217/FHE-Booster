@@ -2,7 +2,7 @@
 
 result_file_suffix=""
 
-if [[ $(($4)) > 1 && ("$1" == "limited" || "$1" == "selective") ]]; then
+if [[ $(($4)) > 1 ]]; then
     result_file_suffix="_$4_cores"
 fi
 
