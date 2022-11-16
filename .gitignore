@@ -17,3 +17,6 @@ solution_validator
 graph_generator
 model_customizer.ltf
 limited_to_selective_converter
+txt_to_vcg
+make_simon_dag
+make_nn_dag

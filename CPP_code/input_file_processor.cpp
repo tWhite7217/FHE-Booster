@@ -125,16 +125,17 @@ int main(int argc, char *argv[])
     get_info_from_input_parser();
 
     BootstrappingPathGenerator path_generator(operations, using_selective_model);
-    bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+    bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
 
     output_file.open(output_file_path, std::ios::out);
 
     std::vector<std::function<void()>> write_functions = {
-        write_operation_type_latencies_to_output_file,
+        // write_operation_type_latencies_to_output_file,
         write_operation_list_to_output_file,
         write_operation_types_to_output_file,
         write_operation_dependencies_to_output_file,
-        write_bootstrapping_latency_to_output_file,
+        // write_bootstrapping_latency_to_output_file,
         write_bootstrapping_constraints_to_output_file};
 
     for (auto write_function : write_functions)

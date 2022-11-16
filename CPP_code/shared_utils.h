@@ -21,8 +21,8 @@
 // };
 
 const int bootstrapping_latency = 300;
-const int addition_divider = 1;
-const int bootstrapping_path_threshold = 3;
+const int addition_divider = 20;
+const int bootstrapping_path_threshold = 2;
 
 struct Operation;
 
