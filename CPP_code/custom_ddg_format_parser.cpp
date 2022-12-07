@@ -32,11 +32,15 @@ void InputParser::parse_lines(std::fstream &input_file)
 
         if (line_as_list[0] == "~")
         {
-            phase = 1;
+            phase++;
         }
         else if (phase == 0)
         {
             parse_operation_type(line_as_list);
+        }
+        else if (phase == 1)
+        {
+            parse_constant(line_as_list);
         }
         else
         {
@@ -54,13 +58,27 @@ void InputParser::parse_operation_and_its_dependences(std::vector<std::string> l
 {
     std::string type = line[1];
     std::vector<OperationPtr> parent_ptrs;
+    std::vector<int> constant_parent_ids;
     for (int i = 2; i < line.size(); i++)
     {
-        auto parent_id = std::stoi(line[i]);
-        auto parent_ptr = get_operation_ptr_from_id(operations, parent_id);
-        parent_ptrs.push_back(parent_ptr);
+        auto parent_is_ciphertext = (line[i][0] == 'c');
+        auto parent_id = std::stoi(line[i].substr(1, line[i].length() - 1));
+        if (parent_is_ciphertext)
+        {
+            auto parent_ptr = get_operation_ptr_from_id(operations, parent_id);
+            parent_ptrs.push_back(parent_ptr);
+        }
+        else
+        {
+            constant_parent_ids.push_back(parent_id);
+        }
     }
-    operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
+    operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs, constant_parent_ids});
+}
+
+void InputParser::parse_constant(std::vector<std::string> line)
+{
+    // operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
 }
 
 std::vector<std::string> InputParser::get_string_list_from_line(std::string line)

@@ -14,6 +14,32 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
         lgr_parser.set_operations(operations);
         lgr_parser.lex();
     }
+    else
+    {
+        switch (heuristic_type)
+        {
+        case 0: // num_paths with slack
+            num_paths_multiplier = 12;
+            rank_multiplier = 2;
+            urgency_multiplier = 0;
+            break;
+        case 1: // urgency
+            num_paths_multiplier = 0;
+            rank_multiplier = 0;
+            urgency_multiplier = 1;
+            break;
+        case 2: // urgency and num_paths
+            num_paths_multiplier = 1;
+            rank_multiplier = 0;
+            urgency_multiplier = 2;
+            break;
+        case 3: // num_paths minus slack
+            num_paths_multiplier = 25;
+            rank_multiplier = 0;
+            urgency_multiplier = -1;
+            break;
+        }
+    }
 
     BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
     bootstrapping_paths = path_generator.generate_bootstrapping_paths();
@@ -28,6 +54,8 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     }
     else
     {
+        cores.resize(operations.size());
+        core_schedules.resize(operations.size());
         start_bootstrapping_ready_operations = [this]()
         { start_bootstrapping_ready_operations_for_unlimited_model(); };
     }
@@ -704,13 +732,9 @@ int ListScheduler::get_score(OperationPtr operation)
     }
 
     return std::max(num_paths_multiplier * num_paths +
-                        rank_multiplier * operation->rank,
-                    0);
-
-    // return num_paths_multiplier * num_paths +
-    //        urgency_multiplier * operation->bootstrap_urgency;
-
-    // return operation->bootstrap_urgency;
+                        rank_multiplier * operation->rank +
+                        urgency_multiplier * operation->bootstrap_urgency,
+                    0.0f);
 }
 
 int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr operation)
@@ -752,9 +776,9 @@ void ListScheduler::perform_list_scheduling()
 
 int main(int argc, char **argv)
 {
-    if (argc != 6)
+    if (argc != 7)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <create_core_assignments>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <create_core_assignments> <heuristic_type>" << std::endl;
         return 1;
     }
 
@@ -763,6 +787,13 @@ int main(int argc, char **argv)
     std::string output_file_path = argv[3];
     int num_cores = std::stoi(argv[4]);
     bool create_core_assignments = std::string(argv[5]) == "True";
+    int heuristic_type = std::stoi(argv[6]);
+
+    if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 3)
+    {
+        std::cout << "Invalid heuristic type." << std::endl;
+        return 1;
+    }
 
     ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, create_core_assignments);
 

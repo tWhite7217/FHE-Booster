@@ -5,14 +5,19 @@ BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations,
 
 std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::generate_bootstrapping_paths()
 {
+    print_number_of_paths();
     create_raw_bootstrapping_paths();
+    std::cout << bootstrapping_paths.size() << std::endl;
+    // print_bootstrapping_paths();
     clean_raw_bootstrapping_paths();
     return bootstrapping_paths;
 }
 
 std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::generate_bootstrapping_paths_for_validation()
 {
+    print_number_of_paths();
     create_raw_bootstrapping_paths_for_validation();
+    print_bootstrapping_paths();
     clean_raw_bootstrapping_paths();
     return bootstrapping_paths;
 }
@@ -24,22 +29,187 @@ void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
         std::vector<std::vector<OperationPtr>> bootstrapping_paths_to_add;
         if (operation->type == "MUL")
         {
-            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 1, 0);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 1, 0);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 1, 0, false);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 1, 0);
+            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 1, 0, false);
         }
         else
         {
-            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 0, 1);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 0, 1);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, 0, 1, true);
+            // bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 0, 1);
+            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 0, 1, true);
         }
         bootstrapping_paths.insert(bootstrapping_paths.end(), bootstrapping_paths_to_add.begin(), bootstrapping_paths_to_add.end());
     }
+
+    class comparator_class
+    {
+    public:
+        bool operator()(std::vector<OperationPtr> path1, std::vector<OperationPtr> path2)
+        {
+            if (path1.back() == path2.back())
+            {
+                return path1.size() < path2.size();
+            }
+            else
+            {
+                return path1.back()->id < path2.back()->id;
+            }
+        }
+    };
+
+    auto starting_point_offset = 0;
+    auto current_starting_id_to_sort = bootstrapping_paths[0][0];
+    for (auto i = 1; i < bootstrapping_paths.size(); i++)
+    {
+        if (bootstrapping_paths[i][0] != current_starting_id_to_sort)
+        {
+            std::sort(bootstrapping_paths.begin() + starting_point_offset, bootstrapping_paths.begin() + i, comparator_class());
+            starting_point_offset = i;
+            current_starting_id_to_sort = bootstrapping_paths[i][0];
+        }
+    }
 }
 
-std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, int num_multiplications, int num_additions)
+// std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, int num_multiplications, int num_additions)
+// {
+//     float path_cost = (num_multiplications + (float)num_additions / addition_divider);
+//     if (path_cost > bootstrapping_path_threshold)
+//     {
+//         return {{operation}};
+//     }
+//     else if (operation->parent_ptrs.size() == 0)
+//     {
+//         return {};
+//     }
+
+//     std::vector<std::vector<OperationPtr>> paths_to_return;
+//     for (auto parent : operation->parent_ptrs)
+//     {
+//         std::vector<std::vector<OperationPtr>> paths_to_add;
+//         if (parent->type == "MUL")
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications + 1, num_additions);
+//         }
+//         else
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications, num_additions + 1);
+//         }
+//         for (auto path : paths_to_add)
+//         {
+//             path.push_back(operation);
+//             paths_to_return.push_back(path);
+//         }
+//     }
+//     return paths_to_return;
+// }
+
+// std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, int num_multiplications, int num_additions, bool initial_was_addition)
+// {
+//     float path_cost = (num_multiplications + (float)num_additions / addition_divider);
+//     if (path_cost > bootstrapping_path_threshold)
+//     {
+//         float path_cost_without_last_op;
+//         if (initial_was_addition)
+//         {
+//             path_cost_without_last_op = (num_multiplications + (float)(num_additions - 1) / addition_divider);
+//         }
+//         else
+//         {
+//             path_cost_without_last_op = ((num_multiplications - 1) + (float)num_additions / addition_divider);
+//         }
+
+//         if (path_cost_without_last_op <= bootstrapping_path_threshold)
+//         {
+//             return {{operation}};
+//         }
+//         else
+//         {
+//             return {};
+//         }
+//     }
+//     else if (operation->parent_ptrs.size() == 0)
+//     {
+//         return {};
+//     }
+
+//     std::vector<std::vector<OperationPtr>> paths_to_return;
+//     for (auto parent : operation->parent_ptrs)
+//     {
+//         std::vector<std::vector<OperationPtr>> paths_to_add;
+//         if (parent->type == "MUL")
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications + 1, num_additions, initial_was_addition);
+//         }
+//         else
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications, num_additions + 1, initial_was_addition);
+//         }
+//         for (auto path : paths_to_add)
+//         {
+//             path.push_back(operation);
+//             paths_to_return.push_back(path);
+//         }
+//     }
+//     return paths_to_return;
+// }
+
+// std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, std::vector<OperationPtr> path, int num_multiplications, int num_additions)
+// {
+//     path.push_back(operation);
+//     float path_cost = (num_multiplications + (float)num_additions / addition_divider);
+//     if (path_cost > bootstrapping_path_threshold)
+//     {
+//         return {path};
+//     }
+//     else if (operation->parent_ptrs.size() == 0)
+//     {
+//         return {};
+//     }
+
+//     std::vector<std::vector<OperationPtr>> paths_to_return;
+//     for (auto child : operation->child_ptrs)
+//     {
+//         std::vector<std::vector<OperationPtr>> paths_to_add;
+//         if (child->type == "MUL")
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications + 1, num_additions);
+//         }
+//         else
+//         {
+//             paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications, num_additions + 1);
+//         }
+//         paths_to_return.insert(paths_to_return.end(), paths_to_add.begin(), paths_to_add.end());
+//     }
+//     return paths_to_return;
+// }
+
+std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, std::vector<OperationPtr> path, int num_multiplications, int num_additions, bool initial_was_addition)
 {
+    path.push_back(operation);
     float path_cost = (num_multiplications + (float)num_additions / addition_divider);
     if (path_cost > bootstrapping_path_threshold)
     {
-        return {{operation}};
+        float path_cost_without_first_op;
+        if (initial_was_addition)
+        {
+            path_cost_without_first_op = (num_multiplications + (float)(num_additions - 1) / addition_divider);
+        }
+        else
+        {
+            path_cost_without_first_op = ((num_multiplications - 1) + (float)num_additions / addition_divider);
+        }
+
+        if (path_cost_without_first_op <= bootstrapping_path_threshold)
+        {
+            return {path};
+        }
+        else
+        {
+            return {};
+        }
     }
     else if (operation->parent_ptrs.size() == 0)
     {
@@ -47,22 +217,18 @@ std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootst
     }
 
     std::vector<std::vector<OperationPtr>> paths_to_return;
-    for (auto parent : operation->parent_ptrs)
+    for (auto child : operation->child_ptrs)
     {
         std::vector<std::vector<OperationPtr>> paths_to_add;
-        if (parent->type == "MUL")
+        if (child->type == "MUL")
         {
-            paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications + 1, num_additions);
+            paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications + 1, num_additions, initial_was_addition);
         }
         else
         {
-            paths_to_add = create_bootstrapping_paths_helper(parent, num_multiplications, num_additions + 1);
+            paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications, num_additions + 1, initial_was_addition);
         }
-        for (auto path : paths_to_add)
-        {
-            path.push_back(operation);
-            paths_to_return.push_back(path);
-        }
+        paths_to_return.insert(paths_to_return.end(), paths_to_add.begin(), paths_to_add.end());
     }
     return paths_to_return;
 }
@@ -118,13 +284,17 @@ std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::depth_first_s
 
 void BootstrappingPathGenerator::clean_raw_bootstrapping_paths()
 {
+    remove_redundant_bootstrapping_paths();
+
     if (!using_selective_model)
     {
         remove_last_operation_from_bootstrapping_paths();
+        std::cout << "here2" << std::endl;
         remove_duplicate_bootstrapping_paths();
+        std::cout << "here3" << std::endl;
     }
 
-    remove_redundant_bootstrapping_paths();
+    // remove_redundant_bootstrapping_paths();
 }
 
 void BootstrappingPathGenerator::remove_last_operation_from_bootstrapping_paths()
@@ -152,30 +322,89 @@ void BootstrappingPathGenerator::remove_duplicate_bootstrapping_paths()
 
 void BootstrappingPathGenerator::remove_redundant_bootstrapping_paths()
 {
-    size_t min_path_length = std::numeric_limits<size_t>::max();
-    for (auto path : bootstrapping_paths)
-    {
-        min_path_length = std::min(min_path_length, path.size());
-    }
-
-    std::vector<size_t> indices_to_remove;
+    // std::vector<size_t> indices_to_remove;
     for (auto i = 0; i < bootstrapping_paths.size(); i++)
     {
-        if (bootstrapping_paths[i].size() > min_path_length)
+        for (auto j = i + 1;
+             j < bootstrapping_paths.size() &&
+             bootstrapping_paths[i].front() == bootstrapping_paths[j].front() &&
+             bootstrapping_paths[i].back() == bootstrapping_paths[j].back();
+             j++)
         {
-            if (path_is_redundant(i))
+            if (bootstrapping_paths[i].size() != bootstrapping_paths[j].size())
             {
-                indices_to_remove.push_back(i);
+                if (paths_are_redundant(bootstrapping_paths[i], bootstrapping_paths[j]))
+                {
+                    bootstrapping_paths.erase(bootstrapping_paths.begin() + j);
+                    j--;
+                }
             }
         }
     }
 
-    int num_redundant_paths = indices_to_remove.size();
-    for (int i = num_redundant_paths - 1; i >= 0; i--)
-    {
-        bootstrapping_paths.erase(bootstrapping_paths.begin() + indices_to_remove[i]);
-    }
+    // int num_redundant_paths = indices_to_remove.size();
+    // for (int i = num_redundant_paths - 1; i >= 0; i--)
+    // {
+    //     bootstrapping_paths.erase(bootstrapping_paths.begin() + indices_to_remove[i]);
+    // }
 }
+
+bool BootstrappingPathGenerator::paths_are_redundant(std::vector<OperationPtr> path1, std::vector<OperationPtr> path2)
+{
+    auto j = 0;
+    for (auto i = 0; i < path1.size(); i++)
+    {
+        while (path1[i] != path2[j])
+        {
+            j++;
+            if (j >= path2.size())
+            {
+                return false;
+            }
+        }
+    }
+
+    for (auto operation : path1)
+    {
+        std::cout << operation->id << ",";
+    }
+    std::cout << std::endl;
+
+    for (auto operation : path2)
+    {
+        std::cout << operation->id << ",";
+    }
+    std::cout << std::endl;
+
+    return true;
+}
+
+// void BootstrappingPathGenerator::remove_redundant_bootstrapping_paths()
+// {
+//     size_t min_path_length = std::numeric_limits<size_t>::max();
+//     for (auto path : bootstrapping_paths)
+//     {
+//         min_path_length = std::min(min_path_length, path.size());
+//     }
+
+//     std::vector<size_t> indices_to_remove;
+//     for (auto i = 0; i < bootstrapping_paths.size(); i++)
+//     {
+//         if (bootstrapping_paths[i].size() > min_path_length)
+//         {
+//             if (path_is_redundant(i))
+//             {
+//                 indices_to_remove.push_back(i);
+//             }
+//         }
+//     }
+
+//     int num_redundant_paths = indices_to_remove.size();
+//     for (int i = num_redundant_paths - 1; i >= 0; i--)
+//     {
+//         bootstrapping_paths.erase(bootstrapping_paths.begin() + indices_to_remove[i]);
+//     }
+// }
 
 bool BootstrappingPathGenerator::path_is_redundant(size_t path_index)
 {
@@ -211,6 +440,49 @@ bool BootstrappingPathGenerator::larger_path_contains_smaller_path(std::vector<O
             return false;
         }
     }
-    
+
+    for (auto operation : smaller_path)
+    {
+        std::cout << operation->id << ",";
+    }
+    std::cout << std::endl;
+
+    for (auto operation : larger_path)
+    {
+        std::cout << operation->id << ",";
+    }
+    std::cout << std::endl;
+
     return true;
+}
+
+void BootstrappingPathGenerator::print_number_of_paths()
+{
+    std::unordered_map<OperationPtr, int> num_paths_to;
+    for (auto operation : operations)
+    {
+        num_paths_to[operation] = 1;
+        for (auto parent : operation->parent_ptrs)
+        {
+            num_paths_to[operation] += num_paths_to[parent] + 1;
+        }
+    }
+
+    int result = std::accumulate(std::begin(num_paths_to), std::end(num_paths_to), 0,
+                                 [](const int previous, const std::pair<const OperationPtr, int> &p)
+                                 { return previous + p.second; });
+
+    std::cout << result << std::endl;
+}
+
+void BootstrappingPathGenerator::print_bootstrapping_paths()
+{
+    for (auto path : bootstrapping_paths)
+    {
+        for (auto operation : path)
+        {
+            std::cout << operation->id << ",";
+        }
+        std::cout << std::endl;
+    }
 }

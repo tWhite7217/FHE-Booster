@@ -1,109 +1,123 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 
 const int in_size = 28 * 28;
 const int l1out_neurons = 20;
 const int l2out_neurons = 10;
 
-const int num_rounds = 2;
-const int num_bits = 32;
+const int num_rounds = 10;
+const int num_bits = 16;
 
-void set(int[], int[]);
-void shift_left(int[], int[], int);
-void shift_right(int[], int[], int);
-void print_set(int[]);
-void print_xor(int[], int[], int[]);
-void print_or(int[], int[], int[]);
-void print_and(int[], int[], int[]);
+using bit = std::string;
+
+void set(bit[], bit[]);
+void print_rotate_left(bit[], bit[], int);
+void shift_left(bit[], bit[], int);
+void shift_right(bit[], bit[], int);
+void print_set(bit[]);
+void print_xor(bit[], bit[], bit[]);
+void print_or(bit[], bit[], bit[]);
+void print_and(bit[], bit[], bit[]);
 
 std::ofstream output_file;
 int instruction_count = 1;
+int constant_count = 1;
 
 int main()
 {
-    output_file.open("test_simon.txt");
+    auto output_filename = "test_simon_" + std::to_string(num_rounds) + "_rounds.txt";
+    output_file.open(output_filename);
 
     output_file << "ADD,1" << std::endl;
+    output_file << "SUB,1" << std::endl;
     output_file << "MUL,5" << std::endl;
     output_file << "~" << std::endl;
 
-    output_file << instruction_count++ << ",SET" << std::endl;
+    output_file << constant_count++ << ",SET" << std::endl;
 
-    int exp_key[num_rounds][num_bits];
+    bit exp_key[num_rounds][num_bits];
     for (int i = 0; i < num_rounds; i++)
     {
         print_set(exp_key[i]);
     }
 
-    int pt0[num_bits];
+    bit pt0[num_bits];
     print_set(pt0);
 
-    int pt1[num_bits];
+    bit pt1[num_bits];
     print_set(pt1);
+
+    output_file << "~" << std::endl;
 
     for (int i = 0; i < num_rounds; i++)
     {
-        print_xor(pt0, pt0, pt1);
+        // print_xor(pt0, pt0, pt1);
 
-        int t1mp[num_bits];
-        shift_left(t1mp, pt0, 1);
+        bit t1mp[num_bits];
+        print_rotate_left(t1mp, pt0, 1);
 
-        int t2mp[num_bits];
-        shift_right(t2mp, pt0, 15);
+        bit t2mp[num_bits];
+        print_rotate_left(t2mp, pt0, 8);
 
-        int t3mp[num_bits];
-        print_or(t3mp, t1mp, t2mp);
+        bit t3mp[num_bits];
+        print_rotate_left(t3mp, pt0, 2);
 
-        int t4mp[num_bits];
-        shift_left(t4mp, pt0, 8);
+        bit t4mp[num_bits];
+        print_and(t4mp, t1mp, t2mp);
 
-        int t5mp[num_bits];
-        shift_right(t5mp, pt0, 8);
+        bit t5mp[num_bits];
+        int index = num_rounds - 1 - i;
+        print_xor(t5mp, pt1, exp_key[index]);
 
-        int t6mp[num_bits];
-        print_or(t6mp, t4mp, t5mp);
-
-        int t7mp[num_bits];
-        shift_right(t7mp, pt0, 2);
-
-        int t8mp[num_bits];
-        shift_left(t8mp, pt0, 14);
-
-        int t9mp[num_bits];
-        print_or(t9mp, t7mp, t8mp);
-
-        int t10mp[num_bits];
-        print_and(t10mp, t3mp, t6mp);
-
-        int t11mp[num_bits];
-        print_xor(t11mp, t10mp, pt1);
-
-        int t12mp[num_bits];
-        print_xor(t12mp, t11mp, t9mp);
+        bit t6mp[num_bits];
+        print_xor(t6mp, t3mp, t5mp);
 
         set(pt1, pt0);
 
-        int index = num_rounds - 1 - i;
-        print_xor(pt0, t12mp, exp_key[index]);
+        print_xor(pt0, t4mp, t6mp);
     }
 }
 
-void set(int output_arr[], int input_arr[])
+void set(bit output_arr[], bit input_arr[])
 {
-
     for (int i = 0; i < num_bits; i++)
     {
         output_arr[i] = input_arr[i];
     }
 }
 
-void shift_left(int output_arr[], int input_arr[], int num)
+void print_rotate_left(bit output_arr[], bit input_arr[], int num)
+{
+    bit t1mp[num_bits];
+    shift_left(t1mp, input_arr, num);
+
+    bit t2mp[num_bits];
+    shift_right(t2mp, input_arr, num_bits - num);
+
+    bit t3mp[num_bits];
+    print_or(output_arr, t1mp, t2mp);
+}
+
+// void print_rotate_right(bit output_arr[], bit input_arr[], int num)
+// {
+//     bit t1mp[num_bits];
+//     shift_right(t1mp, input_arr, num);
+
+//     bit t2mp[num_bits];
+//     shift_left(t2mp, input_arr, num_bits - num);
+
+//     bit t3mp[num_bits];
+//     print_or(output_arr, t1mp, t2mp);
+// }
+
+void shift_left(bit output_arr[], bit input_arr[], int num)
 {
     for (int i = 0; i < num_bits; i++)
     {
         if (i < num)
         {
-            output_arr[i] = 1;
+            output_arr[i] = "k1";
         }
         else
         {
@@ -112,7 +126,7 @@ void shift_left(int output_arr[], int input_arr[], int num)
     }
 }
 
-void shift_right(int output_arr[], int input_arr[], int num)
+void shift_right(bit output_arr[], bit input_arr[], int num)
 {
     for (int i = 0; i < num_bits; i++)
     {
@@ -122,52 +136,52 @@ void shift_right(int output_arr[], int input_arr[], int num)
         }
         else
         {
-            output_arr[i] = 1;
+            output_arr[i] = "k1";
         }
     }
 }
 
-void print_set(int output_arr[])
+void print_set(bit output_arr[])
 {
     for (int i = 0; i < num_bits; i++)
     {
-        output_file << instruction_count++ << ",SET" << std::endl;
-        output_arr[i] = instruction_count - 1;
+        output_file << constant_count++ << ",SET" << std::endl;
+        output_arr[i] = "k" + std::to_string(constant_count - 1);
     }
 }
 
-void print_or(int output_arr[], int input_arr1[], int input_arr2[])
+void print_or(bit output_arr[], bit input_arr1[], bit input_arr2[])
 {
     for (int i = 0; i < num_bits; i++)
     {
-        int c1 = input_arr1[i];
-        int c2 = input_arr2[i];
+        bit c1 = input_arr1[i];
+        bit c2 = input_arr2[i];
         output_file << instruction_count++ << ",MUL," << c1 << "," << c2 << std::endl;
         output_file << instruction_count++ << ",ADD," << c1 << "," << c2 << std::endl;
-        output_file << instruction_count++ << ",SUB," << instruction_count - 3 << "," << instruction_count - 2 << std::endl;
-        output_arr[i] = instruction_count - 1;
+        output_file << instruction_count++ << ",SUB,c" << instruction_count - 3 << ",c" << instruction_count - 2 << std::endl;
+        output_arr[i] = "c" + std::to_string(instruction_count - 1);
     }
 }
 
-void print_and(int output_arr[], int input_arr1[], int input_arr2[])
+void print_and(bit output_arr[], bit input_arr1[], bit input_arr2[])
 {
     for (int i = 0; i < num_bits; i++)
     {
-        int c1 = input_arr1[i];
-        int c2 = input_arr2[i];
+        bit c1 = input_arr1[i];
+        bit c2 = input_arr2[i];
         output_file << instruction_count++ << ",MUL," << c1 << "," << c2 << std::endl;
-        output_arr[i] = instruction_count - 1;
+        output_arr[i] = "c" + std::to_string(instruction_count - 1);
     }
 }
 
-void print_xor(int output_arr[], int input_arr1[], int input_arr2[])
+void print_xor(bit output_arr[], bit input_arr1[], bit input_arr2[])
 {
     for (int i = 0; i < num_bits; i++)
     {
-        int c1 = input_arr1[i];
-        int c2 = input_arr2[i];
+        bit c1 = input_arr1[i];
+        bit c2 = input_arr2[i];
         output_file << instruction_count++ << ",SUB," << c1 << "," << c2 << std::endl;
-        output_file << instruction_count++ << ",MUL," << instruction_count - 2 << std::endl;
-        output_arr[i] = instruction_count - 1;
+        output_file << instruction_count++ << ",MUL,c" << instruction_count - 2 << std::endl;
+        output_arr[i] = "c" + std::to_string(instruction_count - 1);
     }
 }

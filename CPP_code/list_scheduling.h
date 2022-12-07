@@ -31,17 +31,9 @@ public:
     void write_assembly_like_format(std::string);
 
 private:
-    // use for num_paths with slack heuristic
-    // const int num_paths_multiplier = 12;
-    // const int rank_multiplier = 2;
-
-    // use for num_paths minus slack heuristic
-    const int num_paths_multiplier = 25;
-    const int rank_multiplier = -1;
-
-    // use for urgency and num_paths heuristic
-    // const int num_paths_multiplier = 5;
-    // const int urgency_multiplier = 10;
+    int num_paths_multiplier;
+    int rank_multiplier;
+    int urgency_multiplier;
 
     int solver_latency;
 
@@ -52,6 +44,8 @@ private:
 
     bool create_core_assignments;
     std::vector<std::string> core_schedules;
+
+    int heuristic_type;
 
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;

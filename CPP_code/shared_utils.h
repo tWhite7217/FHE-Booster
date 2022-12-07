@@ -22,7 +22,7 @@
 
 const int bootstrapping_latency = 300;
 const int addition_divider = 20;
-const int bootstrapping_path_threshold = 2;
+const int bootstrapping_path_threshold = 9;
 
 struct Operation;
 
@@ -33,6 +33,7 @@ struct Operation
     std::string type;
     int id;
     std::vector<OperationPtr> parent_ptrs;
+    std::vector<int> constant_parent_ids;
     std::vector<OperationPtr> child_ptrs;
     std::vector<OperationPtr> child_ptrs_that_receive_bootstrapped_result;
     int start_time;

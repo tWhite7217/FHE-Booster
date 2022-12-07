@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
     get_info_from_input_parser();
 
     BootstrappingPathGenerator path_generator(operations, using_selective_model);
-    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
-    bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
+    bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+    // bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
 
     output_file.open(output_file_path, std::ios::out);
 
