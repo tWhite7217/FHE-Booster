@@ -12,7 +12,8 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_f
     lgr_parser.lex();
 
     auto bootstrapping_path_generator = BootstrappingPathGenerator(operations, true);
-    bootstrapping_paths = bootstrapping_path_generator.generate_bootstrapping_paths();
+    bootstrapping_paths = bootstrapping_path_generator.get_bootstrapping_paths(input_dag_file_path);
+    // bootstrapping_paths = bootstrapping_path_generator.generate_bootstrapping_paths();
 }
 
 void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()

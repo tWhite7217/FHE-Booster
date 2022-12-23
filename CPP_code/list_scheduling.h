@@ -14,7 +14,7 @@ class ListScheduler
 public:
     std::vector<OperationPtr> schedule;
 
-    ListScheduler(std::string, std::string, int, bool);
+    ListScheduler(std::string, std::string, int, bool, int);
 
     OperationList get_operations();
 
@@ -45,8 +45,6 @@ private:
     bool create_core_assignments;
     std::vector<std::string> core_schedules;
 
-    int heuristic_type;
-
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
     std::vector<std::vector<OperationPtr>> bootstrapping_paths;
@@ -75,6 +73,7 @@ private:
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(OperationPtr, int);
     void update_all_bootstrap_urgencies();
+    void update_num_paths_for_every_operation();
     std::vector<OperationPtr> get_priority_list();
     std::map<OperationPtr, int> initialize_pred_count();
     std::set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);

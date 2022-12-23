@@ -96,6 +96,10 @@ void write_bootstrapping_constraints_to_output_file()
         {
             for (auto i = 0; i < path.size() - 1; i++)
             {
+                if ((i > 0) && (i % 10 == 0))
+                {
+                    constraint_string += "\n";
+                }
                 constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ", " + std::to_string(path[i + 1]->id) + ") + ";
             }
         }
@@ -103,6 +107,10 @@ void write_bootstrapping_constraints_to_output_file()
         {
             for (auto i = 0; i < path.size(); i++)
             {
+                if ((i > 0) && (i % 20 == 0))
+                {
+                    constraint_string += "\n";
+                }
                 constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ") + ";
             }
         }
@@ -125,7 +133,8 @@ int main(int argc, char *argv[])
     get_info_from_input_parser();
 
     BootstrappingPathGenerator path_generator(operations, using_selective_model);
-    bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+    bootstrapping_paths = path_generator.get_bootstrapping_paths(input_file_path);
+    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
     // bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
 
     output_file.open(output_file_path, std::ios::out);

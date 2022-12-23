@@ -75,7 +75,6 @@ bool bootstrapping_path_is_satisfied(OperationList &bootstrapping_path)
     return false;
 }
 
-
 bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &bootstrapping_path)
 {
     for (auto i = 0; i < bootstrapping_path.size() - 1; i++)
@@ -109,4 +108,16 @@ float get_path_cost(std::vector<OperationPtr> path)
         }
     }
     return num_multiplications + (float)num_additions / addition_divider;
+}
+
+std::vector<std::string> split_string_by_character(std::string str, char separator)
+{
+    std::vector<std::string> str_as_list;
+    std::stringstream ss(str);
+    std::string item;
+    while (std::getline(ss, item, separator))
+    {
+        str_as_list.push_back(item);
+    }
+    return str_as_list;
 }

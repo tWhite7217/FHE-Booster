@@ -3,23 +3,39 @@
 BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations, bool using_selective_model)
     : operations{operations}, using_selective_model{using_selective_model} {}
 
-std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::generate_bootstrapping_paths()
+std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(std::string input_dag_file_path)
 {
-    print_number_of_paths();
-    create_raw_bootstrapping_paths();
-    std::cout << bootstrapping_paths.size() << std::endl;
-    // print_bootstrapping_paths();
-    clean_raw_bootstrapping_paths();
-    return bootstrapping_paths;
+    std::string bootstrapping_file_path = input_dag_file_path.substr(0, input_dag_file_path.size() - 4) + "_bootstrapping_paths_" + std::to_string(bootstrapping_path_threshold) + "_levels.txt";
+    struct stat input_dag_file_info;
+    struct stat output_bootstrapping_file_info;
+
+    stat(input_dag_file_path.c_str(), &input_dag_file_info);
+    auto result = stat(bootstrapping_file_path.c_str(), &output_bootstrapping_file_info);
+
+    if (result == 0 && input_dag_file_info.st_mtime < output_bootstrapping_file_info.st_mtime)
+    {
+        auto input_file = std::ifstream(bootstrapping_file_path);
+        return read_bootstrapping_paths(input_file, operations);
+    }
+    else
+    {
+        auto output_file = std::ofstream(bootstrapping_file_path);
+        generate_bootstrapping_paths();
+        write_paths_to_file(output_file);
+        return bootstrapping_paths;
+    }
 }
 
-std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::generate_bootstrapping_paths_for_validation()
+void BootstrappingPathGenerator::generate_bootstrapping_paths()
 {
-    print_number_of_paths();
-    create_raw_bootstrapping_paths_for_validation();
-    print_bootstrapping_paths();
+    create_raw_bootstrapping_paths();
     clean_raw_bootstrapping_paths();
-    return bootstrapping_paths;
+}
+
+void BootstrappingPathGenerator::generate_bootstrapping_paths_for_validation()
+{
+    create_raw_bootstrapping_paths_for_validation();
+    clean_raw_bootstrapping_paths();
 }
 
 void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
@@ -289,9 +305,7 @@ void BootstrappingPathGenerator::clean_raw_bootstrapping_paths()
     if (!using_selective_model)
     {
         remove_last_operation_from_bootstrapping_paths();
-        std::cout << "here2" << std::endl;
         remove_duplicate_bootstrapping_paths();
-        std::cout << "here3" << std::endl;
     }
 
     // remove_redundant_bootstrapping_paths();
@@ -485,4 +499,40 @@ void BootstrappingPathGenerator::print_bootstrapping_paths()
         }
         std::cout << std::endl;
     }
+}
+
+void BootstrappingPathGenerator::write_paths_to_file(std::ofstream &output_file)
+{
+    for (auto path : bootstrapping_paths)
+    {
+        for (auto operation : path)
+        {
+            output_file << operation->id << ",";
+        }
+        output_file << std::endl;
+    }
+}
+
+std::vector<OperationList> BootstrappingPathGenerator::read_bootstrapping_paths(std::ifstream &input_file, OperationList operations)
+{
+    std::vector<OperationList> bootstrapping_paths;
+    std::string line;
+    while (std::getline(input_file, line))
+    {
+        auto line_as_list = split_string_by_character(line, ',');
+
+        if (line_as_list[0] == "")
+        {
+            return bootstrapping_paths;
+        }
+
+        bootstrapping_paths.emplace_back();
+
+        for (auto op_str : line_as_list)
+        {
+            auto op_num = std::stoi(op_str);
+            bootstrapping_paths.back().push_back(operations[op_num]);
+        }
+    }
+    return bootstrapping_paths;
 }

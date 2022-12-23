@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <functional>
+#include <sstream>
 
 // enum class OperationType
 // {
@@ -22,7 +23,7 @@
 
 const int bootstrapping_latency = 300;
 const int addition_divider = 20;
-const int bootstrapping_path_threshold = 9;
+const int bootstrapping_path_threshold = 2;
 
 struct Operation;
 
@@ -43,6 +44,7 @@ struct Operation
     int latest_start_time;
     int rank;
     float bootstrap_urgency;
+    int num_paths;
 };
 
 using OperationList = std::vector<OperationPtr>;
@@ -126,5 +128,7 @@ bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
 float get_path_cost(OperationList);
+std::vector<std::string> split_string_by_character(std::string, char);
+std::vector<OperationList> get_bootstrapping_paths();
 
 #endif

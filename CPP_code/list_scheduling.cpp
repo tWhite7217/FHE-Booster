@@ -1,6 +1,6 @@
 #include "list_scheduling.h"
 
-ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, bool create_core_assignments)
+ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, bool create_core_assignments, int heuristic_type)
     : lgr_file_path{lgr_file_path}, num_cores{num_cores}, create_core_assignments{create_core_assignments}
 {
     InputParser input_parser;
@@ -42,7 +42,8 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     }
 
     BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
-    bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+    bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
+    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
 
     if (num_cores > 0)
     {
@@ -630,9 +631,19 @@ void ListScheduler::choose_operations_to_bootstrap()
     // }
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
-        update_all_ESTs_and_LSTs();
-        update_all_ranks();
-        update_all_bootstrap_urgencies();
+        // if (num_paths_multiplier != 0)
+        // {
+        update_num_paths_for_every_operation();
+        // }
+        if (rank_multiplier != 0)
+        {
+            update_all_ESTs_and_LSTs();
+            update_all_ranks();
+        }
+        if (urgency_multiplier != 0)
+        {
+            update_all_bootstrap_urgencies();
+        }
         choose_operation_to_bootstrap_based_on_score();
     }
 }
@@ -719,22 +730,52 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
         }
     }
 
+    // std::cout << max_score << std::endl;
     max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
 }
 
 int ListScheduler::get_score(OperationPtr operation)
 {
-    auto num_paths = get_num_bootstrapping_paths_containing_operation(operation);
+    // int num_paths;
+    // if (num_paths_multiplier != 0)
+    // {
+    // num_paths = get_num_bootstrapping_paths_containing_operation(operation);
+    // }
 
-    if (num_paths == 0)
+    // if (num_paths == 0)
+    if (operation->num_paths == 0)
     {
         return -1;
     }
 
-    return std::max(num_paths_multiplier * num_paths +
+    return std::max(num_paths_multiplier * operation->num_paths +
                         rank_multiplier * operation->rank +
                         urgency_multiplier * operation->bootstrap_urgency,
                     0.0f);
+}
+
+void ListScheduler::update_num_paths_for_every_operation()
+{
+    for (auto &operation : operations)
+    {
+        operation->num_paths = 0;
+    }
+
+    for (auto path : bootstrapping_paths)
+    {
+        if (lgr_parser.used_selective_model)
+        {
+            path.pop_back();
+        }
+
+        if (!bootstrapping_path_is_satisfied(path))
+        {
+            for (auto &operation : path)
+            {
+                operation->num_paths++;
+            }
+        }
+    }
 }
 
 int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr operation)
@@ -795,7 +836,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, create_core_assignments);
+    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, create_core_assignments, heuristic_type);
 
     list_scheduler.perform_list_scheduling();
     list_scheduler.write_lgr_like_format(output_file_path);

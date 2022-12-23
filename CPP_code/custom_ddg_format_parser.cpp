@@ -23,7 +23,7 @@ void InputParser::parse_lines(std::fstream &input_file)
     std::string line;
     while (std::getline(input_file, line))
     {
-        auto line_as_list = get_string_list_from_line(line);
+        auto line_as_list = split_string_by_character(line, ',');
 
         if (line_as_list[0] == "")
         {
@@ -79,16 +79,4 @@ void InputParser::parse_operation_and_its_dependences(std::vector<std::string> l
 void InputParser::parse_constant(std::vector<std::string> line)
 {
     // operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
-}
-
-std::vector<std::string> InputParser::get_string_list_from_line(std::string line)
-{
-    std::vector<std::string> line_as_list;
-    std::stringstream ss(line);
-    std::string item;
-    while (std::getline(ss, item, ','))
-    {
-        line_as_list.push_back(item);
-    }
-    return line_as_list;
 }
