@@ -44,7 +44,8 @@ struct Operation
     int latest_start_time;
     int rank;
     float bootstrap_urgency;
-    int num_paths;
+    int num_unsatisfied_paths;
+    std::vector<size_t> path_nums;
 };
 
 using OperationList = std::vector<OperationPtr>;
@@ -134,5 +135,6 @@ bool path_is_urgent(OperationList &);
 bool operation_has_no_parents(OperationPtr &);
 // bool operation_only_receives_bootstrapped_results(OperationPtr &);
 bool operation_receives_a_bootstrapped_result(OperationPtr &);
+bool operation_parents_meet_urgency_criteria(OperationPtr &);
 
 #endif

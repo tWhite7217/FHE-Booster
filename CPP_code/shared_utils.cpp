@@ -125,20 +125,32 @@ std::vector<std::string> split_string_by_character(std::string str, char separat
 bool path_is_urgent(OperationList &path)
 {
     auto first_operation = path.front();
-    return !bootstrapping_path_is_satisfied(path) &&
-           (operation_has_no_parents(first_operation) ||
-            // operation_only_receives_bootstrapped_results(first_operation));
-            operation_receives_a_bootstrapped_result(first_operation));
+    return !bootstrapping_path_is_satisfied(path) && operation_parents_meet_urgency_criteria(first_operation);
+    //    (operation_has_no_parents(first_operation) ||
+    // operation_only_receives_bootstrapped_results(first_operation));
+    // operation_receives_a_bootstrapped_result(first_operation));
 }
 
-bool operation_has_no_parents(OperationPtr &operation)
+bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
 {
-    // if (operation->parent_ptrs.size() == 0)
-    // {
-    //     std::cout << "true" << std::endl;
-    // }
-    return operation->parent_ptrs.size() == 0;
+    for (auto parent : operation->parent_ptrs)
+    {
+        if ((parent->path_nums.size() > 0) && !operation_is_bootstrapped(parent))
+        {
+            return false;
+        }
+    }
+    return true;
 }
+
+// bool operation_has_no_parents(OperationPtr &operation)
+// {
+//     // if (operation->parent_ptrs.size() == 0)
+//     // {
+//     //     std::cout << "true" << std::endl;
+//     // }
+//     return operation->parent_ptrs.size() == 0;
+// }
 
 // bool operation_only_receives_bootstrapped_results(OperationPtr &operation)
 // {
@@ -152,14 +164,14 @@ bool operation_has_no_parents(OperationPtr &operation)
 //     return true;
 // }
 
-bool operation_receives_a_bootstrapped_result(OperationPtr &operation)
-{
-    for (auto parent : operation->parent_ptrs)
-    {
-        if (operation_is_bootstrapped(parent))
-        {
-            return true;
-        }
-    }
-    return false;
-}
+// bool operation_receives_a_bootstrapped_result(OperationPtr &operation)
+// {
+//     for (auto parent : operation->parent_ptrs)
+//     {
+//         if (operation_is_bootstrapped(parent))
+//         {
+//             return true;
+//         }
+//     }
+//     return false;
+// }

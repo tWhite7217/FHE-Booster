@@ -40,4 +40,5 @@ private:
     bool larger_path_contains_smaller_path(std::vector<OperationPtr>, std::vector<OperationPtr>);
     void write_paths_to_file(std::ofstream &);
     std::vector<OperationList> read_bootstrapping_paths(std::ifstream &input_file, OperationList);
+    void add_path_num_info_to_all_operations();
 };

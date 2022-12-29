@@ -1,4 +1,4 @@
-#include "list_scheduling.h"
+#include "list_scheduler.h"
 
 ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, bool create_core_assignments, int heuristic_type)
     : lgr_file_path{lgr_file_path}, num_cores{num_cores}, create_core_assignments{create_core_assignments}
@@ -11,7 +11,7 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     if (lgr_file_path != "NULL")
     {
         lgr_parser.switchIstream(lgr_file_path);
-    lgr_parser.set_operations(operations);
+        lgr_parser.set_operations(operations);
         lgr_parser.lex();
     }
     else
@@ -660,7 +660,7 @@ void ListScheduler::update_all_bootstrap_urgencies()
 {
     for (auto &operation : operations)
     {
-        operation->bootstrap_urgency = 0;
+        operation->bootstrap_urgency = -1;
     }
 
     auto count = 0;
@@ -672,7 +672,7 @@ void ListScheduler::update_all_bootstrap_urgencies()
             path.back()->bootstrap_urgency = 1;
         }
     }
-    std::cout << count << std::endl;
+    // std::cout << count << std::endl;
     if (count == 0)
     {
         std::cout << "here" << std::endl;
@@ -724,7 +724,7 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
     }
 
     // std::cout << max_score << std::endl;
-    std::cout << max_score_operation->child_ptrs.size() << std::endl;
+    // std::cout << max_score_operation->child_ptrs.size() << std::endl;
     max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
 }
 
@@ -737,12 +737,12 @@ int ListScheduler::get_score(OperationPtr operation)
     // }
 
     // if (num_paths == 0)
-    if (operation->num_paths == 0)
+    if (operation->num_unsatisfied_paths == 0)
     {
         return -1;
     }
 
-    return std::max(num_paths_multiplier * operation->num_paths +
+    return std::max(num_paths_multiplier * operation->num_unsatisfied_paths +
                         rank_multiplier * operation->rank +
                         urgency_multiplier * operation->bootstrap_urgency,
                     0.0f);
@@ -752,7 +752,7 @@ void ListScheduler::update_num_paths_for_every_operation()
 {
     for (auto &operation : operations)
     {
-        operation->num_paths = 0;
+        operation->num_unsatisfied_paths = 0;
     }
 
     for (auto path : bootstrapping_paths)
@@ -766,7 +766,7 @@ void ListScheduler::update_num_paths_for_every_operation()
         {
             for (auto &operation : path)
             {
-                operation->num_paths++;
+                operation->num_unsatisfied_paths++;
             }
         }
     }

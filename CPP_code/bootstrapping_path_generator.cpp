@@ -24,6 +24,7 @@ std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(s
         std::cout << "Generating bootstrapping paths." << std::endl;
         generate_bootstrapping_paths();
         write_paths_to_file(output_file);
+        add_path_num_info_to_all_operations();
         return bootstrapping_paths;
     }
 }
@@ -270,56 +271,6 @@ bool BootstrappingPathGenerator::paths_are_redundant(std::vector<OperationPtr> p
     return true;
 }
 
-bool BootstrappingPathGenerator::path_is_redundant(size_t path_index)
-{
-    auto test_path = bootstrapping_paths[path_index];
-    auto test_path_size = test_path.size();
-    for (auto i = 0; i < bootstrapping_paths.size(); i++)
-    {
-        auto path_i = bootstrapping_paths[i];
-        auto path_i_size = path_i.size();
-        auto size_difference = test_path_size - path_i_size;
-        if (i != path_index && size_difference > 0)
-        {
-            if (larger_path_contains_smaller_path(test_path, path_i))
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool BootstrappingPathGenerator::larger_path_contains_smaller_path(std::vector<OperationPtr> larger_path, std::vector<OperationPtr> smaller_path)
-{
-    if (using_selective_model)
-    {
-        larger_path.pop_back();
-    }
-
-    for (auto i = 0; i < smaller_path.size(); i++)
-    {
-        if (!vector_contains_element(larger_path, smaller_path[i]))
-        {
-            return false;
-        }
-    }
-
-    for (auto operation : smaller_path)
-    {
-        std::cout << operation->id << ",";
-    }
-    std::cout << std::endl;
-
-    for (auto operation : larger_path)
-    {
-        std::cout << operation->id << ",";
-    }
-    std::cout << std::endl;
-
-    return true;
-}
-
 void BootstrappingPathGenerator::print_number_of_paths()
 {
     std::unordered_map<OperationPtr, int> num_paths_to;
@@ -367,6 +318,7 @@ std::vector<OperationList> BootstrappingPathGenerator::read_bootstrapping_paths(
 {
     std::vector<OperationList> bootstrapping_paths;
     std::string line;
+
     while (std::getline(input_file, line))
     {
         auto line_as_list = split_string_by_character(line, ',');
@@ -376,13 +328,30 @@ std::vector<OperationList> BootstrappingPathGenerator::read_bootstrapping_paths(
             return bootstrapping_paths;
         }
 
+        auto path_num = bootstrapping_paths.size();
+
         bootstrapping_paths.emplace_back();
 
         for (auto op_str : line_as_list)
         {
             auto op_num = std::stoi(op_str);
-            bootstrapping_paths.back().push_back(get_operation_ptr_from_id(operations, op_num));
+            auto op_ptr = get_operation_ptr_from_id(operations, op_num);
+            op_ptr->path_nums.push_back(path_num);
+            bootstrapping_paths.back().push_back(op_ptr);
         }
     }
     return bootstrapping_paths;
+}
+
+void BootstrappingPathGenerator::add_path_num_info_to_all_operations()
+{
+    auto path_num = 0;
+    for (auto &path : bootstrapping_paths)
+    {
+        for (auto &operation : path)
+        {
+            operation->path_nums.push_back(path_num);
+        }
+        path_num++;
+    }
 }
