@@ -7,7 +7,7 @@
 #     ./CPP_code/list_scheduler DDGs/random_graph$i/random_graph$i.txt results/random_graph$i/rg${i}_min_bootstrapping.lgr,NULL,NULL,NULL,NULL results/random_graph$i/rg${i}_list_limited_min_bootstrapping.lgr,results/random_graph$i/rg${i}_list_limited_num_paths_with_slack.lgr,results/random_graph$i/rg${i}_list_limited_urgency.lgr,results/random_graph$i/rg${i}_list_limited_urgency_and_num_paths.lgr,results/random_graph$i/rg${i}_list_limited_num_paths_minus_slack.lgr $3 False all
 # done
 
-heuristics=("num_paths_with_slack" "urgency" "urgency_and_num_paths" "num_paths_minus_slack")
+heuristics=("num_paths_with_slack" "urgency" "urgency_and_num_paths" "num_paths_minus_slack" "num_paths_minus_urgency")
 
 ./list_schedule_multiple.sh limited $1 $2 $3 limited_min_bootstrapping file False -1 $4
 ./convert_multiple_to_selective.sh $1 $2 min_bootstrapping_$4_levels _$4_levels

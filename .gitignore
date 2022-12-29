@@ -12,4 +12,4 @@ LGRParserBase.h
 model_customizer.ltf
 *.out
 profile.txt
-
+*.o

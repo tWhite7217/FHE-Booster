@@ -33,8 +33,8 @@ $(BIN)/solution_validator.o: solution_validator.cpp solution_validator.h Makefil
 solution_validator.out: solution_validator.cpp solution_validator.h $(shared_depenedencies) $(lgr_parser_dependencies)
 	g++ $(CPP_FLAGS) -o $@ solution_validator.o $(shared_depenedencies) $(lgr_parser_dependencies)
 
-$(BIN)/list_scheduler.o: list_scheduling.cpp list_scheduling.h Makefile
-	g++ $(CPP_FLAGS) -c -o $@ list_scheduling.cpp
+$(BIN)/list_scheduler.o: list_scheduler.cpp list_scheduler.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ list_scheduler.cpp
 
 list_scheduler.out: $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
 	g++ $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
