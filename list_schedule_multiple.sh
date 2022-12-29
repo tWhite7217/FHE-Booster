@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make list_scheduler
+make list_scheduler.out
 
 
 source_lgr="NULL"
@@ -8,9 +8,9 @@ source_lgr_suffix=""
 
 if [[ "$6" != "heuristic" ]]; then
     if [[ "$1" == "limited" || "$1" == "unlimited" ]]; then
-        source_lgr_suffix="min_bootstrapping.lgr"
+        source_lgr_suffix="min_bootstrapping_$9_levels.lgr"
     else
-        source_lgr_suffix="min_bootstrapping_$1.lgr"
+        source_lgr_suffix="min_bootstrapping_$9_levels_$1.lgr"
     fi
 fi
 
@@ -27,7 +27,7 @@ do
         source_lgr="results/random_graph$i/rg${i}_"
     fi
     
-    echo ./CPP_code/list_scheduler DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$9_levels_list_$5${result_file_suffix}.lgr $4 $7 $8
-    ./CPP_code/list_scheduler DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$9_levels_list_$5${result_file_suffix}.lgr $4 $7 $8
+    echo ./CPP_code/list_scheduler.out DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$9_levels_list_$5${result_file_suffix}.lgr $4 $7 $8
+    ./CPP_code/list_scheduler.out DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$9_levels_list_$5${result_file_suffix}.lgr $4 $7 $8
     
 done

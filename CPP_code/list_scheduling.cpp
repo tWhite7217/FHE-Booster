@@ -11,7 +11,7 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     if (lgr_file_path != "NULL")
     {
         lgr_parser.switchIstream(lgr_file_path);
-        lgr_parser.set_operations(operations);
+    lgr_parser.set_operations(operations);
         lgr_parser.lex();
     }
     else
@@ -31,9 +31,14 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
         case 2: // urgency and num_paths
             num_paths_multiplier = 1;
             rank_multiplier = 0;
-            urgency_multiplier = 2;
+            urgency_multiplier = 5;
             break;
         case 3: // num_paths minus slack
+            num_paths_multiplier = 25;
+            rank_multiplier = -1;
+            urgency_multiplier = 0;
+            break;
+        case 4: // num_paths minus urgency
             num_paths_multiplier = 25;
             rank_multiplier = 0;
             urgency_multiplier = -1;
@@ -629,8 +634,11 @@ void ListScheduler::choose_operations_to_bootstrap()
     //     update_all_ranks();
     //     choose_operation_to_bootstrap_based_on_score();
     // }
+    auto count = 0;
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
+        // std::cout << count << std::endl;
+        // count++;
         // if (num_paths_multiplier != 0)
         // {
         update_num_paths_for_every_operation();
@@ -655,34 +663,19 @@ void ListScheduler::update_all_bootstrap_urgencies()
         operation->bootstrap_urgency = 0;
     }
 
+    auto count = 0;
     for (auto &path : bootstrapping_paths)
     {
-        if (!bootstrapping_path_is_satisfied(path))
+        if (path_is_urgent(path))
         {
-            for (auto operation_it = path.begin(); operation_it != path.end(); operation_it++)
-            {
-                auto operation = *operation_it;
-                auto path_up_to_operation = OperationList(path.begin(), operation_it + 1);
-                auto path_cost = get_path_cost(path_up_to_operation);
-                operation->bootstrap_urgency = std::max(operation->bootstrap_urgency, path_cost);
-            }
+            count++;
+            path.back()->bootstrap_urgency = 1;
         }
     }
-
-    for (auto &path : bootstrapping_paths)
+    std::cout << count << std::endl;
+    if (count == 0)
     {
-        if (!bootstrapping_path_is_satisfied(path))
-        {
-            for (auto operation_it = path.begin(); operation_it != path.end() - 1; operation_it++)
-            {
-                auto earlier_operation_urgency = (*operation_it)->bootstrap_urgency;
-                auto later_operation = *(operation_it + 1);
-                if (later_operation_exceeds_urgency_threshold(later_operation, earlier_operation_urgency))
-                {
-                    later_operation->bootstrap_urgency = -1;
-                }
-            }
-        }
+        std::cout << "here" << std::endl;
     }
 }
 
@@ -731,6 +724,7 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
     }
 
     // std::cout << max_score << std::endl;
+    std::cout << max_score_operation->child_ptrs.size() << std::endl;
     max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
 }
 
@@ -798,13 +792,18 @@ int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr
 
 void ListScheduler::perform_list_scheduling()
 {
+    std::cout << "here1" << std::endl;
     if (lgr_file_path == "NULL")
     {
         choose_operations_to_bootstrap();
     }
+    std::cout << "here2" << std::endl;
     update_all_ESTs_and_LSTs();
+    std::cout << "here3" << std::endl;
     update_all_ranks();
+    std::cout << "here4" << std::endl;
     create_schedule();
+    std::cout << "here5" << std::endl;
     if (create_core_assignments)
     {
         generate_core_assignments();
@@ -830,7 +829,7 @@ int main(int argc, char **argv)
     bool create_core_assignments = std::string(argv[5]) == "True";
     int heuristic_type = std::stoi(argv[6]);
 
-    if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 3)
+    if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 4)
     {
         std::cout << "Invalid heuristic type." << std::endl;
         return 1;

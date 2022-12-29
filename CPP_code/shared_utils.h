@@ -23,7 +23,7 @@
 
 const int bootstrapping_latency = 300;
 const int addition_divider = 20;
-const int bootstrapping_path_threshold = 2;
+const int bootstrapping_path_threshold = 9;
 
 struct Operation;
 
@@ -49,7 +49,7 @@ struct Operation
 
 using OperationList = std::vector<OperationPtr>;
 
-OperationPtr get_operation_ptr_from_id(OperationList, int);
+OperationPtr get_operation_ptr_from_id(OperationList &, int);
 
 bool operations_bootstrap_on_same_core(OperationPtr, OperationPtr);
 
@@ -130,5 +130,9 @@ void write_lgr_like_format(std::string, OperationList);
 float get_path_cost(OperationList);
 std::vector<std::string> split_string_by_character(std::string, char);
 std::vector<OperationList> get_bootstrapping_paths();
+bool path_is_urgent(OperationList &);
+bool operation_has_no_parents(OperationPtr &);
+// bool operation_only_receives_bootstrapped_results(OperationPtr &);
+bool operation_receives_a_bootstrapped_result(OperationPtr &);
 
 #endif

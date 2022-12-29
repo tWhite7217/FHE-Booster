@@ -21,7 +21,7 @@ bool operations_bootstrap_on_same_core(OperationPtr op1, OperationPtr op2)
     return op1->core_num == op2->core_num;
 }
 
-OperationPtr get_operation_ptr_from_id(OperationList operations, int id)
+OperationPtr get_operation_ptr_from_id(OperationList &operations, int id)
 {
     if (id < 1 || id > operations.size())
     {
@@ -120,4 +120,46 @@ std::vector<std::string> split_string_by_character(std::string str, char separat
         str_as_list.push_back(item);
     }
     return str_as_list;
+}
+
+bool path_is_urgent(OperationList &path)
+{
+    auto first_operation = path.front();
+    return !bootstrapping_path_is_satisfied(path) &&
+           (operation_has_no_parents(first_operation) ||
+            // operation_only_receives_bootstrapped_results(first_operation));
+            operation_receives_a_bootstrapped_result(first_operation));
+}
+
+bool operation_has_no_parents(OperationPtr &operation)
+{
+    // if (operation->parent_ptrs.size() == 0)
+    // {
+    //     std::cout << "true" << std::endl;
+    // }
+    return operation->parent_ptrs.size() == 0;
+}
+
+// bool operation_only_receives_bootstrapped_results(OperationPtr &operation)
+// {
+//     for (auto parent : operation->parent_ptrs)
+//     {
+//         if (!operation_is_bootstrapped(parent))
+//         {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+bool operation_receives_a_bootstrapped_result(OperationPtr &operation)
+{
+    for (auto parent : operation->parent_ptrs)
+    {
+        if (operation_is_bootstrapped(parent))
+        {
+            return true;
+        }
+    }
+    return false;
 }

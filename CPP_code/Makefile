@@ -1,37 +1,65 @@
-shared_header_files := shared_utils.h custom_ddg_format_parser.h bootstrapping_path_generator.h
-shared_source_files := shared_utils.cpp custom_ddg_format_parser.cpp bootstrapping_path_generator.cpp
+BIN = ./bin
 
-shared_depenedencies := $(shared_header_files) $(shared_source_files)
+shared_depenedencies := $(BIN)/shared_utils.o $(BIN)/custom_ddg_format_parser.o $(BIN)/bootstrapping_path_generator.o
 
-lgr_parser_source_files := LGRParser.cpp lex.cc
-
-lgr_parser_dependencies := LGRParser.l LGRParser.cpp LGRParser.h
+lgr_parser_dependencies := $(BIN)/lex.o $(BIN)/LGRParser.o
 
 CPP_FLAGS = -std=c++17 -O3
 
-all: solution_validator list_scheduler input_file_processor tgff_to_unprocessed_lingo
+all: solution_validator.out list_scheduler.out limited_to_selective_converter.out input_file_processor.out graph_generator.out tgff_to_unprocessed_lingo.out
 
-solution_validator: solution_validator.cpp solution_validator.h $(shared_depenedencies) $(lgr_parser_dependencies) Makefile
+$(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ shared_utils.cpp
+
+$(BIN)/custom_ddg_format_parser.o: custom_ddg_format_parser.cpp custom_ddg_format_parser.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ custom_ddg_format_parser.cpp
+
+$(BIN)/bootstrapping_path_generator.o: bootstrapping_path_generator.cpp bootstrapping_path_generator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_path_generator.cpp
+
+$(BIN)/bootstrapping_path_generator.o: bootstrapping_path_generator.cpp bootstrapping_path_generator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_path_generator.cpp
+
+$(BIN)/lex.o: LGRParser.l Makefile
 	flexc++ LGRParser.l
-	g++ -o solution_validator.out solution_validator.cpp $(shared_source_files) $(lgr_parser_source_files) $(CPP_FLAGS)
+	g++ $(CPP_FLAGS) -c -o $@ lex.cc
 
-list_scheduler: list_scheduling.cpp list_scheduling.h $(shared_depenedencies) $(lgr_parser_dependencies) Makefile
-	flexc++ LGRParser.l
-	g++ -o list_scheduler.out list_scheduling.cpp $(shared_source_files) $(lgr_parser_source_files) $(CPP_FLAGS)
+$(BIN)/LGRParser.o: LGRParser.cpp LGRParser.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ LGRParser.cpp
 
-limited_to_selective_converter: limited_to_selective_converter.cpp limited_to_selective_converter.h $(shared_depenedencies) $(lgr_parser_dependencies) Makefile
-	flexc++ LGRParser.l
-	g++ -o limited_to_selective_converter.out limited_to_selective_converter.cpp $(shared_source_files) $(lgr_parser_source_files) $(CPP_FLAGS)
+$(BIN)/solution_validator.o: solution_validator.cpp solution_validator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ solution_validator.cpp
 
-input_file_processor: input_file_processor.cpp $(shared_depenedencies) Makefile
-	g++ -o input_file_processor.out input_file_processor.cpp $(shared_source_files) $(CPP_FLAGS)
+solution_validator.out: solution_validator.cpp solution_validator.h $(shared_depenedencies) $(lgr_parser_dependencies)
+	g++ $(CPP_FLAGS) -o $@ solution_validator.o $(shared_depenedencies) $(lgr_parser_dependencies)
 
-graph_generator: graph_generator.cpp graph_generator.h shared_utils.cpp shared_utils.h Makefile
-	g++ -o graph_generator.out graph_generator.cpp shared_utils.cpp $(CPP_FLAGS)
+$(BIN)/list_scheduler.o: list_scheduling.cpp list_scheduling.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ list_scheduling.cpp
 
-tgff_to_unprocessed_lingo: tgff_to_unprocessed_lingo.l Makefile
+list_scheduler.out: $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
+
+$(BIN)/limited_to_selective_converter.o: limited_to_selective_converter.cpp limited_to_selective_converter.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ limited_to_selective_converter.cpp
+
+limited_to_selective_converter.out: $(BIN)/limited_to_selective_converter.o $(shared_depenedencies) $(lgr_parser_dependencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/limited_to_selective_converter.o $(shared_depenedencies) $(lgr_parser_dependencies)
+
+$(BIN)/input_file_processor.o: input_file_processor.cpp Makefile
+	g++ $(CPP_FLAGS) -c -o $@ input_file_processor.cpp
+
+input_file_processor.out: $(BIN)/input_file_processor.o $(shared_depenedencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/input_file_processor.o $(shared_depenedencies)
+
+$(BIN)/graph_generator.o: graph_generator.cpp graph_generator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ graph_generator.cpp
+
+graph_generator.out: $(BIN)/graph_generator.o shared_utils.o
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/graph_generator.o shared_utils.o
+
+tgff_to_unprocessed_lingo.out: tgff_to_unprocessed_lingo.l Makefile
 	flex -o lex.yy.c tgff_to_unprocessed_lingo.l
-	g++ -o tgff_to_unprocessed_lingo.out lex.yy.c $(CPP_FLAGS)
+	g++ $(CPP_FLAGS) -o $@ lex.yy.c
 
 clean:
 	rm lex.cc LGRParserBase.h lex.yy.c
