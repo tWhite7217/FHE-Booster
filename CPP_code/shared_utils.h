@@ -129,6 +129,7 @@ bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
 float get_path_cost(OperationList);
+float get_path_cost_from_num_operations(int, int);
 std::vector<std::string> split_string_by_character(std::string, char);
 std::vector<OperationList> get_bootstrapping_paths();
 bool path_is_urgent(OperationList &);

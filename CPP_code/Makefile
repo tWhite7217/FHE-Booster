@@ -17,9 +17,6 @@ $(BIN)/custom_ddg_format_parser.o: custom_ddg_format_parser.cpp custom_ddg_forma
 $(BIN)/bootstrapping_path_generator.o: bootstrapping_path_generator.cpp bootstrapping_path_generator.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_path_generator.cpp
 
-$(BIN)/bootstrapping_path_generator.o: bootstrapping_path_generator.cpp bootstrapping_path_generator.h Makefile
-	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_path_generator.cpp
-
 $(BIN)/lex.o: LGRParser.l Makefile
 	flexc++ LGRParser.l
 	g++ $(CPP_FLAGS) -c -o $@ lex.cc
@@ -30,8 +27,8 @@ $(BIN)/LGRParser.o: LGRParser.cpp LGRParser.h Makefile
 $(BIN)/solution_validator.o: solution_validator.cpp solution_validator.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ solution_validator.cpp
 
-solution_validator.out: solution_validator.cpp solution_validator.h $(shared_depenedencies) $(lgr_parser_dependencies)
-	g++ $(CPP_FLAGS) -o $@ solution_validator.o $(shared_depenedencies) $(lgr_parser_dependencies)
+solution_validator.out: $(BIN)/solution_validator.o $(shared_depenedencies) $(lgr_parser_dependencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/solution_validator.o $(shared_depenedencies) $(lgr_parser_dependencies)
 
 $(BIN)/list_scheduler.o: list_scheduler.cpp list_scheduler.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ list_scheduler.cpp

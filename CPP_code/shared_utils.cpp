@@ -107,6 +107,11 @@ float get_path_cost(std::vector<OperationPtr> path)
             num_additions++;
         }
     }
+    return get_path_cost_from_num_operations(num_additions, num_multiplications);
+}
+
+float get_path_cost_from_num_operations(int num_additions, int num_multiplications)
+{
     return num_multiplications + (float)num_additions / addition_divider;
 }
 

@@ -679,32 +679,6 @@ void ListScheduler::update_all_bootstrap_urgencies()
     }
 }
 
-bool ListScheduler::later_operation_exceeds_urgency_threshold(OperationPtr &later_operation, float &earlier_operation_urgency)
-{
-    if (earlier_operation_urgency == -1)
-    {
-        return true;
-    }
-
-    float urgency_to_add;
-    if (later_operation->type == "MUL")
-    {
-        urgency_to_add = 1;
-    }
-    else
-    {
-        urgency_to_add = 1 / addition_divider;
-    }
-
-    float later_operation_urgency = earlier_operation_urgency + urgency_to_add;
-
-    return later_operation_urgency > bootstrapping_path_threshold;
-}
-
-// void ListScheduler::update_bootstrap_urgency(OperationPtr operation)
-// {
-
-// }
 
 void ListScheduler::choose_operation_to_bootstrap_based_on_score()
 {
