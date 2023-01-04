@@ -92,7 +92,7 @@ bool operation_is_bootstrapped(OperationPtr operation)
     return operation->child_ptrs_that_receive_bootstrapped_result.size() > 0;
 }
 
-float get_path_cost(std::vector<OperationPtr> path)
+int get_path_cost(std::vector<OperationPtr> path)
 {
     int num_multiplications = 0;
     int num_additions = 0;
@@ -110,9 +110,9 @@ float get_path_cost(std::vector<OperationPtr> path)
     return get_path_cost_from_num_operations(num_additions, num_multiplications);
 }
 
-float get_path_cost_from_num_operations(int num_additions, int num_multiplications)
+int get_path_cost_from_num_operations(int num_additions, int num_multiplications)
 {
-    return num_multiplications + (float)num_additions / addition_divider;
+    return num_multiplications * multiplication_cost + num_additions * addition_cost;
 }
 
 std::vector<std::string> split_string_by_character(std::string str, char separator)

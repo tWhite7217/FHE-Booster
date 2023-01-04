@@ -14,6 +14,7 @@
 #include <fstream>
 #include <functional>
 #include <sstream>
+#include <cmath>
 
 // enum class OperationType
 // {
@@ -22,8 +23,16 @@
 // };
 
 const int bootstrapping_latency = 300;
-const int addition_divider = 20;
-const int bootstrapping_path_threshold = 9;
+// 2 levels - 16 bits
+// const int gained_levels = 2;
+// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
+// const double multiplication_cost = 30.5;
+// const int bootstrapping_path_threshold = 55;
+// 9 levels - 12 bits
+const int gained_levels = 9;
+const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
+const double multiplication_cost = 26.75;
+const int bootstrapping_path_threshold = 216;
 
 struct Operation;
 
@@ -43,7 +52,7 @@ struct Operation
     int earliest_start_time;
     int latest_start_time;
     int rank;
-    float bootstrap_urgency;
+    double bootstrap_urgency;
     int num_unsatisfied_paths;
     std::vector<size_t> path_nums;
 };
@@ -128,8 +137,8 @@ bool bootstrapping_path_is_satisfied(OperationList &);
 bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
-float get_path_cost(OperationList);
-float get_path_cost_from_num_operations(int, int);
+int get_path_cost(OperationList);
+int get_path_cost_from_num_operations(int, int);
 std::vector<std::string> split_string_by_character(std::string, char);
 std::vector<OperationList> get_bootstrapping_paths();
 bool path_is_urgent(OperationList &);

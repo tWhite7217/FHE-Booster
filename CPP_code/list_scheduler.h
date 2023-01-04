@@ -84,7 +84,6 @@ private:
     void start_ready_operations();
     void add_necessary_operations_to_bootstrapping_queue(std::set<OperationPtr>);
     void start_bootstrapping_necessary_operations(std::set<OperationPtr>);
-    bool later_operation_exceeds_urgency_threshold(OperationPtr &, float &);
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_best_core_for_operation(OperationPtr, int);

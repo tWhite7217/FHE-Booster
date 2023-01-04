@@ -5,7 +5,12 @@ BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations,
 
 std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(std::string input_dag_file_path)
 {
-    std::string bootstrapping_file_path = input_dag_file_path.substr(0, input_dag_file_path.size() - 4) + "_bootstrapping_paths_" + std::to_string(bootstrapping_path_threshold) + "_levels.txt";
+    std::string bootstrapping_file_path = input_dag_file_path.substr(0, input_dag_file_path.size() - 4) + "_bootstrapping_paths_" + std::to_string(gained_levels) + "_levels";
+    if (using_selective_model)
+    {
+        bootstrapping_file_path += "_selective";
+    }
+    bootstrapping_file_path += ".txt";
     struct stat input_dag_file_info;
     struct stat output_bootstrapping_file_info;
 
@@ -74,25 +79,32 @@ void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
     };
 
     auto starting_point_offset = 0;
-    auto current_starting_id_to_sort = bootstrapping_paths[0][0];
-    for (auto i = 1; i < bootstrapping_paths.size(); i++)
+    if (bootstrapping_paths.size() > 0)
     {
-        if (bootstrapping_paths[i][0] != current_starting_id_to_sort)
+        auto current_starting_id_to_sort = bootstrapping_paths[0][0];
+        for (auto i = 1; i < bootstrapping_paths.size(); i++)
         {
-            std::sort(bootstrapping_paths.begin() + starting_point_offset, bootstrapping_paths.begin() + i, comparator_class());
-            starting_point_offset = i;
-            current_starting_id_to_sort = bootstrapping_paths[i][0];
+            if (bootstrapping_paths[i][0] != current_starting_id_to_sort)
+            {
+                std::sort(bootstrapping_paths.begin() + starting_point_offset, bootstrapping_paths.begin() + i, comparator_class());
+                starting_point_offset = i;
+                current_starting_id_to_sort = bootstrapping_paths[i][0];
+            }
         }
+    }
+    else
+    {
+        std::cout << "This program has no bootstrapping paths." << std::endl;
     }
 }
 
 std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, std::vector<OperationPtr> path, int num_multiplications, int num_additions, bool initial_was_addition)
 {
     path.push_back(operation);
-    float path_cost = get_path_cost_from_num_operations(num_additions, num_multiplications);
+    auto path_cost = get_path_cost_from_num_operations(num_additions, num_multiplications);
     if (path_cost > bootstrapping_path_threshold)
     {
-        float path_cost_without_first_op;
+        double path_cost_without_first_op;
         if (initial_was_addition)
         {
             path_cost_without_first_op = get_path_cost_from_num_operations(num_additions - 1, num_multiplications);
@@ -332,7 +344,7 @@ std::vector<OperationList> BootstrappingPathGenerator::read_bootstrapping_paths(
 
         if (line_as_list[0] == "")
         {
-            return bootstrapping_paths;
+            continue;
         }
 
         auto path_num = bootstrapping_paths.size();

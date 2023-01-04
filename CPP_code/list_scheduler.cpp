@@ -679,7 +679,6 @@ void ListScheduler::update_all_bootstrap_urgencies()
     }
 }
 
-
 void ListScheduler::choose_operation_to_bootstrap_based_on_score()
 {
     auto max_score = -1;
@@ -719,7 +718,7 @@ int ListScheduler::get_score(OperationPtr operation)
     return std::max(num_paths_multiplier * operation->num_unsatisfied_paths +
                         rank_multiplier * operation->rank +
                         urgency_multiplier * operation->bootstrap_urgency,
-                    0.0f);
+                    0.0);
 }
 
 void ListScheduler::update_num_paths_for_every_operation()
