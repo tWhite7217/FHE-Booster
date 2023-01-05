@@ -14,7 +14,7 @@ class ListScheduler
 public:
     std::vector<OperationPtr> schedule;
 
-    ListScheduler(std::string, std::string, int, bool, int);
+    ListScheduler(std::string, std::string, int, int);
 
     OperationList get_operations();
 

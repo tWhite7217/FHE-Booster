@@ -1,7 +1,7 @@
 #include "list_scheduler.h"
 
-ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, bool create_core_assignments, int heuristic_type)
-    : lgr_file_path{lgr_file_path}, num_cores{num_cores}, create_core_assignments{create_core_assignments}
+ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int heuristic_type)
+    : lgr_file_path{lgr_file_path}, num_cores{num_cores}
 {
     InputParser input_parser;
     input_parser.parse_input_to_generate_operations(dag_file_path);
@@ -16,6 +16,10 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     }
     else
     {
+        BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
+        bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
+        // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
+
         switch (heuristic_type)
         {
         case 0: // num_paths with slack
@@ -46,14 +50,10 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
         }
     }
 
-    BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
-    bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
-    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
-
     if (num_cores > 0)
     {
         cores.resize(num_cores);
-        core_schedules.resize(num_cores);
+        core_schedules.assign(num_cores, "");
         std::iota(cores.begin(), cores.end(), 1);
         start_bootstrapping_ready_operations = [this]()
         { start_bootstrapping_ready_operations_for_limited_model(); };
@@ -285,6 +285,7 @@ bool ListScheduler::operation_is_ready(OperationPtr operation)
 
 void ListScheduler::generate_start_times_and_solver_latency()
 {
+    create_core_assignments = false;
     clock_cycle = 0;
     running_operations.clear();
     bootstrapping_operations.clear();
@@ -309,6 +310,7 @@ void ListScheduler::generate_start_times_and_solver_latency()
 
 void ListScheduler::generate_core_assignments()
 {
+    create_core_assignments = true;
     clock_cycle = 0;
     running_operations.clear();
     bootstrapping_operations.clear();
@@ -362,6 +364,8 @@ void ListScheduler::start_ready_operations()
                 int best_core = get_best_core_for_operation(operation, available_core);
                 operation->core_num = best_core;
 
+                auto core_schedules_index = best_core - 1;
+
                 // for (auto parent : operation->parent_ptrs)
                 // {
                 //     if (parent->core_num != best_core)
@@ -393,10 +397,10 @@ void ListScheduler::start_ready_operations()
 
                 std::string thread = " t" + std::to_string(best_core);
 
-                core_schedules[best_core] += operation->type + result_var + arg1 + arg2 + thread + "\n";
+                core_schedules[core_schedules_index] += operation->type + result_var + arg1 + arg2 + thread + "\n";
                 if (operation_is_bootstrapped(operation))
                 {
-                    core_schedules[best_core] += "BOOT c0" + std::to_string(operation->id) + " c" + std::to_string(operation->id) + " t" + std::to_string(best_core) + "\n";
+                    core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->id) + " c" + std::to_string(operation->id) + " t" + std::to_string(best_core) + "\n";
                 }
             }
         }
@@ -620,9 +624,13 @@ void ListScheduler::write_lgr_like_format(std::string output_file_path)
 
 void ListScheduler::write_assembly_like_format(std::string output_file_path)
 {
+    std::ofstream output_file;
+    output_file.open(output_file_path);
+
     for (auto schedule : core_schedules)
     {
-        std::cout << schedule;
+        output_file << schedule;
+        // std::cout << schedule;
     }
 }
 
@@ -703,13 +711,6 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
 
 int ListScheduler::get_score(OperationPtr operation)
 {
-    // int num_paths;
-    // if (num_paths_multiplier != 0)
-    // {
-    // num_paths = get_num_bootstrapping_paths_containing_operation(operation);
-    // }
-
-    // if (num_paths == 0)
     if (operation->num_unsatisfied_paths == 0)
     {
         return -1;
@@ -745,24 +746,6 @@ void ListScheduler::update_num_paths_for_every_operation()
     }
 }
 
-int ListScheduler::get_num_bootstrapping_paths_containing_operation(OperationPtr operation)
-{
-    int num_paths = 0;
-    for (auto path : bootstrapping_paths)
-    {
-        if (lgr_parser.used_selective_model)
-        {
-            path.pop_back();
-        }
-
-        if (vector_contains_element(path, operation) && !bootstrapping_path_is_satisfied(path))
-        {
-            num_paths++;
-        }
-    }
-    return num_paths;
-}
-
 void ListScheduler::perform_list_scheduling()
 {
     std::cout << "here1" << std::endl;
@@ -777,21 +760,17 @@ void ListScheduler::perform_list_scheduling()
     std::cout << "here4" << std::endl;
     create_schedule();
     std::cout << "here5" << std::endl;
-    if (create_core_assignments)
-    {
-        generate_core_assignments();
-    }
-    else
-    {
-        generate_start_times_and_solver_latency();
-    }
+    generate_start_times_and_solver_latency();
+    std::cout << "here6" << std::endl;
+    generate_core_assignments();
+    std::cout << "here7" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 7)
+    if (argc != 6)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <create_core_assignments> <heuristic_type>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <heuristic_type>" << std::endl;
         return 1;
     }
 
@@ -799,8 +778,7 @@ int main(int argc, char **argv)
     std::string lgr_file_path = argv[2];
     std::string output_file_path = argv[3];
     int num_cores = std::stoi(argv[4]);
-    bool create_core_assignments = std::string(argv[5]) == "True";
-    int heuristic_type = std::stoi(argv[6]);
+    int heuristic_type = std::stoi(argv[5]);
 
     if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 4)
     {
@@ -808,14 +786,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, create_core_assignments, heuristic_type);
+    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, heuristic_type);
 
     list_scheduler.perform_list_scheduling();
-    list_scheduler.write_lgr_like_format(output_file_path);
-    if (create_core_assignments)
-    {
-        list_scheduler.write_assembly_like_format(output_file_path);
-    }
+    list_scheduler.write_lgr_like_format(output_file_path + ".lgr");
+    list_scheduler.write_assembly_like_format(output_file_path + ".sched");
 
     return 0;
 }
