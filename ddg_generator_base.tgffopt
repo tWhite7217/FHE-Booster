@@ -1,9 +1,0 @@
-tg_cnt 1
-task_cnt 30 1
-task_type_cnt 2
-trans_type_cnt 1
-prob_multi_start_nodes 0.7
-start_node 4 2
-tg_write 1
-eps_write 0
-vcg_write 1
