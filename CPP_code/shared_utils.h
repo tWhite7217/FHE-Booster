@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -24,15 +25,15 @@
 
 const int bootstrapping_latency = 300;
 // 2 levels - 16 bits
-// const int gained_levels = 2;
-// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
-// const double multiplication_cost = 30.5;
-// const int bootstrapping_path_threshold = 55;
+const int gained_levels = 2;
+const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
+const double multiplication_cost = 30.5;
+const int bootstrapping_path_threshold = 55;
 // 9 levels - 12 bits
-const int gained_levels = 9;
-const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
-const double multiplication_cost = 26.75;
-const int bootstrapping_path_threshold = 216;
+// const int gained_levels = 9;
+// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
+// const double multiplication_cost = 26.75;
+// const int bootstrapping_path_threshold = 216;
 
 struct Operation;
 
@@ -76,6 +77,12 @@ bool set_contains_element(const std::set<T, S> &set, const T &element)
 }
 
 template <typename T, typename S>
+bool unordered_set_contains_element(const std::unordered_set<T, S> &set, const T &element)
+{
+    return set.find(element) != set.end();
+}
+
+template <typename T, typename S>
 bool multiset_contains_element(const std::multiset<T, S> &set, const T &element)
 {
     return set.find(element) != set.end();
@@ -101,11 +108,21 @@ void remove_element_from_vector(std::vector<T> &vector, const T &element)
 }
 
 template <typename T>
-void remove_element_subset_from_vector(std::vector<T> &vector, const std::set<T> &element_subset)
+void remove_element_subset_from_vector(std::vector<T> &vector, std::unordered_set<T> element_subset)
 {
-    for (auto &element : element_subset)
+    auto it = vector.begin();
+    while (it != vector.end() && element_subset.size() > 0)
     {
-        remove_element_from_vector(vector, element);
+        auto element = *it;
+        if (unordered_set_contains_element(element_subset, element))
+        {
+            it = vector.erase(it);
+            element_subset.erase(element);
+        }
+        else
+        {
+            it++;
+        }
     }
 }
 
@@ -119,7 +136,7 @@ S map_max_value(const std::map<T, S> &map)
 }
 
 template <typename T, typename S>
-void remove_key_subset_from_map(std::map<T, S> &map, const std::set<T> key_subset)
+void remove_key_subset_from_map(std::map<T, S> &map, const std::unordered_set<T> key_subset)
 {
     for (auto key : key_subset)
     {

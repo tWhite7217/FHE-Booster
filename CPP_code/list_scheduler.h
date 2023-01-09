@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include <queue>
-#include <set>
+#include <unordered_set>
 #include <numeric>
 
 class ListScheduler
@@ -40,7 +40,7 @@ private:
     std::string lgr_file_path;
 
     int num_cores;
-    std::vector<int> cores;
+    std::unordered_map<int, bool> core_availability;
 
     bool create_core_assignments;
     std::vector<std::string> core_schedules;
@@ -53,6 +53,7 @@ private:
     std::map<OperationPtr, int> running_operations;
     std::map<OperationPtr, int> bootstrapping_operations;
     std::vector<OperationPtr> ordered_unstarted_operations;
+    std::vector<OperationPtr> ready_operations;
     int clock_cycle;
 
     int constant_counter = 0;
@@ -76,14 +77,14 @@ private:
     void update_num_paths_for_every_operation();
     std::vector<OperationPtr> get_priority_list();
     std::map<OperationPtr, int> initialize_pred_count();
-    std::set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);
+    std::unordered_set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);
     bool operation_is_ready(OperationPtr);
-    std::set<OperationPtr> handle_started_operations(std::map<OperationPtr, int> &);
+    std::unordered_set<OperationPtr> handle_started_operations(std::map<OperationPtr, int> &);
     void decrement_cycles_left(std::map<OperationPtr, int> &);
-    std::set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
+    std::unordered_set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
     void start_ready_operations();
-    void add_necessary_operations_to_bootstrapping_queue(std::set<OperationPtr>);
-    void start_bootstrapping_necessary_operations(std::set<OperationPtr>);
+    void add_necessary_operations_to_bootstrapping_queue(std::unordered_set<OperationPtr>);
+    void start_bootstrapping_necessary_operations(std::unordered_set<OperationPtr>);
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_best_core_for_operation(OperationPtr, int);
@@ -95,4 +96,7 @@ private:
     int get_num_bootstrapping_paths_containing_operation(OperationPtr);
     std::string get_constant_arg();
     std::string get_variable_arg(OperationPtr, int);
+    void mark_cores_available(std::unordered_set<OperationPtr> &);
+    void find_new_ready_operations(std::unordered_set<OperationPtr> &);
+    // void find_new_ready_operations();
 };
