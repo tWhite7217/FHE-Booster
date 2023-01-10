@@ -18,7 +18,6 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     {
         BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
         bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
-        // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
 
         switch (heuristic_type)
         {
@@ -144,7 +143,6 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     for (auto operation : operations_in_topological_order)
     {
         update_earliest_start_time(operation);
-        // std::cout << "EST of " << operation->id << " is " << operation->earliest_start_time << std::endl;
     }
 
     int earliest_program_end_time = get_earliest_possible_program_end_time();
@@ -155,7 +153,6 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     for (auto operation : operations_in_reverse_topological_order)
     {
         update_latest_start_time(operation, earliest_program_end_time);
-        // std::cout << "LST of " << operation->id << " is " << operation->latest_start_time << std::endl;
     }
 }
 
@@ -196,14 +193,7 @@ void ListScheduler::update_ready_operations()
 void ListScheduler::generate_start_times_and_solver_latency()
 {
     create_core_assignments = false;
-    clock_cycle = 0;
-    running_operations.clear();
-    bootstrapping_operations.clear();
-    bootstrapping_queue.clear();
-    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
-
-    initialize_pred_count();
-    update_ready_operations();
+    initialize_per_cycle_simulation_state();
 
     while (program_is_not_finished())
     {
@@ -212,18 +202,18 @@ void ListScheduler::generate_start_times_and_solver_latency()
         clock_cycle++;
 
         auto finished_bootstrapping_operations = handle_started_operations(bootstrapping_operations);
+        auto finished_running_operations = handle_started_operations(running_operations);
+
+        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
+        update_ready_operations();
 
         if (num_cores > 0)
         {
             mark_cores_available(finished_bootstrapping_operations);
         }
 
-        auto finished_running_operations = handle_started_operations(running_operations);
         add_necessary_operations_to_bootstrapping_queue(finished_running_operations);
         start_bootstrapping_ready_operations();
-
-        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
-        update_ready_operations();
     }
     solver_latency = clock_cycle;
 }
@@ -231,13 +221,7 @@ void ListScheduler::generate_start_times_and_solver_latency()
 void ListScheduler::generate_core_assignments()
 {
     create_core_assignments = true;
-    clock_cycle = 0;
-    running_operations.clear();
-    bootstrapping_operations.clear();
-    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
-
-    initialize_pred_count();
-    update_ready_operations();
+    initialize_per_cycle_simulation_state();
 
     while (program_is_not_finished())
     {
@@ -248,17 +232,27 @@ void ListScheduler::generate_core_assignments()
         auto finished_bootstrapping_operations = handle_started_operations(bootstrapping_operations);
         auto finished_running_operations = handle_started_operations(running_operations);
 
-        if (num_cores > 0)
-        {
-            mark_cores_available(finished_bootstrapping_operations);
-            mark_cores_available(finished_running_operations);
-        }
-
-        start_bootstrapping_necessary_operations(finished_running_operations);
-
         update_pred_count(finished_running_operations, finished_bootstrapping_operations);
         update_ready_operations();
+
+        mark_cores_available(finished_bootstrapping_operations);
+        mark_cores_available(finished_running_operations);
+
+        start_bootstrapping_necessary_operations(finished_running_operations);
     }
+}
+
+void ListScheduler::initialize_per_cycle_simulation_state()
+{
+    clock_cycle = 0;
+    prioritized_unstarted_operations.clear();
+    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
+    running_operations.clear();
+    bootstrapping_queue.clear();
+    bootstrapping_operations.clear();
+
+    initialize_pred_count();
+    update_ready_operations();
 }
 
 void ListScheduler::mark_cores_available(std::unordered_set<OperationPtr> &finished_operations)
@@ -317,20 +311,35 @@ void ListScheduler::start_ready_operations()
             std::string arg1;
             std::string arg2;
 
-            switch (operation->parent_ptrs.size())
+            auto num_var_parents = operation->parent_ptrs.size();
+            auto num_const_parents = operation->constant_parent_ids.size();
+
+            if (num_var_parents == 2)
             {
-            case 0:
-                arg1 = get_constant_arg();
-                arg2 = get_constant_arg();
-                break;
-            case 1:
-                arg1 = get_variable_arg(operation, 0);
-                arg2 = get_constant_arg();
-                break;
-            case 2:
                 arg1 = get_variable_arg(operation, 0);
                 arg2 = get_variable_arg(operation, 1);
-                break;
+            }
+            else if (num_const_parents == 2)
+            {
+                arg1 = get_constant_arg(operation, 0);
+                arg2 = get_constant_arg(operation, 1);
+            }
+            else if (num_var_parents == 1 && num_const_parents == 1)
+            {
+                arg1 = get_variable_arg(operation, 0);
+                arg2 = get_constant_arg(operation, 0);
+            }
+            else if (num_var_parents == 1)
+            {
+                arg1 = arg2 = get_variable_arg(operation, 0);
+            }
+            else if (num_const_parents == 1)
+            {
+                arg1 = arg2 = get_constant_arg(operation, 0);
+            }
+            else
+            {
+                throw std::runtime_error("An operation must have at least one input.");
             }
 
             std::string thread = " t" + std::to_string(best_core);
@@ -344,12 +353,12 @@ void ListScheduler::start_ready_operations()
     }
 }
 
-std::string ListScheduler::get_constant_arg()
+std::string ListScheduler::get_constant_arg(OperationPtr operation, size_t parent_num)
 {
-    return " k" + std::to_string(constant_counter++);
+    return " k" + std::to_string(operation->constant_parent_ids[parent_num]);
 }
 
-std::string ListScheduler::get_variable_arg(OperationPtr operation, int parent_num)
+std::string ListScheduler::get_variable_arg(OperationPtr operation, size_t parent_num)
 {
     std::string arg = " c";
     if (vector_contains_element(operation->parent_ptrs[parent_num]->child_ptrs_that_receive_bootstrapped_result, operation))
@@ -521,27 +530,15 @@ void ListScheduler::write_assembly_like_format(std::string output_file_path)
     for (auto schedule : core_schedules)
     {
         output_file << schedule;
-        // std::cout << schedule;
     }
 }
 
 void ListScheduler::choose_operations_to_bootstrap()
 {
-    // while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
-    // {
-    //     update_all_ESTs_and_LSTs();
-    //     update_all_ranks();
-    //     choose_operation_to_bootstrap_based_on_score();
-    // }
     auto count = 0;
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
-        // std::cout << count << std::endl;
-        // count++;
-        // if (num_paths_multiplier != 0)
-        // {
         update_num_paths_for_every_operation();
-        // }
         if (rank_multiplier != 0)
         {
             update_all_ESTs_and_LSTs();
@@ -571,7 +568,6 @@ void ListScheduler::update_all_bootstrap_urgencies()
             path.back()->bootstrap_urgency = 1;
         }
     }
-    // std::cout << count << std::endl;
     if (count == 0)
     {
         std::cout << "here" << std::endl;
@@ -595,8 +591,6 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
         }
     }
 
-    // std::cout << max_score << std::endl;
-    // std::cout << max_score_operation->child_ptrs.size() << std::endl;
     max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
 }
 

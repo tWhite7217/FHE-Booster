@@ -62,8 +62,6 @@ private:
     OperationList ready_operations;
     int clock_cycle;
 
-    int constant_counter = 0;
-
     struct RankCmp
     {
         bool operator()(const OperationPtr &a, const OperationPtr &b) const
@@ -75,7 +73,6 @@ private:
 
     std::function<void()> start_bootstrapping_ready_operations;
 
-    std::vector<OperationPtr> get_operations_in_topological_order();
     void update_earliest_start_time(OperationPtr);
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(OperationPtr, int);
@@ -97,9 +94,9 @@ private:
     bool program_is_not_finished();
     void choose_operation_to_bootstrap_based_on_score();
     int get_score(OperationPtr);
-    int get_num_bootstrapping_paths_containing_operation(OperationPtr);
-    std::string get_constant_arg();
-    std::string get_variable_arg(OperationPtr, int);
+    std::string get_constant_arg(OperationPtr, size_t);
+    std::string get_variable_arg(OperationPtr, size_t);
     void mark_cores_available(std::unordered_set<OperationPtr> &);
     void update_pred_count(std::unordered_set<OperationPtr> &, std::unordered_set<OperationPtr> &);
+    void initialize_per_cycle_simulation_state();
 };
