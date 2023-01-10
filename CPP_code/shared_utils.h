@@ -127,6 +127,15 @@ void remove_element_subset_from_vector(std::vector<T> &vector, std::unordered_se
 }
 
 template <typename T, typename S>
+void remove_element_subset_from_set(std::set<T, S> &set, const std::unordered_set<T> &element_subset)
+{
+    for (const auto element : element_subset)
+    {
+        set.erase(element);
+    }
+}
+
+template <typename T, typename S>
 S map_max_value(const std::map<T, S> &map)
 {
     auto max_it = std::max_element(map.begin(), map.end(),
@@ -160,8 +169,7 @@ std::vector<std::string> split_string_by_character(std::string, char);
 std::vector<OperationList> get_bootstrapping_paths();
 bool path_is_urgent(OperationList &);
 bool operation_has_no_parents(OperationPtr &);
-// bool operation_only_receives_bootstrapped_results(OperationPtr &);
-bool operation_receives_a_bootstrapped_result(OperationPtr &);
+bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
 bool operation_parents_meet_urgency_criteria(OperationPtr &);
 
 #endif

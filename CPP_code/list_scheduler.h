@@ -12,15 +12,12 @@
 class ListScheduler
 {
 public:
-    std::vector<OperationPtr> schedule;
-
     ListScheduler(std::string, std::string, int, int);
 
     OperationList get_operations();
 
     void perform_list_scheduling();
 
-    void create_schedule();
     void update_all_ESTs_and_LSTs();
     void update_all_ranks();
     void generate_start_times_and_solver_latency();
@@ -47,13 +44,22 @@ private:
 
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
-    std::vector<std::vector<OperationPtr>> bootstrapping_paths;
+    std::vector<OperationList> bootstrapping_paths;
     LGRParser lgr_parser;
 
+    struct PriorityCmp
+    {
+        bool operator()(const OperationPtr &a, const OperationPtr &b) const
+        {
+            return a->rank < b->rank;
+        }
+    };
+
+    std::map<OperationPtr, int> pred_count;
     std::map<OperationPtr, int> running_operations;
     std::map<OperationPtr, int> bootstrapping_operations;
-    std::vector<OperationPtr> ordered_unstarted_operations;
-    std::vector<OperationPtr> ready_operations;
+    std::multiset<OperationPtr, PriorityCmp> prioritized_unstarted_operations;
+    OperationList ready_operations;
     int clock_cycle;
 
     int constant_counter = 0;
@@ -75,10 +81,8 @@ private:
     void update_latest_start_time(OperationPtr, int);
     void update_all_bootstrap_urgencies();
     void update_num_paths_for_every_operation();
-    std::vector<OperationPtr> get_priority_list();
-    std::map<OperationPtr, int> initialize_pred_count();
-    std::unordered_set<OperationPtr> initialize_ready_operations(std::map<OperationPtr, int>);
-    bool operation_is_ready(OperationPtr);
+    void initialize_pred_count();
+    void update_ready_operations();
     std::unordered_set<OperationPtr> handle_started_operations(std::map<OperationPtr, int> &);
     void decrement_cycles_left(std::map<OperationPtr, int> &);
     std::unordered_set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
@@ -97,6 +101,5 @@ private:
     std::string get_constant_arg();
     std::string get_variable_arg(OperationPtr, int);
     void mark_cores_available(std::unordered_set<OperationPtr> &);
-    void find_new_ready_operations(std::unordered_set<OperationPtr> &);
-    // void find_new_ready_operations();
+    void update_pred_count(std::unordered_set<OperationPtr> &, std::unordered_set<OperationPtr> &);
 };

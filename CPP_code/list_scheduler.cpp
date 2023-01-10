@@ -159,43 +159,6 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     }
 }
 
-std::vector<OperationPtr> ListScheduler::get_operations_in_topological_order()
-{
-    std::vector<OperationPtr> unvisited_operations = operations;
-    std::vector<OperationPtr> operations_in_topological_order;
-
-    while (!unvisited_operations.empty())
-    {
-        auto operation_it = unvisited_operations.begin();
-        while (operation_it != unvisited_operations.end())
-        {
-            auto operation = *operation_it;
-            bool operation_is_ready = true;
-
-            for (auto potential_parent_operation : unvisited_operations)
-            {
-                if (vector_contains_element(operation->parent_ptrs, potential_parent_operation))
-                {
-                    operation_is_ready = false;
-                    break;
-                }
-            }
-
-            if (operation_is_ready)
-            {
-                operations_in_topological_order.push_back(operation);
-                operation_it = unvisited_operations.erase(operation_it);
-            }
-            else
-            {
-                operation_it++;
-            }
-        }
-    }
-
-    return operations_in_topological_order;
-}
-
 void ListScheduler::update_all_ranks()
 {
     for (auto &operation : operations)
@@ -204,84 +167,30 @@ void ListScheduler::update_all_ranks()
     }
 }
 
-std::vector<OperationPtr> ListScheduler::get_priority_list()
+void ListScheduler::initialize_pred_count()
 {
-    auto priority_list = operations;
-
-    std::sort(priority_list.begin(), priority_list.end(),
-              [this](OperationPtr a, OperationPtr b)
-              {
-                  return a->rank > b->rank;
-              });
-    return priority_list;
-}
-
-std::map<OperationPtr, int> ListScheduler::initialize_pred_count()
-{
-    std::map<OperationPtr, int> pred_count;
     for (auto operation : operations)
     {
         pred_count[operation] = operation->parent_ptrs.size();
     }
-    return pred_count;
 }
 
-std::unordered_set<OperationPtr> ListScheduler::initialize_ready_operations(std::map<OperationPtr, int> pred_count)
+void ListScheduler::update_ready_operations()
 {
-    std::unordered_set<OperationPtr> ready_operations;
-    for (const auto [id, count] : pred_count)
+    auto it = prioritized_unstarted_operations.begin();
+    while (it != prioritized_unstarted_operations.end())
     {
-        if (count == 0)
+        auto operation = *it;
+        if (pred_count[operation] == 0)
         {
-            ready_operations.insert(id);
+            ready_operations.push_back(operation);
+            it = prioritized_unstarted_operations.erase(it);
+        }
+        else
+        {
+            it++;
         }
     }
-    return ready_operations;
-}
-
-void ListScheduler::create_schedule()
-{
-    auto priority_list = get_priority_list();
-    auto pred_count = initialize_pred_count();
-    auto ready_operations = initialize_ready_operations(pred_count);
-
-    while (!ready_operations.empty())
-    {
-        for (const auto operation : priority_list)
-        {
-            if (unordered_set_contains_element(ready_operations, operation))
-            {
-                schedule.push_back(operation);
-                ready_operations.erase(operation);
-
-                for (auto child : operation->child_ptrs)
-                {
-                    pred_count[child]--;
-                    if (pred_count[child] == 0)
-                    {
-                        ready_operations.insert(child);
-                    }
-                }
-            }
-        }
-    }
-}
-
-bool ListScheduler::operation_is_ready(OperationPtr operation)
-{
-    for (auto parent : operation->parent_ptrs)
-    {
-        if (map_contains_key(running_operations, parent) ||
-            vector_contains_element(ordered_unstarted_operations, parent) ||
-            !vector_contains_element(ordered_unstarted_operations, operation) ||
-            (vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation) &&
-             (multiset_contains_element(bootstrapping_queue, parent) ||
-              map_contains_key(bootstrapping_operations, parent))))
-        {
-            return false;
-        }
-    }
-    return true;
 }
 
 void ListScheduler::generate_start_times_and_solver_latency()
@@ -291,22 +200,10 @@ void ListScheduler::generate_start_times_and_solver_latency()
     running_operations.clear();
     bootstrapping_operations.clear();
     bootstrapping_queue.clear();
-    ordered_unstarted_operations = schedule;
+    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
 
-    auto it = ordered_unstarted_operations.begin();
-    while (it != ordered_unstarted_operations.end())
-    {
-        auto operation = *it;
-        if (operation->parent_ptrs.size() == 0)
-        {
-            ready_operations.push_back(operation);
-            it = ordered_unstarted_operations.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
+    initialize_pred_count();
+    update_ready_operations();
 
     while (program_is_not_finished())
     {
@@ -325,8 +222,8 @@ void ListScheduler::generate_start_times_and_solver_latency()
         add_necessary_operations_to_bootstrapping_queue(finished_running_operations);
         start_bootstrapping_ready_operations();
 
-        find_new_ready_operations(finished_running_operations);
-        find_new_ready_operations(finished_bootstrapping_operations);
+        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
+        update_ready_operations();
     }
     solver_latency = clock_cycle;
 }
@@ -337,22 +234,10 @@ void ListScheduler::generate_core_assignments()
     clock_cycle = 0;
     running_operations.clear();
     bootstrapping_operations.clear();
-    ordered_unstarted_operations = schedule;
+    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
 
-    auto it = ordered_unstarted_operations.begin();
-    while (it != ordered_unstarted_operations.end())
-    {
-        auto operation = *it;
-        if (operation->parent_ptrs.size() == 0)
-        {
-            ready_operations.push_back(operation);
-            it = ordered_unstarted_operations.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
+    initialize_pred_count();
+    update_ready_operations();
 
     while (program_is_not_finished())
     {
@@ -371,8 +256,8 @@ void ListScheduler::generate_core_assignments()
 
         start_bootstrapping_necessary_operations(finished_running_operations);
 
-        find_new_ready_operations(finished_running_operations);
-        find_new_ready_operations(finished_bootstrapping_operations);
+        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
+        update_ready_operations();
     }
 }
 
@@ -386,10 +271,11 @@ void ListScheduler::mark_cores_available(std::unordered_set<OperationPtr> &finis
 
 bool ListScheduler::program_is_not_finished()
 {
-    return !ordered_unstarted_operations.empty() ||
+    return !prioritized_unstarted_operations.empty() ||
+           !ready_operations.empty() ||
+           !running_operations.empty() ||
            !bootstrapping_queue.empty() ||
-           !bootstrapping_operations.empty() ||
-           !running_operations.empty();
+           !bootstrapping_operations.empty();
 }
 
 std::unordered_set<OperationPtr> ListScheduler::handle_started_operations(std::map<OperationPtr, int> &started_operations)
@@ -763,49 +649,40 @@ void ListScheduler::perform_list_scheduling()
     std::cout << "here3" << std::endl;
     update_all_ranks();
     std::cout << "here4" << std::endl;
-    create_schedule();
-    std::cout << "here5" << std::endl;
     generate_start_times_and_solver_latency();
-    std::cout << "here6" << std::endl;
+    std::cout << "here5" << std::endl;
     if (num_cores > 0)
     {
         generate_core_assignments();
     }
-    std::cout << "here7" << std::endl;
+    std::cout << "here6" << std::endl;
 }
 
-void ListScheduler::find_new_ready_operations(std::unordered_set<OperationPtr> &finished_operations)
+void ListScheduler::update_pred_count(std::unordered_set<OperationPtr> &finished_running_operations, std::unordered_set<OperationPtr> &finished_bootstrapping_operations)
 {
     std::unordered_set<OperationPtr> readied_operations;
-    for (auto &op : finished_operations)
+    for (auto &op : finished_running_operations)
     {
         for (auto &child : op->child_ptrs)
         {
-            if (operation_is_ready(child))
+            if (!operation_receives_a_bootstrapped_result_from_parent(child, op) && multiset_contains_element(prioritized_unstarted_operations, child))
             {
-                ready_operations.push_back(child);
-                readied_operations.insert(child);
+                pred_count[child]--;
             }
         }
     }
 
-    remove_element_subset_from_vector(ordered_unstarted_operations, readied_operations);
+    for (auto &op : finished_bootstrapping_operations)
+    {
+        for (auto &child : op->child_ptrs)
+        {
+            if (multiset_contains_element(prioritized_unstarted_operations, child))
+            {
+                pred_count[child]--;
+            }
+        }
+    }
 }
-
-// void ListScheduler::find_new_ready_operations()
-// {
-//     std::unordered_set<OperationPtr> readied_operations;
-//     for (auto &op : ordered_unstarted_operations)
-//     {
-//         if (operation_is_ready(op))
-//         {
-//             ready_operations.push_back(op);
-//             readied_operations.insert(op);
-//         }
-//     }
-
-//     remove_element_subset_from_vector(ordered_unstarted_operations, readied_operations);
-// }
 
 int main(int argc, char **argv)
 {

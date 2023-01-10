@@ -131,9 +131,6 @@ bool path_is_urgent(OperationList &path)
 {
     auto first_operation = path.front();
     return !bootstrapping_path_is_satisfied(path) && operation_parents_meet_urgency_criteria(first_operation);
-    //    (operation_has_no_parents(first_operation) ||
-    // operation_only_receives_bootstrapped_results(first_operation));
-    // operation_receives_a_bootstrapped_result(first_operation));
 }
 
 bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
@@ -148,35 +145,7 @@ bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
     return true;
 }
 
-// bool operation_has_no_parents(OperationPtr &operation)
-// {
-//     // if (operation->parent_ptrs.size() == 0)
-//     // {
-//     //     std::cout << "true" << std::endl;
-//     // }
-//     return operation->parent_ptrs.size() == 0;
-// }
-
-// bool operation_only_receives_bootstrapped_results(OperationPtr &operation)
-// {
-//     for (auto parent : operation->parent_ptrs)
-//     {
-//         if (!operation_is_bootstrapped(parent))
-//         {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-// bool operation_receives_a_bootstrapped_result(OperationPtr &operation)
-// {
-//     for (auto parent : operation->parent_ptrs)
-//     {
-//         if (operation_is_bootstrapped(parent))
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
+bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &operation, const OperationPtr &parent)
+{
+    return vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation);
+}
