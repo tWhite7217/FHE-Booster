@@ -193,26 +193,18 @@ void ListScheduler::update_ready_operations()
 void ListScheduler::generate_start_times_and_solver_latency()
 {
     create_core_assignments = false;
-    initialize_per_cycle_simulation_state();
+    initialize_simulation_state();
 
     while (program_is_not_finished())
     {
-        start_ready_operations();
-
-        clock_cycle++;
-
-        auto finished_bootstrapping_operations = handle_started_operations(bootstrapping_operations);
-        auto finished_running_operations = handle_started_operations(running_operations);
-
-        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
-        update_ready_operations();
+        update_simulation_state();
 
         if (num_cores > 0)
         {
             mark_cores_available(finished_bootstrapping_operations);
         }
 
-        add_necessary_operations_to_bootstrapping_queue(finished_running_operations);
+        add_necessary_operations_to_bootstrapping_queue();
         start_bootstrapping_ready_operations();
     }
     solver_latency = clock_cycle;
@@ -221,28 +213,20 @@ void ListScheduler::generate_start_times_and_solver_latency()
 void ListScheduler::generate_core_assignments()
 {
     create_core_assignments = true;
-    initialize_per_cycle_simulation_state();
+    initialize_simulation_state();
 
     while (program_is_not_finished())
     {
-        start_ready_operations();
-
-        clock_cycle++;
-
-        auto finished_bootstrapping_operations = handle_started_operations(bootstrapping_operations);
-        auto finished_running_operations = handle_started_operations(running_operations);
-
-        update_pred_count(finished_running_operations, finished_bootstrapping_operations);
-        update_ready_operations();
+        update_simulation_state();
 
         mark_cores_available(finished_bootstrapping_operations);
         mark_cores_available(finished_running_operations);
 
-        start_bootstrapping_necessary_operations(finished_running_operations);
+        start_bootstrapping_necessary_operations();
     }
 }
 
-void ListScheduler::initialize_per_cycle_simulation_state()
+void ListScheduler::initialize_simulation_state()
 {
     clock_cycle = 0;
     prioritized_unstarted_operations.clear();
@@ -252,6 +236,19 @@ void ListScheduler::initialize_per_cycle_simulation_state()
     bootstrapping_operations.clear();
 
     initialize_pred_count();
+    update_ready_operations();
+}
+
+void ListScheduler::update_simulation_state()
+{
+    start_ready_operations();
+
+    clock_cycle++;
+
+    finished_running_operations = handle_started_operations(running_operations);
+    finished_bootstrapping_operations = handle_started_operations(bootstrapping_operations);
+
+    update_pred_count();
     update_ready_operations();
 }
 
@@ -404,7 +401,7 @@ std::unordered_set<OperationPtr> ListScheduler::get_finished_operations(std::map
     return finished_operations;
 }
 
-void ListScheduler::add_necessary_operations_to_bootstrapping_queue(std::unordered_set<OperationPtr> finished_running_operations)
+void ListScheduler::add_necessary_operations_to_bootstrapping_queue()
 {
     for (auto operation : finished_running_operations)
     {
@@ -415,7 +412,7 @@ void ListScheduler::add_necessary_operations_to_bootstrapping_queue(std::unorder
     }
 }
 
-void ListScheduler::start_bootstrapping_necessary_operations(std::unordered_set<OperationPtr> finished_running_operations)
+void ListScheduler::start_bootstrapping_necessary_operations()
 {
     for (auto operation : finished_running_operations)
     {
@@ -652,7 +649,7 @@ void ListScheduler::perform_list_scheduling()
     std::cout << "here6" << std::endl;
 }
 
-void ListScheduler::update_pred_count(std::unordered_set<OperationPtr> &finished_running_operations, std::unordered_set<OperationPtr> &finished_bootstrapping_operations)
+void ListScheduler::update_pred_count()
 {
     std::unordered_set<OperationPtr> readied_operations;
     for (auto &op : finished_running_operations)

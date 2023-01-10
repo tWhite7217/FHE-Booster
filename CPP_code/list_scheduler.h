@@ -62,6 +62,9 @@ private:
     OperationList ready_operations;
     int clock_cycle;
 
+    std::unordered_set<OperationPtr> finished_running_operations;
+    std::unordered_set<OperationPtr> finished_bootstrapping_operations;
+
     struct RankCmp
     {
         bool operator()(const OperationPtr &a, const OperationPtr &b) const
@@ -84,8 +87,8 @@ private:
     void decrement_cycles_left(std::map<OperationPtr, int> &);
     std::unordered_set<OperationPtr> get_finished_operations(std::map<OperationPtr, int> &);
     void start_ready_operations();
-    void add_necessary_operations_to_bootstrapping_queue(std::unordered_set<OperationPtr>);
-    void start_bootstrapping_necessary_operations(std::unordered_set<OperationPtr>);
+    void add_necessary_operations_to_bootstrapping_queue();
+    void start_bootstrapping_necessary_operations();
     void start_bootstrapping_ready_operations_for_unlimited_model();
     void start_bootstrapping_ready_operations_for_limited_model();
     int get_best_core_for_operation(OperationPtr, int);
@@ -97,6 +100,7 @@ private:
     std::string get_constant_arg(OperationPtr, size_t);
     std::string get_variable_arg(OperationPtr, size_t);
     void mark_cores_available(std::unordered_set<OperationPtr> &);
-    void update_pred_count(std::unordered_set<OperationPtr> &, std::unordered_set<OperationPtr> &);
-    void initialize_per_cycle_simulation_state();
+    void update_pred_count();
+    void initialize_simulation_state();
+    void update_simulation_state();
 };
