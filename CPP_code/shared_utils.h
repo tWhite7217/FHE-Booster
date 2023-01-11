@@ -25,15 +25,15 @@
 
 const int bootstrapping_latency = 300;
 // 2 levels - 16 bits
-const int gained_levels = 2;
-const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
-const double multiplication_cost = 30.5;
-const int bootstrapping_path_threshold = 55;
+// const int gained_levels = 2;
+// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
+// const double multiplication_cost = 30.5;
+// const int bootstrapping_path_threshold = 55;
 // 9 levels - 12 bits
-// const int gained_levels = 9;
-// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
-// const double multiplication_cost = 26.75;
-// const int bootstrapping_path_threshold = 216;
+const int gained_levels = 9;
+const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
+const double multiplication_cost = 26.75;
+const int bootstrapping_path_threshold = 216;
 
 struct Operation;
 

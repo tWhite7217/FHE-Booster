@@ -15,5 +15,6 @@ profile.txt
 *.o
 results/
 DDGs/
+DAGs/
 *.txt
 *tgff*

@@ -16,7 +16,7 @@ ALTER ALL 'custom_graph1'random_graph${i}'
 ALTER ALL '_0_levels'_$6_levels'
 ALTER ALL 'C1..C1'C1..C$4'
 ALTER ALL 'BOOTSTRAPPING_LATENCY = 300;'BOOTSTRAPPING_LATENCY = $5;'
-    DIVERT D:\LINGO64_19\FHE_Model\results\random_graph$i\rg${i}_$6_levels_$1$result_file_suffix.lgr" > model_customizer.ltf
+    DIVERT D:\LINGO64_19\FHE_Model\results\random_graph$i\rg${i}_$1${result_file_suffix}_$6_levels.lgr" > model_customizer.ltf
     
     powershell.exe "RunLingo .\run_solver.ltf"
     

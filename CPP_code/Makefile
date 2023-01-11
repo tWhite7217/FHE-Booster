@@ -48,15 +48,21 @@ $(BIN)/input_file_processor.o: input_file_processor.cpp Makefile
 input_file_processor.out: $(BIN)/input_file_processor.o $(shared_depenedencies)
 	g++ $(CPP_FLAGS) -o $@ $(BIN)/input_file_processor.o $(shared_depenedencies)
 
-$(BIN)/graph_generator.o: graph_generator.cpp graph_generator.h Makefile
-	g++ $(CPP_FLAGS) -c -o $@ graph_generator.cpp
+$(BIN)/random_graph_generator.o: random_graph_generator.cpp random_graph_generator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ random_graph_generator.cpp
 
-graph_generator.out: $(BIN)/graph_generator.o shared_utils.o
-	g++ $(CPP_FLAGS) -o $@ $(BIN)/graph_generator.o shared_utils.o
+random_graph_generator.out: $(BIN)/random_graph_generator.o shared_utils.o
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/random_graph_generator.o $(BIN)/shared_utils.o
+
+$(BIN)/txt_to_vcg.o: txt_to_vcg.cpp Makefile
+	g++ $(CPP_FLAGS) -c -o $@ txt_to_vcg.cpp
+
+txt_to_vcg.out: $(BIN)/txt_to_vcg.o $(BIN)/custom_ddg_format_parser.o $(BIN)/shared_utils.o
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/txt_to_vcg.o $(BIN)/custom_ddg_format_parser.o $(BIN)/shared_utils.o
 
 tgff_to_unprocessed_lingo.out: tgff_to_unprocessed_lingo.l Makefile
 	flex -o lex.yy.c tgff_to_unprocessed_lingo.l
 	g++ $(CPP_FLAGS) -o $@ lex.yy.c
 
 clean:
-	rm lex.cc LGRParserBase.h lex.yy.c
+	rm lex.cc LGRParserBase.h lex.yy.c *.out bin/*
