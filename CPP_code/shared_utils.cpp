@@ -92,29 +92,6 @@ bool operation_is_bootstrapped(OperationPtr operation)
     return operation->child_ptrs_that_receive_bootstrapped_result.size() > 0;
 }
 
-int get_path_cost(std::vector<OperationPtr> path)
-{
-    int num_multiplications = 0;
-    int num_additions = 0;
-    for (auto operation : path)
-    {
-        if (operation->type == "MUL")
-        {
-            num_multiplications++;
-        }
-        else
-        {
-            num_additions++;
-        }
-    }
-    return get_path_cost_from_num_operations(num_additions, num_multiplications);
-}
-
-int get_path_cost_from_num_operations(int num_additions, int num_multiplications)
-{
-    return num_multiplications * multiplication_cost + num_additions * addition_cost;
-}
-
 std::vector<std::string> split_string_by_character(std::string str, char separator)
 {
     std::vector<std::string> str_as_list;
@@ -154,4 +131,16 @@ bool operation_has_no_parents(OperationPtr &operation)
 bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &operation, const OperationPtr &parent)
 {
     return vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation);
+}
+
+bool operation_has_multiplication_child(const OperationPtr &operation)
+{
+    for (const auto &child : operation->child_ptrs)
+    {
+        if (child->type == "MUL")
+        {
+            return true;
+        }
+    }
+    return false;
 }

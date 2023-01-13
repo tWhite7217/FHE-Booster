@@ -40,13 +40,15 @@ void BootstrappingPathGenerator::generate_bootstrapping_paths()
     clean_raw_bootstrapping_paths();
 }
 
-
 void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
 {
     for (auto operation : operations)
     {
         std::vector<std::vector<OperationPtr>> bootstrapping_paths_to_add;
-        bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 0, 0);
+        if (operation->type == "MUL")
+        {
+            bootstrapping_paths_to_add = create_bootstrapping_paths_helper(operation, {}, 0);
+        }
         bootstrapping_paths.insert(bootstrapping_paths.end(), bootstrapping_paths_to_add.begin(), bootstrapping_paths_to_add.end());
     }
 
@@ -86,45 +88,23 @@ void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
     }
 }
 
-std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, std::vector<OperationPtr> path, int num_multiplications, int num_additions)
+std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootstrapping_paths_helper(OperationPtr operation, std::vector<OperationPtr> path, int num_multiplications)
 {
     if (operation->type == "MUL")
     {
         num_multiplications++;
     }
-    else
-    {
-        num_additions++;
-    }
     path.push_back(operation);
-    auto path_cost = get_path_cost_from_num_operations(num_additions, num_multiplications);
-    if (path_cost > bootstrapping_path_threshold)
+    if (num_multiplications >= gained_levels && operation_has_multiplication_child(operation))
     {
-        double path_cost_without_first_op;
-        if (path.front()->type == "MUL")
+        std::vector<OperationList> paths_to_return;
+        for (auto child : operation->child_ptrs)
         {
-            path_cost_without_first_op = get_path_cost_from_num_operations(num_additions, num_multiplications - 1);
+            auto path_to_return = path;
+            path_to_return.push_back(child);
+            paths_to_return.push_back(path_to_return);
         }
-        else
-        {
-            path_cost_without_first_op = get_path_cost_from_num_operations(num_additions - 1, num_multiplications);
-        }
-
-        if (path_cost_without_first_op <= bootstrapping_path_threshold)
-        {
-            std::vector<OperationList> paths_to_return;
-            for (auto child : operation->child_ptrs)
-            {
-                auto path_to_return = path;
-                path_to_return.push_back(child);
-                paths_to_return.push_back(path_to_return);
-            }
-            return paths_to_return;
-        }
-        else
-        {
-            return {};
-        }
+        return paths_to_return;
     }
     else if (operation->child_ptrs.size() == 0)
     {
@@ -135,7 +115,7 @@ std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootst
     for (auto child : operation->child_ptrs)
     {
         std::vector<std::vector<OperationPtr>> paths_to_add;
-        paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications, num_additions);
+        paths_to_add = create_bootstrapping_paths_helper(child, path, num_multiplications);
         paths_to_return.insert(paths_to_return.end(), paths_to_add.begin(), paths_to_add.end());
     }
     return paths_to_return;

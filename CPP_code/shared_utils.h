@@ -26,14 +26,8 @@
 const int bootstrapping_latency = 300;
 // 2 levels - 16 bits
 // const int gained_levels = 2;
-// const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/756
-// const double multiplication_cost = 30.5;
-// const int bootstrapping_path_threshold = 55;
 // 9 levels - 12 bits
 const int gained_levels = 9;
-const double addition_cost = 0.0001; // Unconfirmed. This could actually be smaller or larger, but known to be < 1/3000
-const double multiplication_cost = 26.75;
-const int bootstrapping_path_threshold = 216;
 
 struct Operation;
 
@@ -163,13 +157,12 @@ bool bootstrapping_path_is_satisfied(OperationList &);
 bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
-int get_path_cost(OperationList);
-int get_path_cost_from_num_operations(int, int);
 std::vector<std::string> split_string_by_character(std::string, char);
 std::vector<OperationList> get_bootstrapping_paths();
 bool path_is_urgent(OperationList &);
 bool operation_has_no_parents(OperationPtr &);
 bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
 bool operation_parents_meet_urgency_criteria(OperationPtr &);
+bool operation_has_multiplication_child(const OperationPtr &);
 
 #endif

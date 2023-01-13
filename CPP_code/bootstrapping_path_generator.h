@@ -19,7 +19,7 @@ private:
     void generate_bootstrapping_paths();
 
     void create_raw_bootstrapping_paths();
-    std::vector<std::vector<OperationPtr>> create_bootstrapping_paths_helper(OperationPtr, std::vector<OperationPtr>, int, int);
+    std::vector<std::vector<OperationPtr>> create_bootstrapping_paths_helper(OperationPtr, std::vector<OperationPtr>, int);
 
     void print_number_of_paths();
     void print_bootstrapping_paths();
