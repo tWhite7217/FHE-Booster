@@ -23,7 +23,7 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers) {
         line.erase(0,1);
         int thread_idx = std::stoi(line)-1;
         idx = 0;
-        if (operation == "ADD" || operation == "MUL") {
+        if (operation == "ADD" || operation == "SUB" || operation == "MUL") {
           Node* tmp = new Node(operation, operands[0], operands[1], operands[2]);
           circuit[thread_idx].push(tmp);
         }

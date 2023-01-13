@@ -6,7 +6,7 @@
 #include <cassert>
 #include <sstream>
 
-enum Op { EMUL, CMUL, EADD, CADD, EINV, BOOT };
+enum Op { EMUL, CMUL, EADD, CADD, ESUB, CSUB, EINV, BOOT };
 
 class Node {
   std::vector<std::string> inputs;
@@ -32,15 +32,15 @@ class Node {
       std::cout << "Output: " << output_wire << std::endl;
     }
     void set_operation(std::string in_op) {
-      if (in_op == "MUL" || in_op == "ADD") {
+      if (in_op == "MUL" || in_op == "ADD" || in_op == "SUB") {
         assert(inputs.size() == 2);
         bool cond1 = inputs[0].find('p') == std::string::npos;
         bool cond2 = inputs[1].find('p') == std::string::npos;
         if (cond1 & cond2) {
-          operation = in_op == "MUL" ? EMUL : EADD;
+          operation = in_op == "MUL" ? EMUL : (in_op == "ADD" ? EADD : ESUB);
         }
         else if (cond1 ^ cond2) {
-          operation = in_op == "MUL" ? CMUL : CADD;
+          operation = in_op == "MUL" ? CMUL : (in_op == "ADD" ? CADD : CSUB);
         }
         else {
           std::cout << "ERROR: Ptxt-ptxt ops are not supported!" << std::endl;

@@ -66,6 +66,20 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
             context->EvalAdd(enc_regs[schedule[i].front()->get_inputs()[0]], 
               enc_regs[schedule[i].front()->get_inputs()[1]]); 
           break;
+        case CSUB:
+          whichPtxt = schedule[i].front()->get_inputs()[0].find('p') == 
+            std::string::npos;
+          enc_regs[schedule[i].front()->get_output()] = whichPtxt ? 
+            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[0]], 
+              ptxt_regs[schedule[i].front()->get_inputs()[1]]) : 
+            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[1]], 
+              ptxt_regs[schedule[i].front()->get_inputs()[0]]);
+          break;
+        case ESUB:
+          enc_regs[schedule[i].front()->get_output()] = 
+            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[0]], 
+              enc_regs[schedule[i].front()->get_inputs()[1]]); 
+          break;
         case EINV:
           enc_regs[schedule[i].front()->get_output()] = 
             context->EvalNegate(enc_regs[schedule[i].front()->get_inputs()[0]]);
