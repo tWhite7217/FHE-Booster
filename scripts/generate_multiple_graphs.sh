@@ -1,6 +1,8 @@
 #!/bin/bash
 
-make graph_generator
+make random_graph_generator.out
+make txt_to_vcg.out
+make input_file_processor.out
 
 graph_range=$(($2-$1+1))
 
@@ -17,10 +19,11 @@ do
         echo $op_offset
         echo $num_operations
         
-        mkdir DDGs/random_graph$graph_num
-        ./CPP_code/graph_generator $num_operations $5 $6 DDGs/random_graph$graph_num/random_graph$graph_num
-        ./CPP_code/input_file_processor DDGs/random_graph$graph_num/random_graph$graph_num.txt DDGs/random_graph$graph_num/random_graph$graph_num.LDT False
-        ./CPP_code/input_file_processor DDGs/random_graph$graph_num/random_graph$graph_num.txt DDGs/random_graph$graph_num/random_graph${graph_num}_selective.LDT True
+        mkdir DAGs/random_graph$graph_num
+        ./CPP_code/random_graph_generator.out $num_operations $5 $6 $7 $8 $9 DAGs/random_graph$graph_num/random_graph$graph_num
+        ./CPP_code/txt_to_vcg.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph$graph_num.vcg
+        ./CPP_code/input_file_processor.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph$graph_num.LDT False
+        ./CPP_code/input_file_processor.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph${graph_num}_selective.LDT True
         sleep 1
         
     done

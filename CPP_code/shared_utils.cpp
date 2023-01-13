@@ -145,6 +145,12 @@ bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
     return true;
 }
 
+bool operation_has_no_parents(OperationPtr &operation)
+{
+    return (operation->parent_ptrs.size() == 0) &&
+           (operation->constant_parent_ids.size() == 0);
+}
+
 bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &operation, const OperationPtr &parent)
 {
     return vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation);

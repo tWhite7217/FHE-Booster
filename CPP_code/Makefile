@@ -51,7 +51,7 @@ input_file_processor.out: $(BIN)/input_file_processor.o $(shared_depenedencies)
 $(BIN)/random_graph_generator.o: random_graph_generator.cpp random_graph_generator.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ random_graph_generator.cpp
 
-random_graph_generator.out: $(BIN)/random_graph_generator.o shared_utils.o
+random_graph_generator.out: $(BIN)/random_graph_generator.o $(BIN)/shared_utils.o
 	g++ $(CPP_FLAGS) -o $@ $(BIN)/random_graph_generator.o $(BIN)/shared_utils.o
 
 $(BIN)/txt_to_vcg.o: txt_to_vcg.cpp Makefile

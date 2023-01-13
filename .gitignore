@@ -16,5 +16,6 @@ profile.txt
 results/
 DDGs/
 DAGs/
-*.txt
 *tgff*
+CPP_code/benchmark_generation/*.txt
+CPP_code/execution_engine/build/
