@@ -26,6 +26,22 @@ void print_schedule(vector<queue<Node*>> schedule) {
   return;
 }
 
+bool whichPtxt(const std::queue<Node *> &core_schedule) {
+  return core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
+}
+
+std::pair<Ciphertext<DCRTPoly>, Plaintext> get_ctxt_ptxt_args(const std::queue<Node *> &core_schedule,
+                    const std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
+                    const std::map<string, Plaintext>& ptxt_regs, 
+                    const CryptoContext<DCRTPoly>& context) {
+  auto input0 = core_schedule.front()->get_inputs()[0];
+  auto input1 = core_schedule.front()->get_inputs()[1];
+
+  return whichPtxt(core_schedule) ? 
+    std::pair(enc_regs.at(input0), ptxt_regs.at(input1)) :
+    std::pair(enc_regs.at(input1), ptxt_regs.at(input0));
+}
+
 void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
                      std::map<string, Plaintext>& ptxt_regs, 
                      vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
@@ -33,59 +49,46 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
   omp_set_num_threads(schedule.size());
   #pragma omp parallel for
   for (uint64_t i = 0; i < schedule.size(); i++) {
-    bool whichPtxt;
+    auto &core_schedule = schedule[i];
+    std::pair<Ciphertext<DCRTPoly>, Plaintext> args;
     while(!schedule[i].empty()) {
+      auto output_index = schedule[i].front()->get_output();
       switch(schedule[i].front()->get_op()) {
         case CMUL:
-          whichPtxt = schedule[i].front()->get_inputs()[0].find('p') == 
-            std::string::npos;
-          enc_regs[schedule[i].front()->get_output()] = whichPtxt ? 
-            context->EvalMult(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[1]]) : 
-            context->EvalMult(enc_regs[schedule[i].front()->get_inputs()[1]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[0]]);
-          context->ModReduceInPlace(enc_regs[schedule[i].front()->get_output()]);
+          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
+          enc_regs[output_index] = context->EvalMult(args.first, args.second);
+          context->ModReduceInPlace(enc_regs[output_index]);
           break;
         case EMUL:
-          enc_regs[schedule[i].front()->get_output()] = 
+          enc_regs[output_index] = 
             context->EvalMult(enc_regs[schedule[i].front()->get_inputs()[0]], 
               enc_regs[schedule[i].front()->get_inputs()[1]]); 
-          context->ModReduceInPlace(enc_regs[schedule[i].front()->get_output()]);
+          context->ModReduceInPlace(enc_regs[output_index]);
           break;
         case CADD:
-          whichPtxt = schedule[i].front()->get_inputs()[0].find('p') == 
-            std::string::npos;
-          enc_regs[schedule[i].front()->get_output()] = whichPtxt ? 
-            context->EvalAdd(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[1]]) : 
-            context->EvalAdd(enc_regs[schedule[i].front()->get_inputs()[1]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[0]]);
+          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
+          enc_regs[output_index] = context->EvalAdd(args.first, args.second);
           break;
         case EADD:
-          enc_regs[schedule[i].front()->get_output()] = 
+          enc_regs[output_index] = 
             context->EvalAdd(enc_regs[schedule[i].front()->get_inputs()[0]], 
               enc_regs[schedule[i].front()->get_inputs()[1]]); 
           break;
         case CSUB:
-          whichPtxt = schedule[i].front()->get_inputs()[0].find('p') == 
-            std::string::npos;
-          enc_regs[schedule[i].front()->get_output()] = whichPtxt ? 
-            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[1]]) : 
-            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[1]], 
-              ptxt_regs[schedule[i].front()->get_inputs()[0]]);
+          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
+          enc_regs[output_index] = context->EvalSub(args.first, args.second);
           break;
         case ESUB:
-          enc_regs[schedule[i].front()->get_output()] = 
+          enc_regs[output_index] = 
             context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[0]], 
               enc_regs[schedule[i].front()->get_inputs()[1]]); 
           break;
         case EINV:
-          enc_regs[schedule[i].front()->get_output()] = 
+          enc_regs[output_index] = 
             context->EvalNegate(enc_regs[schedule[i].front()->get_inputs()[0]]);
           break;
         case BOOT:
-          enc_regs[schedule[i].front()->get_output()] = 
+          enc_regs[output_index] = 
             context->EvalBootstrap(enc_regs[schedule[i].front()->get_inputs()[0]]);
           break;
         default:
