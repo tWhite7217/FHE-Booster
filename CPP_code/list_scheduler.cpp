@@ -651,7 +651,6 @@ void ListScheduler::perform_list_scheduling()
 
 void ListScheduler::update_pred_count()
 {
-    std::unordered_set<OperationPtr> readied_operations;
     for (auto &op : finished_running_operations)
     {
         for (auto &child : op->child_ptrs)
@@ -665,7 +664,7 @@ void ListScheduler::update_pred_count()
 
     for (auto &op : finished_bootstrapping_operations)
     {
-        for (auto &child : op->child_ptrs)
+        for (auto &child : op->child_ptrs_that_receive_bootstrapped_result)
         {
             if (multiset_contains_element(prioritized_unstarted_operations, child))
             {
