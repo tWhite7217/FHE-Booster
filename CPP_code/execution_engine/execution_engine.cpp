@@ -4,6 +4,8 @@
 #include <ctime>
 #include <ratio>
 #include <chrono>
+#include <mutex>
+#include <memory>
 
 #include "parser.hpp"
 #include "openfhe.h"
@@ -30,79 +32,104 @@ bool whichPtxt(const std::queue<Node *> &core_schedule) {
   return core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
 }
 
-std::pair<Ciphertext<DCRTPoly>, Plaintext> get_ctxt_ptxt_args(const std::queue<Node *> &core_schedule,
-                    const std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
-                    const std::map<string, Plaintext>& ptxt_regs, 
-                    const CryptoContext<DCRTPoly>& context) {
-  auto input0 = core_schedule.front()->get_inputs()[0];
-  auto input1 = core_schedule.front()->get_inputs()[1];
+std::pair<string, string> get_input_indices(const std::queue<Node *> &core_schedule) {
+  std::vector<string> inputs = core_schedule.front()->get_inputs();
+  switch(core_schedule.front()->get_op()) {
+    case CMUL:
+    case CADD:
+    case CSUB:
+      return whichPtxt(core_schedule) ? 
+        std::pair(inputs[0], inputs[1]) :
+        std::pair(inputs[1], inputs[0]);
+      break;
+    case EMUL:
+    case EADD:
+    case ESUB:
+      return std::pair(inputs[0], inputs[1]);
+      break;
+    case EINV:
+    case BOOT:
+      return std::pair(inputs[0], "");
+      break;
+    default:
+      cout << "Invalid Instruction! Exiting..." << endl;
+      exit(-1);
+  }
+}
 
-  return whichPtxt(core_schedule) ? 
-    std::pair(enc_regs.at(input0), ptxt_regs.at(input1)) :
-    std::pair(enc_regs.at(input1), ptxt_regs.at(input0));
+void handle_input_mutex(std::map<string, std::shared_ptr<std::mutex>>& reg_locks, const string &input_index) {
+      if (reg_locks.count(input_index)) {
+        reg_locks[input_index]->lock();
+        reg_locks[input_index]->unlock();
+      }
 }
 
 void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
-                     std::map<string, Plaintext>& ptxt_regs, 
+                     std::map<string, Plaintext>& ptxt_regs,
+                     std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
                      vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
                      CryptoContext<DCRTPoly>& context) {
   omp_set_num_threads(schedule.size());
   #pragma omp parallel for
   for (uint64_t i = 0; i < schedule.size(); i++) {
     auto &core_schedule = schedule[i];
-    std::pair<Ciphertext<DCRTPoly>, Plaintext> args;
+    std::pair<Ciphertext<DCRTPoly>, Plaintext> indices;
     while(!core_schedule.empty()) {
       auto output_index = core_schedule.front()->get_output();
+      auto input_indices = get_input_indices(core_schedule);
+      auto input_index1 = input_indices.first;
+      auto input_index2 = input_indices.second;
+      handle_input_mutex(reg_locks, input_index1);
+      handle_input_mutex(reg_locks, input_index2);
       switch(core_schedule.front()->get_op()) {
         case CMUL:
-          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
-          enc_regs[output_index] = context->EvalMult(args.first, args.second);
+          enc_regs[output_index] =
+            context->EvalMult(enc_regs[input_index1], ptxt_regs[input_index2]);
           context->ModReduceInPlace(enc_regs[output_index]);
           break;
         case EMUL:
           enc_regs[output_index] = 
-            context->EvalMult(enc_regs[core_schedule.front()->get_inputs()[0]], 
-              enc_regs[core_schedule.front()->get_inputs()[1]]); 
+            context->EvalMult(enc_regs[input_index1], enc_regs[input_index2]); 
           context->ModReduceInPlace(enc_regs[output_index]);
           break;
         case CADD:
-          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
-          enc_regs[output_index] = context->EvalAdd(args.first, args.second);
+          enc_regs[output_index] =
+            context->EvalAdd(enc_regs[input_index1], ptxt_regs[input_index2]);
           break;
         case EADD:
           enc_regs[output_index] = 
-            context->EvalAdd(enc_regs[core_schedule.front()->get_inputs()[0]], 
-              enc_regs[core_schedule.front()->get_inputs()[1]]); 
+            context->EvalAdd(enc_regs[input_index1], enc_regs[input_index2]); 
           break;
         case CSUB:
-          args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
-          enc_regs[output_index] = context->EvalSub(args.first, args.second);
+          enc_regs[output_index] =
+              context->EvalSub(enc_regs[input_index1], ptxt_regs[input_index2]);
+          if (!whichPtxt(core_schedule)) {
+            enc_regs[output_index] = context->EvalNegate(enc_regs[output_index]);
+          }
           break;
         case ESUB:
           enc_regs[output_index] = 
-            context->EvalSub(enc_regs[core_schedule.front()->get_inputs()[0]], 
-              enc_regs[core_schedule.front()->get_inputs()[1]]); 
+            context->EvalSub(enc_regs[input_index1], enc_regs[input_index2]); 
           break;
         case EINV:
-          enc_regs[output_index] = 
-            context->EvalNegate(enc_regs[core_schedule.front()->get_inputs()[0]]);
+          enc_regs[output_index] = context->EvalNegate(enc_regs[input_index1]);
           break;
         case BOOT:
-          enc_regs[output_index] = 
-            context->EvalBootstrap(enc_regs[core_schedule.front()->get_inputs()[0]]);
+          enc_regs[output_index] = context->EvalBootstrap(enc_regs[input_index1]);
           break;
         default:
           cout << "Invalid Instruction! Exiting..." << endl;
           exit(-1);
       }
+      reg_locks[output_index]->unlock();
       core_schedule.pop();
     }
   }
   return;
 }
 
-
 void execute_validation_schedule(std::map<string, double>& validation_regs, 
+                     std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
                      vector<queue<Node*>> schedule) {
   omp_set_num_threads(schedule.size());
   #pragma omp parallel for
@@ -110,37 +137,41 @@ void execute_validation_schedule(std::map<string, double>& validation_regs,
     auto &core_schedule = schedule[i];
     while(!core_schedule.empty()) {
       auto output_index = core_schedule.front()->get_output();
+      auto inputs = core_schedule.front()->get_inputs();
+      auto input_index1 = inputs[0];
+      string input_index2 = "";
+      if (inputs.size() > 1) {
+        input_index2 = inputs[1];
+        handle_input_mutex(reg_locks, input_index2);
+      }
+      handle_input_mutex(reg_locks, input_index1);
       switch(core_schedule.front()->get_op()) {
         case CMUL:
         case EMUL:
           validation_regs[output_index] = 
-            validation_regs[core_schedule.front()->get_inputs()[0]] * 
-              validation_regs[core_schedule.front()->get_inputs()[1]];
+            validation_regs[input_index1] * validation_regs[input_index2];
           break;
         case CADD:
         case EADD:
           validation_regs[output_index] = 
-            validation_regs[core_schedule.front()->get_inputs()[0]] +
-              validation_regs[core_schedule.front()->get_inputs()[1]];
+            validation_regs[input_index1] + validation_regs[input_index2];
           break;
         case CSUB:
         case ESUB:
           validation_regs[output_index] = 
-            validation_regs[core_schedule.front()->get_inputs()[0]] -
-              validation_regs[core_schedule.front()->get_inputs()[1]];
+            validation_regs[input_index1] - validation_regs[input_index2];
           break;
         case EINV:
-          validation_regs[output_index] = 
-            -validation_regs[core_schedule.front()->get_inputs()[0]];
+          validation_regs[output_index] = -validation_regs[input_index1];
           break;
         case BOOT:
-          validation_regs[output_index] = 
-            validation_regs[core_schedule.front()->get_inputs()[0]];
+          validation_regs[output_index] = validation_regs[input_index1];
           break;
         default:
           cout << "Invalid Instruction! Exiting..." << endl;
           exit(-1);
       }
+      reg_locks[output_index]->unlock();
       core_schedule.pop();
     }
   }
@@ -164,9 +195,9 @@ void validate_results(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
     context->Decrypt(private_key, ctxt, &tmp_ptxt);
     auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
 
-    if (!doubles_close_enough(decrypted_val, validation_regs[key])) {
-      std::cout << key << ": " << decrypted_val << ", " << validation_regs[key] << std::endl;
-    }
+    // if (!doubles_close_enough(decrypted_val, validation_regs[key])) {
+      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs[key] << std::endl;
+    // }
   }
 }
 
@@ -203,6 +234,25 @@ void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
     }
   }
   return;
+}
+
+void get_reg_locks(std::map<string, std::shared_ptr<std::mutex>> &reg_locks,
+                    vector<queue<Node*>> schedule) {
+  for (uint64_t i = 0; i < schedule.size(); i++) {
+    auto &core_schedule = schedule[i];
+    while(!core_schedule.empty()) {
+      auto output_index = core_schedule.front()->get_output();
+      reg_locks.emplace(output_index, new std::mutex);
+      reg_locks[output_index]->lock();
+      core_schedule.pop();
+    }
+  }
+}
+
+void lock_all_mutexes(std::map<string, std::shared_ptr<std::mutex>> &reg_locks) {
+  for (auto &[key, mutex] : reg_locks) {
+    mutex->lock();
+  }
 }
 
 int main(int argc, char **argv) {
@@ -276,13 +326,23 @@ int main(int argc, char **argv) {
   srand(time(NULL));
   gen_random_vals(e_regs, p_regs, v_regs, schedule, keyPair.publicKey, cryptoContext);
 
+  std::map<string, std::shared_ptr<std::mutex>> reg_locks;
+  get_reg_locks(reg_locks, schedule);
+
+  cout << "Executing in ciphertext..." << endl;
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  execute_schedule(e_regs, p_regs, schedule, keyPair.publicKey, cryptoContext);
+  execute_schedule(e_regs, p_regs, reg_locks, schedule, keyPair.publicKey, cryptoContext);
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  cout << "Done." << endl;
   duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
   cout << "Eval Time: " << time_span.count() << " seconds." << endl;
 
-  execute_validation_schedule(v_regs, schedule);
+  lock_all_mutexes(reg_locks);
+  cout << "Executing in plaintext..." << endl;
+  execute_validation_schedule(v_regs, reg_locks, schedule);
+  cout << "Done." << endl;
+  cout << "Comparing ctxt results against ptxt results..." << endl;
   validate_results(e_regs, v_regs, keyPair.secretKey, cryptoContext);
+  cout << "Done." << endl;
   return 0;
 }
