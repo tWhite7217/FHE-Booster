@@ -51,9 +51,9 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
   for (uint64_t i = 0; i < schedule.size(); i++) {
     auto &core_schedule = schedule[i];
     std::pair<Ciphertext<DCRTPoly>, Plaintext> args;
-    while(!schedule[i].empty()) {
-      auto output_index = schedule[i].front()->get_output();
-      switch(schedule[i].front()->get_op()) {
+    while(!core_schedule.empty()) {
+      auto output_index = core_schedule.front()->get_output();
+      switch(core_schedule.front()->get_op()) {
         case CMUL:
           args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
           enc_regs[output_index] = context->EvalMult(args.first, args.second);
@@ -61,8 +61,8 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
           break;
         case EMUL:
           enc_regs[output_index] = 
-            context->EvalMult(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              enc_regs[schedule[i].front()->get_inputs()[1]]); 
+            context->EvalMult(enc_regs[core_schedule.front()->get_inputs()[0]], 
+              enc_regs[core_schedule.front()->get_inputs()[1]]); 
           context->ModReduceInPlace(enc_regs[output_index]);
           break;
         case CADD:
@@ -71,8 +71,8 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
           break;
         case EADD:
           enc_regs[output_index] = 
-            context->EvalAdd(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              enc_regs[schedule[i].front()->get_inputs()[1]]); 
+            context->EvalAdd(enc_regs[core_schedule.front()->get_inputs()[0]], 
+              enc_regs[core_schedule.front()->get_inputs()[1]]); 
           break;
         case CSUB:
           args = get_ctxt_ptxt_args(core_schedule, enc_regs, ptxt_regs, context);
@@ -80,29 +80,99 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
           break;
         case ESUB:
           enc_regs[output_index] = 
-            context->EvalSub(enc_regs[schedule[i].front()->get_inputs()[0]], 
-              enc_regs[schedule[i].front()->get_inputs()[1]]); 
+            context->EvalSub(enc_regs[core_schedule.front()->get_inputs()[0]], 
+              enc_regs[core_schedule.front()->get_inputs()[1]]); 
           break;
         case EINV:
           enc_regs[output_index] = 
-            context->EvalNegate(enc_regs[schedule[i].front()->get_inputs()[0]]);
+            context->EvalNegate(enc_regs[core_schedule.front()->get_inputs()[0]]);
           break;
         case BOOT:
           enc_regs[output_index] = 
-            context->EvalBootstrap(enc_regs[schedule[i].front()->get_inputs()[0]]);
+            context->EvalBootstrap(enc_regs[core_schedule.front()->get_inputs()[0]]);
           break;
         default:
           cout << "Invalid Instruction! Exiting..." << endl;
           exit(-1);
       }
-      schedule[i].pop();
+      core_schedule.pop();
     }
   }
   return;
 }
 
+
+void execute_validation_schedule(std::map<string, double>& validation_regs, 
+                     vector<queue<Node*>> schedule) {
+  omp_set_num_threads(schedule.size());
+  #pragma omp parallel for
+  for (uint64_t i = 0; i < schedule.size(); i++) {
+    auto &core_schedule = schedule[i];
+    while(!core_schedule.empty()) {
+      auto output_index = core_schedule.front()->get_output();
+      switch(core_schedule.front()->get_op()) {
+        case CMUL:
+        case EMUL:
+          validation_regs[output_index] = 
+            validation_regs[core_schedule.front()->get_inputs()[0]] * 
+              validation_regs[core_schedule.front()->get_inputs()[1]];
+          break;
+        case CADD:
+        case EADD:
+          validation_regs[output_index] = 
+            validation_regs[core_schedule.front()->get_inputs()[0]] +
+              validation_regs[core_schedule.front()->get_inputs()[1]];
+          break;
+        case CSUB:
+        case ESUB:
+          validation_regs[output_index] = 
+            validation_regs[core_schedule.front()->get_inputs()[0]] -
+              validation_regs[core_schedule.front()->get_inputs()[1]];
+          break;
+        case EINV:
+          validation_regs[output_index] = 
+            -validation_regs[core_schedule.front()->get_inputs()[0]];
+          break;
+        case BOOT:
+          validation_regs[output_index] = 
+            validation_regs[core_schedule.front()->get_inputs()[0]];
+          break;
+        default:
+          cout << "Invalid Instruction! Exiting..." << endl;
+          exit(-1);
+      }
+      core_schedule.pop();
+    }
+  }
+  return;
+}
+
+bool doubles_close_enough(double experimental, double expected) {
+  if (expected == 0) {
+    return false;
+    // return std::abs(experimental) < 0.000000001;
+  }
+  return (std::abs(experimental - expected)/expected) < 0.005;
+}
+
+void validate_results(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
+                     std::map<string, double>& validation_regs,
+                     PrivateKey<DCRTPoly>& private_key,
+                     CryptoContext<DCRTPoly>& context) {
+  for (auto &[key, ctxt] : enc_regs) {
+    Plaintext tmp_ptxt;
+    context->Decrypt(private_key, ctxt, &tmp_ptxt);
+    auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
+
+    if (!doubles_close_enough(decrypted_val, validation_regs[key])) {
+      std::cout << key << ": " << decrypted_val << ", " << validation_regs[key] << std::endl;
+    }
+  }
+}
+
 void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
                      std::map<string, Plaintext>& ptxt_regs, 
+                     std::map<string, double>& validation_regs, 
                      vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
                      CryptoContext<DCRTPoly>& context) {
   for (uint64_t i = 0; i < schedule.size(); i++) {
@@ -116,6 +186,7 @@ void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
             auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
             auto tmp = context->Encrypt(pub_key, tmp_ptxt);
             enc_regs[schedule[i].front()->get_inputs()[j]] = tmp;
+            validation_regs[schedule[i].front()->get_inputs()[j]] = tmp_vec[0];
           }
         }
         else {
@@ -124,6 +195,7 @@ void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
             tmp_vec.push_back(static_cast <double> (rand()) / static_cast <float> (RAND_MAX));
             auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
             ptxt_regs[schedule[i].front()->get_inputs()[j]] = tmp_ptxt;
+            validation_regs[schedule[i].front()->get_inputs()[j]] = tmp_vec[0];
           }
         }
       }
@@ -200,12 +272,17 @@ int main(int argc, char **argv) {
   vector<queue<Node*>> schedule = parse_schedule(filename, num_workers);
   std::map<string, Ciphertext<DCRTPoly>> e_regs;
   std::map<string, Plaintext> p_regs;
-  gen_random_vals(e_regs, p_regs, schedule, keyPair.publicKey, cryptoContext);
+  std::map<string, double> v_regs;
+  srand(time(NULL));
+  gen_random_vals(e_regs, p_regs, v_regs, schedule, keyPair.publicKey, cryptoContext);
 
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
   execute_schedule(e_regs, p_regs, schedule, keyPair.publicKey, cryptoContext);
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
   cout << "Eval Time: " << time_span.count() << " seconds." << endl;
+
+  execute_validation_schedule(v_regs, schedule);
+  validate_results(e_regs, v_regs, keyPair.secretKey, cryptoContext);
   return 0;
 }

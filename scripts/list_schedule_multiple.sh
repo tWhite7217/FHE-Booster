@@ -27,7 +27,7 @@ do
         source_lgr="results/random_graph$i/rg${i}_"
     fi
     
-    echo ./CPP_code/list_scheduler.out DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7
-    ./CPP_code/list_scheduler.out DDGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7
+    echo ./CPP_code/list_scheduler.out DAGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7
+    ./CPP_code/list_scheduler.out DAGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7
     
 done

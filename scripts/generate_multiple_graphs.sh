@@ -12,7 +12,7 @@ do
     do
         
         graph_num=$((i-1+j))
-        op_offset=$((i/$2))
+        op_offset=$(((i-$1)/$2))
         num_operations=$(($4+op_offset))
         
         echo $graph_num
@@ -22,8 +22,7 @@ do
         mkdir DAGs/random_graph$graph_num
         ./CPP_code/random_graph_generator.out $num_operations $5 $6 $7 $8 $9 DAGs/random_graph$graph_num/random_graph$graph_num
         ./CPP_code/txt_to_vcg.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph$graph_num.vcg
-        ./CPP_code/input_file_processor.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph$graph_num.LDT False
-        ./CPP_code/input_file_processor.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph${graph_num}_selective.LDT True
+        ./scripts/generate_both_LDT_variants.sh random_graph$graph_num ${10}
         sleep 1
         
     done

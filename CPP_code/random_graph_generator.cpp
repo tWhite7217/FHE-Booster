@@ -33,14 +33,14 @@ OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operat
 {
     int operation_type_num = rand_gen() % 13;
     std::string operation_type;
-    if (operation_type_num < 4)
+    if (operation_type_num < 6)
     {
         operation_type = "ADD";
     }
-    else if (operation_type_num < 6)
-    {
-        operation_type = "SUB";
-    }
+    // else if (operation_type_num < 6)
+    // {
+    //     operation_type = "SUB";
+    // }
     else
     {
         operation_type = "MUL";
