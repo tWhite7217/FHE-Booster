@@ -12,6 +12,7 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers) {
   string line;
   string* operands = new string[3];
   string operation; 
+  std::set<string> outputs;
   while (getline(sched_file, line)) {
     stringstream ss(line);
     int idx = 0;
@@ -30,6 +31,13 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers) {
         else {
           Node* tmp = new Node(operation, operands[0], operands[1], "");
           circuit[thread_idx].push(tmp);
+        }
+        if (outputs.count(operands[0])) {
+          std::cout << "ERROR: Schedules must maintain SSA form." << std::endl;
+          std::cout << "Ciphertext " << operands[0] << " is the output of multiple operations." << std::endl;
+          exit(-1);
+        } else {
+          outputs.insert(operands[0]);
         }
         continue;
       }
