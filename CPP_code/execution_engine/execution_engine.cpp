@@ -10,6 +10,8 @@
 #include "parser.hpp"
 #include "openfhe.h"
 
+#define RAND_THRESH 0.4
+
 using namespace lbcrypto;
 using namespace std;
 using namespace std::chrono;
@@ -213,7 +215,7 @@ void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
         if (is_ctxt) {
           if (enc_regs.find(schedule[i].front()->get_inputs()[j]) == enc_regs.end()) {
             vector<double> tmp_vec; 
-            tmp_vec.push_back(static_cast <double> (rand()) / static_cast <float> (RAND_MAX));
+            tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/RAND_THRESH));
             auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
             auto tmp = context->Encrypt(pub_key, tmp_ptxt);
             enc_regs[schedule[i].front()->get_inputs()[j]] = tmp;
@@ -281,7 +283,7 @@ int main(int argc, char **argv) {
   std::vector<uint32_t> levelBudget = {4, 4};
   uint32_t approxBootstrapDepth     = 8;
 
-  uint32_t levelsUsedBeforeBootstrap = 10;
+  uint32_t levelsUsedBeforeBootstrap = 4;
   usint depth =
       levelsUsedBeforeBootstrap + FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
   parameters.SetMultiplicativeDepth(depth);
