@@ -258,6 +258,27 @@ void lock_all_mutexes(std::map<string, std::shared_ptr<std::mutex>> &reg_locks) 
 }
 
 int main(int argc, char **argv) {
+
+  int num_workers = 1;
+  int num_levels = 4;
+  string filename = "";
+  if (argc != 4) {
+    cout << "Usage: ./execution_engine [schedule_file] [num_threads] [num_levels]" << endl;
+    exit(0);
+  }
+  else {
+    try {
+      num_workers = atoi(argv[2]);
+      num_levels = atoi(argv[3]);
+    }
+    catch(...) {
+      cout << "Invalid arguments, using defaults." << endl;
+      num_workers = 1;
+      num_levels = 4;
+    }
+    filename = argv[1];
+  }
+
   // Set up crypto context
   CCParams<CryptoContextCKKSRNS> parameters;
   SecretKeyDist secretKeyDist = UNIFORM_TERNARY;
@@ -283,7 +304,7 @@ int main(int argc, char **argv) {
   std::vector<uint32_t> levelBudget = {4, 4};
   uint32_t approxBootstrapDepth     = 8;
 
-  uint32_t levelsUsedBeforeBootstrap = 4;
+  uint32_t levelsUsedBeforeBootstrap = num_levels;
   usint depth =
       levelsUsedBeforeBootstrap + FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
   parameters.SetMultiplicativeDepth(depth);
@@ -305,22 +326,6 @@ int main(int argc, char **argv) {
   cryptoContext->EvalMultKeyGen(keyPair.secretKey);
   cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
 
-  int num_workers = 1;
-  string filename = "";
-  if (argc != 3) {
-    cout << "Usage: ./execution_engine [schedule_file] [num_threads]" << endl;
-    exit(0);
-  }
-  else {
-    try {
-      num_workers = atoi(argv[2]);
-    }
-    catch(...) {
-      cout << "Invalid thread number, using sequential mode." << endl;
-      num_workers = 1;
-    }
-    filename = argv[1];
-  }
   vector<queue<Node*>> schedule = parse_schedule(filename, num_workers);
   std::map<string, Ciphertext<DCRTPoly>> e_regs;
   std::map<string, Plaintext> p_regs;
