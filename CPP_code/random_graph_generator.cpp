@@ -58,14 +58,14 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
 
         std::vector<bool> parent_at_index_is_constant;
 
-        if (operations.size() == 1)
+        if (constant_probability == 1)
         {
             for (int i = 0; i < num_parents; i++)
             {
                 parent_at_index_is_constant.push_back(true);
             }
         }
-        if (operations.size() == 2)
+        else if (operations.size() == 2)
         {
             auto parent_is_constant = add_a_random_parent_type(parent_at_index_is_constant, constant_probability);
             if (num_parents == 2)
@@ -82,7 +82,8 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
         }
         else
         {
-            for (int i = 0; i < num_parents; i++)
+            parent_at_index_is_constant.push_back(false);
+            if (num_parents == 2)
             {
                 add_a_random_parent_type(parent_at_index_is_constant, constant_probability);
             }

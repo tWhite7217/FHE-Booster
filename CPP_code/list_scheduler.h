@@ -12,7 +12,7 @@
 class ListScheduler
 {
 public:
-    ListScheduler(std::string, std::string, int, int, int);
+    ListScheduler(std::string, std::string, int, int, int, int, int);
 
     OperationList get_operations();
 
@@ -29,7 +29,7 @@ public:
 
 private:
     int num_paths_multiplier;
-    int rank_multiplier;
+    int slack_multiplier;
     int urgency_multiplier;
 
     int solver_latency;

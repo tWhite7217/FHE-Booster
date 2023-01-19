@@ -1,7 +1,7 @@
 #include "list_scheduler.h"
 
-ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int heuristic_type, int gained_levels)
-    : lgr_file_path{lgr_file_path}, num_cores{num_cores}
+ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int gained_levels, int num_paths_multiplier, int slack_multiplier, int urgency_multiplier)
+    : lgr_file_path{lgr_file_path}, num_cores{num_cores}, num_paths_multiplier{num_paths_multiplier}, slack_multiplier{slack_multiplier}, urgency_multiplier{urgency_multiplier} 
 {
     InputParser input_parser;
     input_parser.parse_input_to_generate_operations(dag_file_path);
@@ -18,35 +18,6 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     {
         BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model, gained_levels);
         bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
-
-        switch (heuristic_type)
-        {
-        case 0: // num_paths with slack
-            num_paths_multiplier = 12;
-            rank_multiplier = 2;
-            urgency_multiplier = 0;
-            break;
-        case 1: // urgency
-            num_paths_multiplier = 0;
-            rank_multiplier = 0;
-            urgency_multiplier = 1;
-            break;
-        case 2: // urgency and num_paths
-            num_paths_multiplier = 1;
-            rank_multiplier = 0;
-            urgency_multiplier = 5;
-            break;
-        case 3: // num_paths minus slack
-            num_paths_multiplier = 25;
-            rank_multiplier = -1;
-            urgency_multiplier = 0;
-            break;
-        case 4: // num_paths minus urgency
-            num_paths_multiplier = 25;
-            rank_multiplier = 0;
-            urgency_multiplier = -1;
-            break;
-        }
     }
 
     if (num_cores > 0)
@@ -536,7 +507,7 @@ void ListScheduler::choose_operations_to_bootstrap()
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
         update_num_paths_for_every_operation();
-        if (rank_multiplier != 0)
+        if (slack_multiplier != 0)
         {
             update_all_ESTs_and_LSTs();
             update_all_ranks();
@@ -562,7 +533,12 @@ void ListScheduler::update_all_bootstrap_urgencies()
         if (path_is_urgent(path))
         {
             count++;
-            path.back()->bootstrap_urgency = 1;
+            auto path_size = path.size();
+            for (double i = 1; i <= path_size; i++)
+            {
+                path[i]->bootstrap_urgency = std::max(
+                    path[i]->bootstrap_urgency, i / path_size);
+            }
         }
     }
     if (count == 0)
@@ -599,7 +575,7 @@ int ListScheduler::get_score(OperationPtr operation)
     }
 
     return std::max(num_paths_multiplier * operation->num_unsatisfied_paths +
-                        rank_multiplier * operation->rank +
+                        slack_multiplier * operation->rank +
                         urgency_multiplier * operation->bootstrap_urgency,
                     0.0);
 }
@@ -676,9 +652,9 @@ void ListScheduler::update_pred_count()
 
 int main(int argc, char **argv)
 {
-    if (argc != 7)
+    if (argc != 9)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <heuristic_type> <gained_levels>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <num_paths_multiplier> <slack_multiplier> <urgency_multiplier> <gained_levels>" << std::endl;
         return 1;
     }
 
@@ -686,16 +662,12 @@ int main(int argc, char **argv)
     std::string lgr_file_path = argv[2];
     std::string output_file_path = argv[3];
     int num_cores = std::stoi(argv[4]);
-    int heuristic_type = std::stoi(argv[5]);
-    int gained_levels = std::stoi(argv[6]);
+    int num_paths_multiplier = std::stoi(argv[5]);
+    int slack_multiplier = std::stoi(argv[6]);
+    int urgency_multiplier = std::stoi(argv[7]);
+    int gained_levels = std::stoi(argv[8]);
 
-    if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 4)
-    {
-        std::cout << "Invalid heuristic type." << std::endl;
-        return 1;
-    }
-
-    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, heuristic_type, gained_levels);
+    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, gained_levels, num_paths_multiplier, slack_multiplier, urgency_multiplier);
 
     list_scheduler.perform_list_scheduling();
     list_scheduler.write_lgr_like_format(output_file_path + ".lgr");

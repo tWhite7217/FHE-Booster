@@ -12,7 +12,7 @@ do
     do
         
         graph_num=$((i-1+j))
-        op_offset=$(((i-$1)/$2))
+        op_offset=$((((i-$1)/$2)*10))
         num_operations=$(($4+op_offset))
         
         echo $graph_num
