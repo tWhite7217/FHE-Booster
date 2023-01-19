@@ -6,6 +6,7 @@
 #include <chrono>
 #include <mutex>
 #include <memory>
+#include <unordered_set>
 
 #include "parser.hpp"
 #include "openfhe.h"
@@ -13,6 +14,8 @@
 using namespace lbcrypto;
 using namespace std;
 using namespace std::chrono;
+
+const bool do_T2_style_bootstrapping = true;
 
 void print_schedule(vector<queue<Node*>> schedule) {
   for (uint64_t i = 0; i < schedule.size(); i++) {
@@ -68,7 +71,10 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
                      std::map<string, Plaintext>& ptxt_regs,
                      std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
                      vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
-                     CryptoContext<DCRTPoly>& context) {
+                     CryptoContext<DCRTPoly>& context,
+                     const std::unordered_set<std::string> &all_inputs,
+                     const bool &do_T2_style_bootstrapping,
+                     const uint32_t &bootstrap_depth) {
   omp_set_num_threads(schedule.size());
   #pragma omp parallel for
   for (uint64_t i = 0; i < schedule.size(); i++) {
@@ -121,6 +127,11 @@ void execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
           cout << "Invalid Instruction! Exiting..." << endl;
           exit(-1);
       }
+      if (do_T2_style_bootstrapping &&
+          all_inputs.count(output_index) &&
+          enc_regs[output_index]->GetLevel() == bootstrap_depth) {
+            enc_regs[output_index] = context->EvalBootstrap(enc_regs[output_index]);
+          }
       reg_locks[output_index]->unlock();
       core_schedule.pop();
     }
@@ -195,9 +206,9 @@ void validate_results(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
     context->Decrypt(private_key, ctxt, &tmp_ptxt);
     auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
 
-    // if (!doubles_close_enough(decrypted_val, validation_regs[key])) {
+    if (!doubles_close_enough(decrypted_val, validation_regs[key])) {
       std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs[key] << std::endl;
-    // }
+    }
   }
 }
 
@@ -282,8 +293,8 @@ int main(int argc, char **argv) {
   uint32_t approxBootstrapDepth     = 8;
 
   uint32_t levelsUsedBeforeBootstrap = 10;
-  usint depth =
-      levelsUsedBeforeBootstrap + FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
+  auto bootstrap_depth = FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
+  usint depth = levelsUsedBeforeBootstrap + bootstrap_depth;
   parameters.SetMultiplicativeDepth(depth);
 
   CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);
@@ -319,7 +330,9 @@ int main(int argc, char **argv) {
     }
     filename = argv[1];
   }
-  vector<queue<Node*>> schedule = parse_schedule(filename, num_workers);
+
+  std::unordered_set<std::string> all_inputs;
+  vector<queue<Node*>> schedule = parse_schedule(filename, num_workers, do_T2_style_bootstrapping, all_inputs);
   std::map<string, Ciphertext<DCRTPoly>> e_regs;
   std::map<string, Plaintext> p_regs;
   std::map<string, double> v_regs;
@@ -331,7 +344,7 @@ int main(int argc, char **argv) {
 
   cout << "Executing in ciphertext..." << endl;
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  execute_schedule(e_regs, p_regs, reg_locks, schedule, keyPair.publicKey, cryptoContext);
+  execute_schedule(e_regs, p_regs, reg_locks, schedule, keyPair.publicKey, cryptoContext, all_inputs, do_T2_style_bootstrapping, bootstrap_depth);
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   cout << "Done." << endl;
   duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
