@@ -8,10 +8,12 @@
 class BootstrappingPathGenerator
 {
 public:
-    BootstrappingPathGenerator(OperationList, bool);
+    BootstrappingPathGenerator(OperationList, bool, int);
     std::vector<OperationList> get_bootstrapping_paths(std::string);
 
 private:
+    int gained_levels;
+
     std::vector<std::vector<OperationPtr>> bootstrapping_paths;
     bool using_selective_model;
     OperationList operations;

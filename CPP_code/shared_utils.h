@@ -24,10 +24,6 @@
 // };
 
 const int bootstrapping_latency = 300;
-// 2 levels - 16 bits
-// const int gained_levels = 2;
-// 9 levels - 12 bits
-const int gained_levels = 9;
 
 struct Operation;
 

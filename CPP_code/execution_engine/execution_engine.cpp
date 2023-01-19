@@ -129,7 +129,7 @@ int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
       }
       if (do_T2_style_bootstrapping &&
           all_inputs.count(output_index) &&
-          enc_regs[output_index]->GetLevel() == level_to_bootstrap) {
+          enc_regs[output_index]->GetLevel() >= level_to_bootstrap) {
             enc_regs[output_index] = context->EvalBootstrap(enc_regs[output_index]);
             bootstrap_counter++;
           }
@@ -152,7 +152,7 @@ void execute_validation_schedule(std::map<string, double>& validation_regs,
       auto inputs = core_schedule.front()->get_inputs();
       auto input_index1 = inputs[0];
       string input_index2 = "";
-      if (inputs.size() > 1) {
+      if (inputs.size() == 2) {
         input_index2 = inputs[1];
         handle_input_mutex(reg_locks, input_index2);
       }
@@ -327,6 +327,8 @@ int main(int argc, char **argv) {
   std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
   uint32_t level_to_bootstrap = ctxt_level_after_bootstrap + num_levels;
   usint depth = level_to_bootstrap + 2;
+  // usint depth = level_to_bootstrap + 1;
+  // usint depth = level_to_bootstrap;
   parameters.SetMultiplicativeDepth(depth);
 
   CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);

@@ -1,6 +1,6 @@
 #include "list_scheduler.h"
 
-ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int heuristic_type)
+ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int heuristic_type, int gained_levels)
     : lgr_file_path{lgr_file_path}, num_cores{num_cores}
 {
     InputParser input_parser;
@@ -16,7 +16,7 @@ ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_pat
     }
     else
     {
-        BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model);
+        BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model, gained_levels);
         bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
 
         switch (heuristic_type)
@@ -676,9 +676,9 @@ void ListScheduler::update_pred_count()
 
 int main(int argc, char **argv)
 {
-    if (argc != 6)
+    if (argc != 7)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <heuristic_type>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <heuristic_type> <gained_levels>" << std::endl;
         return 1;
     }
 
@@ -687,6 +687,7 @@ int main(int argc, char **argv)
     std::string output_file_path = argv[3];
     int num_cores = std::stoi(argv[4]);
     int heuristic_type = std::stoi(argv[5]);
+    int gained_levels = std::stoi(argv[6]);
 
     if (lgr_file_path == "NULL" && heuristic_type < 0 || heuristic_type > 4)
     {
@@ -694,7 +695,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, heuristic_type);
+    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, heuristic_type, gained_levels);
 
     list_scheduler.perform_list_scheduling();
     list_scheduler.write_lgr_like_format(output_file_path + ".lgr");

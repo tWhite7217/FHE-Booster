@@ -6,6 +6,7 @@
 bool using_selective_model;
 std::string input_file_path;
 std::string output_file_path;
+int gained_levels;
 
 std::map<std::string, int> operation_type_to_latency_map;
 OperationList operations;
@@ -18,6 +19,7 @@ void read_command_line_args(int argc, char **argv)
     input_file_path = std::string{argv[1]};
     output_file_path = std::string{argv[2]};
     using_selective_model = (std::string(argv[3]) == "True");
+    gained_levels = std::atoi(argv[4]);
 }
 
 void get_info_from_input_parser()
@@ -123,16 +125,16 @@ void write_bootstrapping_constraints_to_output_file()
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4)
+    if (argc != 5)
     {
-        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <using_selective_model>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <using_selective_model> <gained_levels>" << std::endl;
         return 1;
     }
 
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    BootstrappingPathGenerator path_generator(operations, using_selective_model);
+    BootstrappingPathGenerator path_generator(operations, using_selective_model, gained_levels);
     bootstrapping_paths = path_generator.get_bootstrapping_paths(input_file_path);
     // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
     // bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();

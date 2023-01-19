@@ -1,7 +1,7 @@
 #include "bootstrapping_path_generator.h"
 
-BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations, bool using_selective_model)
-    : operations{operations}, using_selective_model{using_selective_model} {}
+BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations, bool using_selective_model, int gained_levels)
+    : operations{operations}, using_selective_model{using_selective_model}, gained_levels{gained_levels} {}
 
 std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(std::string input_dag_file_path)
 {

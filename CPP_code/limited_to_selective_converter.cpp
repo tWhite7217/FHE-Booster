@@ -1,6 +1,6 @@
 #include "limited_to_selective_converter.h"
 
-LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_file_path, std::string input_lgr_file_path)
+LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_file_path, std::string input_lgr_file_path, int gained_levels)
 {
     InputParser input_parser;
     input_parser.parse_input_to_generate_operations(input_dag_file_path);
@@ -11,7 +11,7 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_f
     lgr_parser.set_operations(operations);
     lgr_parser.lex();
 
-    auto bootstrapping_path_generator = BootstrappingPathGenerator(operations, true);
+    auto bootstrapping_path_generator = BootstrappingPathGenerator(operations, true, gained_levels);
     bootstrapping_paths = bootstrapping_path_generator.get_bootstrapping_paths(input_dag_file_path);
     // bootstrapping_paths = bootstrapping_path_generator.generate_bootstrapping_paths();
 }
@@ -84,18 +84,19 @@ void LimitedToSelectiveConverter::write_selective_lgr_file(std::string output_lg
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4)
+    if (argc != 5)
     {
-        std::cout << "Usage: " << argv[0] << " <input_dag_file> <input_lgr_file> <output_lgr_file>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_dag_file> <input_lgr_file> <output_lgr_file> <gained_levels>" << std::endl;
         return 1;
     }
 
     std::string input_dag_file_path = argv[1];
     std::string input_lgr_file_path = argv[2];
     std::string output_lgr_file_path = argv[3];
+    int gained_levels = std::atoi(argv[4]);
 
     auto limited_to_selective_converter =
-        LimitedToSelectiveConverter(input_dag_file_path, input_lgr_file_path);
+        LimitedToSelectiveConverter(input_dag_file_path, input_lgr_file_path, gained_levels);
 
     limited_to_selective_converter.remove_unnecessary_bootstrapped_results();
     limited_to_selective_converter.write_selective_lgr_file(output_lgr_file_path);

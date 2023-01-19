@@ -12,7 +12,7 @@
 class ListScheduler
 {
 public:
-    ListScheduler(std::string, std::string, int, int);
+    ListScheduler(std::string, std::string, int, int, int);
 
     OperationList get_operations();
 
