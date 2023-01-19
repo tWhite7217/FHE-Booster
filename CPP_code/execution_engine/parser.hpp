@@ -1,10 +1,13 @@
 #include <iostream>
 #include <string>
+#include <map>
 #include <vector>
 #include <queue>
+#include <set>
 #include <fstream>
 #include <cassert>
 #include <sstream>
+#include <unordered_set>
 
 enum Op { EMUL, CMUL, EADD, CADD, ESUB, CSUB, EINV, BOOT };
 
@@ -15,6 +18,9 @@ class Node {
   public:
     std::vector<std::string> get_inputs() {
       return inputs;
+    }
+    void set_inputs(const std::vector<std::string> &new_inputs) {
+      inputs = new_inputs;
     }
     std::string get_output() {
       return output_wire;
@@ -83,4 +89,5 @@ class Node {
     }
 };
 
-std::vector<std::queue<Node*>> parse_schedule(std::string sched, int num_workers);
+std::vector<std::queue<Node*>> parse_schedule(std::string, int, bool, std::unordered_set<std::string> &);
+void fix_circuit_io(std::vector<std::queue<Node*>>, const std::map<std::string, std::string> &, std::unordered_set<std::string> &);
