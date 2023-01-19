@@ -2,7 +2,7 @@
 
 using namespace std;
 
-vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_style_bootstrapping, std::unordered_set<string> &all_inputs) {
+vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_style_bootstrapping, std::unordered_set<string> &all_inputs, std::unordered_set<std::string> &initial_inputs) {
   ifstream sched_file(sched);
   if(!sched_file) {
     cout << "Error opening file: " << sched << endl;
@@ -58,6 +58,10 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_st
   sched_file.close();
   if (do_T2_style_bootstrapping) {
     fix_circuit_io(circuit, bootstrap_out_to_in, all_inputs);
+    initial_inputs = all_inputs;
+    for (auto output: outputs) {
+      initial_inputs.erase(output);
+    }
   }
   return circuit;
 }

@@ -89,5 +89,5 @@ class Node {
     }
 };
 
-std::vector<std::queue<Node*>> parse_schedule(std::string, int, bool, std::unordered_set<std::string> &);
+std::vector<std::queue<Node*>> parse_schedule(std::string, int, bool, std::unordered_set<std::string> &, std::unordered_set<std::string> &);
 void fix_circuit_io(std::vector<std::queue<Node*>>, const std::map<std::string, std::string> &, std::unordered_set<std::string> &);

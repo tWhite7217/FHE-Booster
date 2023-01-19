@@ -69,13 +69,12 @@ void handle_input_mutex(std::map<string, std::shared_ptr<std::mutex>>& reg_locks
 int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
                      std::map<string, Plaintext>& ptxt_regs,
                      std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
-                     vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
+                     vector<queue<Node*>> schedule,
                      CryptoContext<DCRTPoly>& context,
                      const std::unordered_set<std::string> &all_inputs,
                      const bool &do_T2_style_bootstrapping,
-                     const uint32_t &bootstrap_depth) {
+                     const uint32_t &level_to_bootstrap) {
   std::atomic<int> bootstrap_counter = 0;
-  omp_set_num_threads(schedule.size());
   #pragma omp parallel for
   for (uint64_t i = 0; i < schedule.size(); i++) {
     auto &core_schedule = schedule[i];
@@ -130,10 +129,11 @@ int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
       }
       if (do_T2_style_bootstrapping &&
           all_inputs.count(output_index) &&
-          enc_regs[output_index]->GetLevel() == bootstrap_depth) {
+          enc_regs[output_index]->GetLevel() == level_to_bootstrap) {
             enc_regs[output_index] = context->EvalBootstrap(enc_regs[output_index]);
             bootstrap_counter++;
           }
+      std::cout << "level: " << enc_regs[output_index]->GetLevel() << std::endl;
       reg_locks[output_index]->unlock();
       core_schedule.pop();
     }
@@ -144,7 +144,6 @@ int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
 void execute_validation_schedule(std::map<string, double>& validation_regs, 
                      std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
                      vector<queue<Node*>> schedule) {
-  omp_set_num_threads(schedule.size());
   #pragma omp parallel for
   for (uint64_t i = 0; i < schedule.size(); i++) {
     auto &core_schedule = schedule[i];
@@ -218,34 +217,26 @@ void validate_results(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
 void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
                      std::map<string, Plaintext>& ptxt_regs, 
                      std::map<string, double>& validation_regs, 
-                     vector<queue<Node*>> schedule, PublicKey<DCRTPoly>& pub_key, 
+                     const std::unordered_set<std::string> &initial_inputs,
+                     PublicKey<DCRTPoly>& pub_key, 
                      CryptoContext<DCRTPoly>& context,
                      double rand_thresh) {
-  for (uint64_t i = 0; i < schedule.size(); i++) {
-    while (!schedule[i].empty()) {
-      for (uint64_t j = 0; j < schedule[i].front()->get_inputs().size(); j++) {
-        bool is_ctxt = schedule[i].front()->get_inputs()[j].find('p') == std::string::npos;
-        if (is_ctxt) {
-          if (enc_regs.find(schedule[i].front()->get_inputs()[j]) == enc_regs.end()) {
-            vector<double> tmp_vec; 
-            tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
-            auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
-            auto tmp = context->Encrypt(pub_key, tmp_ptxt);
-            enc_regs[schedule[i].front()->get_inputs()[j]] = tmp;
-            validation_regs[schedule[i].front()->get_inputs()[j]] = tmp_vec[0];
-          }
-        }
-        else {
-          if (ptxt_regs.find(schedule[i].front()->get_inputs()[j]) == ptxt_regs.end()) {
-            vector<double> tmp_vec;
-            tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
-            auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
-            ptxt_regs[schedule[i].front()->get_inputs()[j]] = tmp_ptxt;
-            validation_regs[schedule[i].front()->get_inputs()[j]] = tmp_vec[0];
-          }
-        }
-      }
-      schedule[i].pop();
+  for (const auto &key : initial_inputs) {
+    bool is_ctxt = key.find('p') == std::string::npos;
+    if (is_ctxt) {
+      vector<double> tmp_vec; 
+      tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
+      auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
+      auto tmp = context->Encrypt(pub_key, tmp_ptxt);
+      enc_regs[key] = tmp;
+      validation_regs[key] = tmp_vec[0];
+    }
+    else {
+      vector<double> tmp_vec;
+      tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
+      auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
+      ptxt_regs[key] = tmp_ptxt;
+      validation_regs[key] = tmp_vec[0];
     }
   }
   return;
@@ -267,6 +258,17 @@ void get_reg_locks(std::map<string, std::shared_ptr<std::mutex>> &reg_locks,
 void lock_all_mutexes(std::map<string, std::shared_ptr<std::mutex>> &reg_locks) {
   for (auto &[key, mutex] : reg_locks) {
     mutex->lock();
+  }
+}
+
+void bootstrap_initial_inputs(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
+                              CryptoContext<DCRTPoly>& context) {
+  #pragma omp parallel for
+  for (int i = 0; i < enc_regs.size(); i++) {
+    auto it = enc_regs.begin();
+    advance(it, i);
+    auto &[_, ctxt] = *it;
+    ctxt = context->EvalBootstrap(ctxt);
   }
 }
 
@@ -321,9 +323,10 @@ int main(int argc, char **argv) {
   std::vector<uint32_t> levelBudget = {4, 4};
   uint32_t approxBootstrapDepth     = 8;
 
-  uint32_t levelsUsedBeforeBootstrap = num_levels;
-  auto bootstrap_depth = FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
-  usint depth = levelsUsedBeforeBootstrap + bootstrap_depth;
+  auto ctxt_level_after_bootstrap = FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
+  std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
+  uint32_t level_to_bootstrap = ctxt_level_after_bootstrap + num_levels;
+  usint depth = level_to_bootstrap + 2;
   parameters.SetMultiplicativeDepth(depth);
 
   CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);
@@ -344,19 +347,28 @@ int main(int argc, char **argv) {
   cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
 
   std::unordered_set<std::string> all_inputs;
-  vector<queue<Node*>> schedule = parse_schedule(filename, num_workers, do_T2_style_bootstrapping, all_inputs);
+  std::unordered_set<std::string> initial_inputs;
+  vector<queue<Node*>> schedule = parse_schedule(filename, num_workers, do_T2_style_bootstrapping, all_inputs, initial_inputs);
+  omp_set_num_threads(schedule.size());
   std::map<string, Ciphertext<DCRTPoly>> e_regs;
   std::map<string, Plaintext> p_regs;
   std::map<string, double> v_regs;
   srand(time(NULL));
-  gen_random_vals(e_regs, p_regs, v_regs, schedule, keyPair.publicKey, cryptoContext, rand_thresh);
+  cout << "Generating random inputs..." << endl;
+  gen_random_vals(e_regs, p_regs, v_regs, initial_inputs, keyPair.publicKey, cryptoContext, rand_thresh);
+  cout << "Done." << endl;
+  cout << "Bootstrapping inputs..." << endl;
+  // if (do_T2_style_bootstrapping) {
+  bootstrap_initial_inputs(e_regs, cryptoContext);
+  // }
+  cout << "Done." << endl;
 
   std::map<string, std::shared_ptr<std::mutex>> reg_locks;
   get_reg_locks(reg_locks, schedule);
 
   cout << "Executing in ciphertext..." << endl;
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  auto num_bootstraps = execute_schedule(e_regs, p_regs, reg_locks, schedule, keyPair.publicKey, cryptoContext, all_inputs, do_T2_style_bootstrapping, bootstrap_depth);
+  auto num_bootstraps = execute_schedule(e_regs, p_regs, reg_locks, schedule, cryptoContext, all_inputs, do_T2_style_bootstrapping, level_to_bootstrap);
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   cout << "Done." << endl;
   duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
