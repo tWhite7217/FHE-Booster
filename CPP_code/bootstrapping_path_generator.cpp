@@ -194,19 +194,6 @@ bool BootstrappingPathGenerator::paths_are_redundant(std::vector<OperationPtr> p
             }
         }
     }
-
-    for (auto operation : path1)
-    {
-        std::cout << operation->id << ",";
-    }
-    std::cout << std::endl;
-
-    for (auto operation : path2)
-    {
-        std::cout << operation->id << ",";
-    }
-    std::cout << std::endl;
-
     return true;
 }
 

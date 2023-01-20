@@ -20,9 +20,10 @@ do
         echo $num_operations
         
         mkdir DAGs/random_graph$graph_num
-        ./CPP_code/random_graph_generator.out $num_operations $5 $6 $7 $8 $9 DAGs/random_graph$graph_num/random_graph$graph_num
+        echo ./CPP_code/random_graph_generator.out $num_operations $5 $6 $7 $8 $9 ${10} ${11} DAGs/random_graph$graph_num/random_graph$graph_num
+        ./CPP_code/random_graph_generator.out $num_operations $5 $6 $7 $8 $9 ${10} ${11} DAGs/random_graph$graph_num/random_graph$graph_num
         ./CPP_code/txt_to_vcg.out DAGs/random_graph$graph_num/random_graph$graph_num.txt DAGs/random_graph$graph_num/random_graph$graph_num.vcg
-        ./scripts/generate_both_LDT_variants.sh random_graph$graph_num ${10}
+        ./scripts/generate_both_LDT_variants.sh random_graph$graph_num ${12}
         sleep 1
         
     done
