@@ -2,5 +2,7 @@
 
 make input_file_processor.out
 
-./CPP_code/input_file_processor.out DAGs/$1/$1.txt DAGs/$1/$1_$2_levels.LDT False $2
-./CPP_code/input_file_processor.out DAGs/$1/$1.txt DAGs/$1/$1_selective_$2_levels.LDT True $2
+mkdir DAGs/$1/$2_levels
+
+./CPP_code/input_file_processor.out DAGs/$1/$1.txt DAGs/$1/$2_levels/$1.LDT False $2
+./CPP_code/input_file_processor.out DAGs/$1/$1.txt DAGs/$1/$2_levels/$1_selective.LDT True $2

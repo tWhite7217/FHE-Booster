@@ -33,10 +33,13 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_st
           if (operation == "ADD" || operation == "SUB" || operation == "MUL") {
             Node* tmp = new Node(operation, operands[0], operands[1], operands[2]);
             circuit[thread_idx].push(tmp);
+            all_inputs.insert(operands[1]);
+            all_inputs.insert(operands[2]);
           }
           else {
             Node* tmp = new Node(operation, operands[0], operands[1], "");
             circuit[thread_idx].push(tmp);
+            all_inputs.insert(operands[1]);
           }
           if (outputs.count(operands[0])) {
             std::cout << "ERROR: Schedules must maintain SSA form." << std::endl;
@@ -57,11 +60,12 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_st
   delete [] operands;
   sched_file.close();
   if (do_T2_style_bootstrapping) {
+    all_inputs.clear();
     fix_circuit_io(circuit, bootstrap_out_to_in, all_inputs);
-    initial_inputs = all_inputs;
-    for (auto output: outputs) {
-      initial_inputs.erase(output);
-    }
+  }
+  initial_inputs = all_inputs;
+  for (auto output: outputs) {
+    initial_inputs.erase(output);
   }
   return circuit;
 }

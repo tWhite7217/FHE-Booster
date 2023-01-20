@@ -1,33 +1,44 @@
 #!/bin/bash
 
+#Usage <script_name> <source_lgr> <first_graph_num> <last_graph_num> <num_cores> <num_levels> <heuristic_name> <num_paths_multiplier> <slack_multiplier> <urgency_multiplier> <sched_name>
+
 make list_scheduler.out
 
+source_lgr=$1
+first_graph_num=$2
+last_graph_num=$3
+num_cores=$4
+num_levels=$5
+heuristic_name=$6
+num_paths_multiplier=$7
+slack_multiplier=$8
+urgency_multiplier=$9
+sched_name=${10}
 
-source_lgr="NULL"
-source_lgr_suffix=""
+source_lgr_base=""
 
-if [[ "$6" != "heuristic" ]]; then
-    if [[ "$1" == "limited" || "$1" == "unlimited" ]]; then
-        source_lgr_suffix="min_bootstrapping_$8_levels.lgr"
-    else
-        source_lgr_suffix="min_bootstrapping_$8_levels_$1.lgr"
-    fi
-fi
-
-result_file_suffix=""
-
-if [[ $(($4)) > 1 && ("$1" != "unlimited") ]]; then
-    result_file_suffix="_$4_cores"
-fi
-
-for i in $(seq $2 $3)
+for i in $(seq $first_graph_num $last_graph_num)
 do
     
-    if [[ "$6" != "heuristic" ]]; then
-        source_lgr="results/random_graph$i/rg${i}_"
+    dag_file="DAGs/random_graph$i/random_graph$i.txt"
+    
+    if [[ "$source_lgr" != "NULL" ]]; then
+        source_lgr_base="results/random_graph$i/${num_levels}_levels/bootstrapping_sets/rg${i}_"
     fi
     
-    echo ./CPP_code/list_scheduler.out DAGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7 $8
-    ./CPP_code/list_scheduler.out DAGs/random_graph$i/random_graph$i.txt $source_lgr$source_lgr_suffix results/random_graph$i/rg${i}_$8_levels_list_$5${result_file_suffix} $4 $7 $8
+    result_folder="results/random_graph$i"
+    mkdir $result_folder
+    result_folder="$result_folder/${num_levels}_levels"
+    mkdir $result_folder
+    result_folder="$result_folder/$heuristic_name"
+    mkdir $result_folder
+    result_folder="$result_folder/${num_cores}_cores"
+    mkdir $result_folder
+    
+    result_file="$result_folder/rg${i}_$sched_name"
+    
+    
+    echo ./CPP_code/list_scheduler.out $dag_file $source_lgr_base$source_lgr $result_file $num_cores $num_paths_multiplier $slack_multiplier $urgency_multiplier $num_levels
+    ./CPP_code/list_scheduler.out $dag_file $source_lgr_base$source_lgr $result_file $num_cores $num_paths_multiplier $slack_multiplier $urgency_multiplier $num_levels
     
 done

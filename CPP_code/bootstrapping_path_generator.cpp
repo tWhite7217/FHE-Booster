@@ -5,7 +5,11 @@ BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations,
 
 std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(std::string input_dag_file_path)
 {
-    std::string bootstrapping_file_path = input_dag_file_path.substr(0, input_dag_file_path.size() - 4) + "_bootstrapping_paths_" + std::to_string(gained_levels) + "_levels";
+    auto dag_path_as_array = split_string_by_character(input_dag_file_path, '/');
+    std::string bootstrapping_file_path = (dag_path_as_array[0] + "/" +
+                                           dag_path_as_array[1] + "/" +
+                                           std::to_string(gained_levels) +
+                                           "_levels/bootstrapping_paths");
     if (using_selective_model)
     {
         bootstrapping_file_path += "_selective";
