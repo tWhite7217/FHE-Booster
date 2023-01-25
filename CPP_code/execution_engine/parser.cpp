@@ -2,7 +2,8 @@
 
 using namespace std;
 
-vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_style_bootstrapping, std::unordered_set<string> &all_inputs, std::unordered_set<std::string> &initial_inputs) {
+vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_style_bootstrapping, std::unordered_set<std::string> &initial_inputs, std::unordered_set<std::string> &bootstrap_candidates) {
+  std::unordered_set<string> all_inputs;
   ifstream sched_file(sched);
   if(!sched_file) {
     cout << "Error opening file: " << sched << endl;
@@ -61,7 +62,7 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_st
   sched_file.close();
   if (do_T2_style_bootstrapping) {
     all_inputs.clear();
-    fix_circuit_io(circuit, bootstrap_out_to_in, all_inputs);
+    fix_circuit_io(circuit, bootstrap_out_to_in, all_inputs, bootstrap_candidates);
   }
   initial_inputs = all_inputs;
   for (auto output: outputs) {
@@ -70,10 +71,11 @@ vector<queue<Node*>> parse_schedule(string sched, int num_workers, bool do_T2_st
   return circuit;
 }
 
-void fix_circuit_io(vector<queue<Node*>> circuit, const std::map<std::string, std::string> &bootstrap_out_to_in, std::unordered_set<std::string> &all_inputs) {
-  for (auto schedule : circuit) {
-    while (!schedule.empty()) {
-      auto inputs = schedule.front()->get_inputs();
+void fix_circuit_io(vector<queue<Node*>> circuit, const std::map<std::string, std::string> &bootstrap_out_to_in, std::unordered_set<std::string> &all_inputs, std::unordered_set<std::string> &bootstrap_candidates) {
+  for (auto core_schedule : circuit) {
+    while (!core_schedule.empty()) {
+      auto inputs = core_schedule.front()->get_inputs();
+      auto op_type = core_schedule.front()->get_op();
       vector<string> new_inputs(inputs.size());
       for (auto i = 0; i < inputs.size(); i++) {
         if (bootstrap_out_to_in.count(inputs[i])) {
@@ -81,10 +83,17 @@ void fix_circuit_io(vector<queue<Node*>> circuit, const std::map<std::string, st
         } else {
           new_inputs[i] = inputs[i];
         }
+        if (op_type == EMUL) {
+          bootstrap_candidates.insert(new_inputs.begin(), new_inputs.end());
+        } else if (op_type == CMUL) {
+          bool whichPtxt = core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
+          size_t i = whichPtxt ? 0 : 1;
+          bootstrap_candidates.insert(new_inputs[i]);
+        }
       }
       all_inputs.insert(new_inputs.begin(), new_inputs.end());
-      schedule.front()->set_inputs(new_inputs);
-      schedule.pop();
+      core_schedule.front()->set_inputs(new_inputs);
+      core_schedule.pop();
     }
   }
 }

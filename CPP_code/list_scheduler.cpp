@@ -1,7 +1,7 @@
 #include "list_scheduler.h"
 
 ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int gained_levels, int num_paths_multiplier, int slack_multiplier, int urgency_multiplier)
-    : lgr_file_path{lgr_file_path}, num_cores{num_cores}, num_paths_multiplier{num_paths_multiplier}, slack_multiplier{slack_multiplier}, urgency_multiplier{urgency_multiplier} 
+    : lgr_file_path{lgr_file_path}, num_cores{num_cores}, num_paths_multiplier{num_paths_multiplier}, slack_multiplier{slack_multiplier}, urgency_multiplier{urgency_multiplier}
 {
     InputParser input_parser;
     input_parser.parse_input_to_generate_operations(dag_file_path);
@@ -534,10 +534,10 @@ void ListScheduler::update_all_bootstrap_urgencies()
         {
             count++;
             auto path_size = path.size();
-            for (double i = 1; i <= path_size; i++)
+            for (double i = 0; i < path_size; i++)
             {
                 path[i]->bootstrap_urgency = std::max(
-                    path[i]->bootstrap_urgency, i / path_size);
+                    path[i]->bootstrap_urgency, (i + 1) / path_size);
             }
         }
     }

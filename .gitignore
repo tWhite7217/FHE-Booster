@@ -19,3 +19,6 @@ DAGs/
 *tgff*
 CPP_code/benchmark_generation/*.txt
 CPP_code/execution_engine/build/
+*.pdf
+*.png
+*.ipynb_checkpoints/
