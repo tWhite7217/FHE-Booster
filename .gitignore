@@ -22,3 +22,4 @@ CPP_code/execution_engine/build/
 *.pdf
 *.png
 *.ipynb_checkpoints/
+*.t2

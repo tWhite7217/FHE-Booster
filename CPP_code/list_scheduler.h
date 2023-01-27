@@ -19,7 +19,7 @@ public:
     void perform_list_scheduling();
 
     void update_all_ESTs_and_LSTs();
-    void update_all_ranks();
+    int update_all_ranks();
     void generate_start_times_and_solver_latency();
     void generate_core_assignments();
     void choose_operations_to_bootstrap();
@@ -31,6 +31,9 @@ private:
     int num_paths_multiplier;
     int slack_multiplier;
     int urgency_multiplier;
+
+    int max_num_paths;
+    int max_slack;
 
     int solver_latency;
 
@@ -80,7 +83,7 @@ private:
     int get_earliest_possible_program_end_time();
     void update_latest_start_time(OperationPtr, int);
     void update_all_bootstrap_urgencies();
-    void update_num_paths_for_every_operation();
+    int update_num_paths_for_every_operation();
     void initialize_pred_count();
     void update_ready_operations();
     std::unordered_set<OperationPtr> handle_started_operations(std::map<OperationPtr, int> &);
@@ -96,7 +99,7 @@ private:
     bool core_is_available(int);
     bool program_is_not_finished();
     void choose_operation_to_bootstrap_based_on_score();
-    int get_score(OperationPtr);
+    double get_score(OperationPtr);
     std::string get_constant_arg(OperationPtr, size_t);
     std::string get_variable_arg(OperationPtr, size_t);
     void mark_cores_available(std::unordered_set<OperationPtr> &);

@@ -127,12 +127,19 @@ void ListScheduler::update_all_ESTs_and_LSTs()
     }
 }
 
-void ListScheduler::update_all_ranks()
+int ListScheduler::update_all_ranks()
 {
+    int max = 0;
     for (auto &operation : operations)
     {
-        operation->rank = operation->latest_start_time - operation->earliest_start_time;
+        int slack = operation->latest_start_time - operation->earliest_start_time;
+        operation->rank = slack;
+        if (slack > max)
+        {
+            max = slack;
+        }
     }
+    return max;
 }
 
 void ListScheduler::initialize_pred_count()
@@ -506,11 +513,11 @@ void ListScheduler::choose_operations_to_bootstrap()
     auto count = 0;
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
-        update_num_paths_for_every_operation();
+        max_num_paths = update_num_paths_for_every_operation();
         if (slack_multiplier != 0)
         {
             update_all_ESTs_and_LSTs();
-            update_all_ranks();
+            max_slack = update_all_ranks();
         }
         if (urgency_multiplier != 0)
         {
@@ -567,20 +574,23 @@ void ListScheduler::choose_operation_to_bootstrap_based_on_score()
     max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
 }
 
-int ListScheduler::get_score(OperationPtr operation)
+double ListScheduler::get_score(OperationPtr operation)
 {
     if (operation->num_unsatisfied_paths == 0)
     {
-        return -1;
+        return 0;
     }
 
-    return std::max(num_paths_multiplier * operation->num_unsatisfied_paths +
-                        slack_multiplier * operation->rank +
+    double normalized_num_paths = ((double)operation->num_unsatisfied_paths) / max_num_paths;
+    double normalized_slack = ((double)operation->rank) / max_slack;
+
+    return std::max(num_paths_multiplier * normalized_num_paths +
+                        slack_multiplier * normalized_slack +
                         urgency_multiplier * operation->bootstrap_urgency,
                     0.0);
 }
 
-void ListScheduler::update_num_paths_for_every_operation()
+int ListScheduler::update_num_paths_for_every_operation()
 {
     for (auto &operation : operations)
     {
@@ -602,6 +612,18 @@ void ListScheduler::update_num_paths_for_every_operation()
             }
         }
     }
+
+    int max = 0;
+
+    for (auto &operation : operations)
+    {
+        if (operation->num_unsatisfied_paths > max)
+        {
+            max = operation->num_unsatisfied_paths;
+        }
+    }
+
+    return max;
 }
 
 void ListScheduler::perform_list_scheduling()
