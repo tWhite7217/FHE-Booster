@@ -16,6 +16,14 @@ using namespace lbcrypto;
 using namespace std;
 using namespace std::chrono;
 
+struct ExecutionVariables {
+  std::map<string, Ciphertext<DCRTPoly>> e_regs;
+  std::map<string, Plaintext> p_regs;
+  std::map<string, double> v_regs;
+  std::map<string, std::shared_ptr<std::mutex>> reg_locks;
+  std::map<string, std::shared_ptr<std::mutex>> dep_locks;
+};
+
 void print_schedule(vector<queue<Node*>> schedule) {
   for (uint64_t i = 0; i < schedule.size(); i++) {
     if (schedule[i].empty()) {
@@ -30,8 +38,8 @@ void print_schedule(vector<queue<Node*>> schedule) {
   return;
 }
 
-bool whichPtxt(const std::queue<Node *> &core_schedule) {
-  return core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
+bool isCtxt(const std::string &input_index) {
+  return input_index.find('p') == std::string::npos;
 }
 
 std::pair<string, string> get_input_indices(const std::queue<Node *> &core_schedule) {
@@ -40,7 +48,7 @@ std::pair<string, string> get_input_indices(const std::queue<Node *> &core_sched
     case CMUL:
     case CADD:
     case CSUB:
-      return whichPtxt(core_schedule) ? 
+      return isCtxt(inputs[0]) ? 
         std::pair(inputs[0], inputs[1]) :
         std::pair(inputs[1], inputs[0]);
       break;
@@ -66,19 +74,35 @@ void handle_input_mutex(std::map<string, std::shared_ptr<std::mutex>>& reg_locks
       }
 }
 
-int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
-                     std::map<string, Plaintext>& ptxt_regs,
-                     std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
-                     vector<queue<Node*>> schedule,
+void update_dependence_info(const std::string &input_index,
+                            const std::string &output_index,
+                            ScheduleInfo &sched_info,
+                            ExecutionVariables &vars) {
+  vars.dep_locks[input_index]->lock();
+  sched_info.dependent_outputs[input_index].erase(output_index);
+  if (sched_info.dependent_outputs[input_index].empty()) {
+    if (isCtxt(input_index)) {
+      vars.e_regs.erase(input_index);
+      vars.reg_locks.erase(input_index);
+    } else {
+      vars.p_regs.erase(input_index);
+    }
+  }
+  vars.dep_locks[input_index]->unlock();
+}
+
+int execute_schedule(ScheduleInfo sched_info,
+                     ExecutionVariables &vars,
                      CryptoContext<DCRTPoly>& context,
                      const bool &do_T2_style_bootstrapping,
-                     const uint32_t &level_to_bootstrap,
-                     const std::unordered_set<std::string> &bootstrap_candidates) {
+                     const uint32_t &level_to_bootstrap) {
   std::atomic<int> bootstrap_counter = 0;
+  auto &enc_regs = vars.e_regs;
+  auto &ptxt_regs = vars.p_regs;
+  auto &reg_locks = vars.reg_locks;
   #pragma omp parallel for
-  for (uint64_t i = 0; i < schedule.size(); i++) {
-    auto &core_schedule = schedule[i];
-    std::pair<Ciphertext<DCRTPoly>, Plaintext> indices;
+  for (uint64_t i = 0; i < sched_info.circuit.size(); i++) {
+    auto &core_schedule = sched_info.circuit[i];
     while(!core_schedule.empty()) {
       auto output_index = core_schedule.front()->get_output();
       auto input_indices = get_input_indices(core_schedule);
@@ -108,7 +132,7 @@ int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
         case CSUB:
           enc_regs[output_index] =
               context->EvalSub(enc_regs[input_index1], ptxt_regs[input_index2]);
-          if (!whichPtxt(core_schedule)) {
+          if (isCtxt(input_index2)) {
             enc_regs[output_index] = context->EvalNegate(enc_regs[output_index]);
           }
           break;
@@ -128,25 +152,33 @@ int execute_schedule(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
           exit(-1);
       }
       if (do_T2_style_bootstrapping &&
-          bootstrap_candidates.count(output_index) &&
+          sched_info.bootstrap_candidates.count(output_index) &&
           enc_regs[output_index]->GetLevel() >= level_to_bootstrap) {
             enc_regs[output_index] = context->EvalBootstrap(enc_regs[output_index]);
             bootstrap_counter++;
           }
-      // std::cout << output_index << " level: " << enc_regs[output_index]->GetLevel() << std::endl;
+          
       reg_locks[output_index]->unlock();
+
+      update_dependence_info(input_index1, output_index, sched_info, vars);
+      if (input_index2 != "") {
+        update_dependence_info(input_index2, output_index, sched_info, vars);
+      }
+
+      // std::cout << output_index << " level: " << enc_regs[output_index]->GetLevel() << std::endl;
       core_schedule.pop();
     }
   }
   return bootstrap_counter;
 }
 
-void execute_validation_schedule(std::map<string, double>& validation_regs, 
-                     std::map<string, std::shared_ptr<std::mutex>>& reg_locks,
-                     vector<queue<Node*>> schedule) {
+void execute_validation_schedule(ScheduleInfo sched_info,
+                     ExecutionVariables &vars) {
+  auto &validation_regs = vars.v_regs;
+  auto &reg_locks = vars.reg_locks;
   #pragma omp parallel for
-  for (uint64_t i = 0; i < schedule.size(); i++) {
-    auto &core_schedule = schedule[i];
+  for (uint64_t i = 0; i < sched_info.circuit.size(); i++) {
+    auto &core_schedule = sched_info.circuit[i];
     while(!core_schedule.empty()) {
       auto output_index = core_schedule.front()->get_output();
       auto inputs = core_schedule.front()->get_inputs();
@@ -198,30 +230,32 @@ double get_percent_error(double experimental, double expected) {
   return std::abs(experimental - expected)/expected * 100;
 }
 
-void validate_results(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
-                     std::map<string, double>& validation_regs,
+void validate_results(const ExecutionVariables &vars,
                      PrivateKey<DCRTPoly>& private_key,
                      CryptoContext<DCRTPoly>& context) {
-  for (auto &[key, ctxt] : enc_regs) {
+  const auto &enc_regs = vars.e_regs;
+  const auto &validation_regs = vars.v_regs;
+  for (const auto &[key, ctxt] : enc_regs) {
     Plaintext tmp_ptxt;
     context->Decrypt(private_key, ctxt, &tmp_ptxt);
     auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
 
-    auto percent_error = get_percent_error(decrypted_val, validation_regs[key]);
+    auto percent_error = get_percent_error(decrypted_val, validation_regs.at(key));
     if (percent_error > 0.5) {
-      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs[key] << ", error: " << percent_error << "%" << std::endl;
+      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs.at(key) << ", error: " << percent_error << "%" << std::endl;
     }
   }
 }
 
-void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs, 
-                     std::map<string, Plaintext>& ptxt_regs, 
-                     std::map<string, double>& validation_regs, 
-                     const std::unordered_set<std::string> &initial_inputs,
+void gen_random_vals(const ScheduleInfo &sched_info,
+                     ExecutionVariables &vars,
                      PublicKey<DCRTPoly>& pub_key, 
                      CryptoContext<DCRTPoly>& context,
                      double rand_thresh) {
-  for (const auto &key : initial_inputs) {
+  auto &enc_regs = vars.e_regs;
+  auto &ptxt_regs = vars.p_regs;
+  auto &validation_regs = vars.v_regs;
+  for (const auto &key : sched_info.initial_inputs) {
     bool is_ctxt = key.find('p') == std::string::npos;
     if (is_ctxt) {
       vector<double> tmp_vec; 
@@ -244,10 +278,10 @@ void gen_random_vals(std::map<string, Ciphertext<DCRTPoly>>& enc_regs,
   return;
 }
 
-void get_reg_locks(std::map<string, std::shared_ptr<std::mutex>> &reg_locks,
-                    vector<queue<Node*>> schedule) {
-  for (uint64_t i = 0; i < schedule.size(); i++) {
-    auto &core_schedule = schedule[i];
+std::map<string, std::shared_ptr<std::mutex>> get_reg_locks(ScheduleInfo sched_info) {
+  std::map<string, std::shared_ptr<std::mutex>> reg_locks;
+  for (uint64_t i = 0; i < sched_info.circuit.size(); i++) {
+    auto &core_schedule = sched_info.circuit[i];
     while(!core_schedule.empty()) {
       auto output_index = core_schedule.front()->get_output();
       reg_locks.emplace(output_index, new std::mutex);
@@ -255,6 +289,15 @@ void get_reg_locks(std::map<string, std::shared_ptr<std::mutex>> &reg_locks,
       core_schedule.pop();
     }
   }
+  return reg_locks;
+}
+
+std::map<string, std::shared_ptr<std::mutex>> get_dep_locks(const ScheduleInfo &sched_info) {
+  std::map<string, std::shared_ptr<std::mutex>> dependence_locks;
+  for (const auto &[input_index, _]: sched_info.dependent_outputs) {
+    dependence_locks.emplace(input_index, new std::mutex);
+  }
+  return dependence_locks;
 }
 
 void lock_all_mutexes(std::map<string, std::shared_ptr<std::mutex>> &reg_locks) {
@@ -378,26 +421,21 @@ int main(int argc, char **argv) {
   cryptoContext->EvalMultKeyGen(keyPair.secretKey);
   cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
 
-  std::unordered_set<std::string> initial_inputs;
-  std::unordered_set<std::string> bootstrap_candidates;
   cout << "Parsing schedule..." << endl;
-  vector<queue<Node*>> schedule = parse_schedule(filename, num_workers, do_T2_style_bootstrapping, initial_inputs, bootstrap_candidates);
+  auto sched_info = parse_schedule(filename, num_workers, do_T2_style_bootstrapping);
   cout << "Done." << endl;
-  // for (auto inputK
-  omp_set_num_threads(schedule.size());
-  std::map<string, Ciphertext<DCRTPoly>> e_regs;
-  std::map<string, Plaintext> p_regs;
-  std::map<string, double> v_regs;
+  omp_set_num_threads(sched_info.circuit.size());
+  ExecutionVariables vars;
   duration<double> time_span;
   srand(time(NULL));
   cout << "Generating random inputs..." << endl;
-  gen_random_vals(e_regs, p_regs, v_regs, initial_inputs, keyPair.publicKey, cryptoContext, rand_thresh);
+  gen_random_vals(sched_info, vars, keyPair.publicKey, cryptoContext, rand_thresh);
   cout << "Done." << endl;
   if (!test_mode) {
     // if (do_T2_style_bootstrapping) {
-      cout << "Bootstrapping " << initial_inputs.size() << " inputs..." << endl;
+      cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << endl;
       high_resolution_clock::time_point t1 = high_resolution_clock::now();
-      bootstrap_initial_inputs(e_regs, ctxt_level_after_bootstrap, cryptoContext);
+      bootstrap_initial_inputs(vars.e_regs, cryptoContext);
       high_resolution_clock::time_point t2 = high_resolution_clock::now();
       cout << "Done." << endl;
       time_span = duration_cast<duration<double>>(t2 - t1);
@@ -405,31 +443,31 @@ int main(int argc, char **argv) {
     // }
   }
 
-  std::map<string, std::shared_ptr<std::mutex>> reg_locks;
-  get_reg_locks(reg_locks, schedule);
+  vars.reg_locks = get_reg_locks(sched_info);
+  vars.dep_locks = get_dep_locks(sched_info);
 
   int num_bootstraps;
   if (!test_mode) {
     cout << "Executing in ciphertext..." << endl;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    num_bootstraps = execute_schedule(e_regs, p_regs, reg_locks, schedule, cryptoContext, do_T2_style_bootstrapping, level_to_bootstrap, bootstrap_candidates);
+    num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, do_T2_style_bootstrapping, level_to_bootstrap);
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     cout << "Done." << endl;
     time_span = duration_cast<duration<double>>(t2 - t1);
     cout << "Eval Time: " << time_span.count() << " seconds." << endl;
     cout << "Number of bootstrapping operations: " << num_bootstraps << "." << endl;
   
-    lock_all_mutexes(reg_locks);
+    lock_all_mutexes(vars.reg_locks);
   }
   if (debug_mode) {
     cout << "Executing in plaintext..." << endl;
-    execute_validation_schedule(v_regs, reg_locks, schedule);
+    execute_validation_schedule(sched_info, vars);
     cout << "Done." << endl;
   }
   if (!test_mode) {
     if (debug_mode){
       cout << "Comparing ctxt results against ptxt results..." << endl;
-      validate_results(e_regs, v_regs, keyPair.secretKey, cryptoContext);
+      validate_results(vars, keyPair.secretKey, cryptoContext);
       cout << "Done." << endl;
     }
 
@@ -440,7 +478,7 @@ int main(int argc, char **argv) {
     bootstrap_file << num_bootstraps << endl;
     bootstrap_file.close();
   } else {
-    print_test_info(v_regs);
+    print_test_info(vars.v_regs);
   }
 
   return 0;

@@ -8,6 +8,7 @@
 #include <cassert>
 #include <sstream>
 #include <unordered_set>
+#include <unordered_map>
 
 enum Op { EMUL, CMUL, EADD, CADD, ESUB, CSUB, EINV, BOOT };
 
@@ -89,5 +90,12 @@ class Node {
     }
 };
 
-std::vector<std::queue<Node*>> parse_schedule(std::string, int, bool, std::unordered_set<std::string> &, std::unordered_set<std::string> &);
+struct ScheduleInfo {
+  std::vector<std::queue<Node*>> circuit;
+  std::unordered_set<std::string> initial_inputs;
+  std::unordered_set<std::string> bootstrap_candidates;
+  std::unordered_map<std::string, std::unordered_set<std::string>> dependent_outputs;
+};
+
+ScheduleInfo parse_schedule(std::string, int, bool);
 void fix_circuit_io(std::vector<std::queue<Node*>>, const std::map<std::string, std::string> &, std::unordered_set<std::string> &, std::unordered_set<std::string> &);
