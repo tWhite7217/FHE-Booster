@@ -2,7 +2,7 @@
 
 using namespace std;
 
-ScheduleInfo parse_schedule(string sched, int num_workers, bool do_T2_style_bootstrapping)
+ScheduleInfo parse_schedule(string sched, int num_workers, ExecMode mode)
 {
   ScheduleInfo sched_info;
   std::unordered_set<string> all_inputs;
@@ -34,9 +34,10 @@ ScheduleInfo parse_schedule(string sched, int num_workers, bool do_T2_style_boot
         int thread_idx = std::stoi(line) - 1;
         idx = 0;
 
-        if (do_T2_style_bootstrapping && operation == "BOOT")
+        if (mode == ALAP && operation == "BOOT")
         {
-          bootstrap_out_to_in[operands[0]] = operands[1];
+          std::cout << "ERROR: ALAP mode schedules cannot contain bootstrapping operations." << std::endl;
+          exit(-1);
         }
         else
         {
@@ -78,11 +79,9 @@ ScheduleInfo parse_schedule(string sched, int num_workers, bool do_T2_style_boot
   }
   delete[] operands;
   sched_file.close();
-  if (do_T2_style_bootstrapping)
+  if (mode == ALAP)
   {
-    all_inputs.clear();
-    sched_info.dependent_outputs.clear();
-    fix_circuit_io(sched_info, bootstrap_out_to_in, all_inputs);
+    find_bootstrap_candidates(sched_info);
   }
   sched_info.initial_inputs = all_inputs;
   for (auto output : outputs)
@@ -92,40 +91,24 @@ ScheduleInfo parse_schedule(string sched, int num_workers, bool do_T2_style_boot
   return sched_info;
 }
 
-void fix_circuit_io(ScheduleInfo &sched_info, const std::map<std::string, std::string> &bootstrap_out_to_in, std::unordered_set<std::string> &all_inputs)
+void find_bootstrap_candidates(ScheduleInfo &sched_info)
 {
   for (auto core_schedule : sched_info.circuit)
   {
     while (!core_schedule.empty())
     {
       auto inputs = core_schedule.front()->get_inputs();
-      auto output = core_schedule.front()->get_output();
       auto op_type = core_schedule.front()->get_op();
-      vector<string> new_inputs(inputs.size());
-      for (auto i = 0; i < inputs.size(); i++)
+      if (op_type == EMUL)
       {
-        if (bootstrap_out_to_in.count(inputs[i]))
-        {
-          new_inputs[i] = bootstrap_out_to_in.at(inputs[i]);
-        }
-        else
-        {
-          new_inputs[i] = inputs[i];
-        }
-        sched_info.dependent_outputs[new_inputs[i]].insert(output);
-        if (op_type == EMUL)
-        {
-          sched_info.bootstrap_candidates.insert(new_inputs.begin(), new_inputs.end());
-        }
-        else if (op_type == CMUL)
-        {
-          bool whichPtxt = core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
-          size_t i = whichPtxt ? 0 : 1;
-          sched_info.bootstrap_candidates.insert(new_inputs[i]);
-        }
+        sched_info.bootstrap_candidates.insert(inputs.begin(), inputs.end());
       }
-      all_inputs.insert(new_inputs.begin(), new_inputs.end());
-      core_schedule.front()->set_inputs(new_inputs);
+      else if (op_type == CMUL)
+      {
+        bool input0_is_ctxt = core_schedule.front()->get_inputs()[0].find('p') == std::string::npos;
+        size_t i = input0_is_ctxt ? 0 : 1;
+        sched_info.bootstrap_candidates.insert(inputs[i]);
+      }
       core_schedule.pop();
     }
   }

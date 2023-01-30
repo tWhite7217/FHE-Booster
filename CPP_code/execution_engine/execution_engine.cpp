@@ -107,9 +107,10 @@ void update_dependence_info(const std::string &input_index,
 int execute_schedule(ScheduleInfo sched_info,
                      ExecutionVariables &vars,
                      CryptoContext<DCRTPoly> &context,
-                     const bool &do_T2_style_bootstrapping,
+                     const ExecMode &mode,
                      const uint32_t &level_to_bootstrap)
 {
+  const bool ALAP_mode = (mode == ALAP);
   std::atomic<int> bootstrap_counter = 0;
   auto &enc_regs = vars.e_regs;
   auto &ptxt_regs = vars.p_regs;
@@ -169,7 +170,7 @@ int execute_schedule(ScheduleInfo sched_info,
         cout << "Invalid Instruction! Exiting..." << endl;
         exit(-1);
       }
-      if (do_T2_style_bootstrapping &&
+      if (ALAP_mode &&
           sched_info.bootstrap_candidates.count(output_index) &&
           enc_regs[output_index]->GetLevel() >= level_to_bootstrap)
       {
@@ -386,17 +387,16 @@ int main(int argc, char **argv)
   int num_workers = 1;
   int num_levels = 4;
   double rand_thresh = 1.0;
-  bool do_T2_style_bootstrapping = false;
-  bool test_mode = false;
-  bool debug_mode = false;
+  ExecMode mode = BOOSTER;
+  bool verify_results = false;
   string sched_file = "";
   string filename = "";
   string eval_time_filename = "";
   string num_bootstraps_filename = "";
   int output_num = 0;
-  if (argc != 7)
+  if (argc != 8)
   {
-    cout << "Usage: ./execution_engine [sched_file] [num_threads] [num_levels] [rand_thresh] [mode (T2, SCHED, TEST, DEBUG)] [output_num]" << endl;
+    cout << "Usage: ./execution_engine [sched_file] [num_threads] [num_levels] [rand_thresh] [mode (BOOSTER, ALAP, PLAINTEXT)] [VERIFY (True, False)] [output_num]" << endl;
     exit(0);
   }
   else
@@ -406,16 +406,23 @@ int main(int argc, char **argv)
       num_workers = atoi(argv[2]);
       num_levels = atoi(argv[3]);
       rand_thresh = atof(argv[4]);
-      do_T2_style_bootstrapping = (std::string(argv[5]) == "T2");
-      test_mode = (std::string(argv[5]) == "TEST");
-      debug_mode = (std::string(argv[5]) == "DEBUG");
-      output_num = atoi(argv[6]);
+      std::string mode_string = argv[5];
+      if (mode_string == "ALAP")
+      {
+        mode = ALAP;
+      }
+      else if (mode_string == "PLAINTEXT")
+      {
+        mode = PLAINTEXT;
+      }
+      verify_results = (std::string(argv[6]) == "True");
+      output_num = atoi(argv[7]);
     }
     catch (...)
     {
-      cout << "Invalid arguments, using defaults." << endl;
-      num_workers = 1;
-      num_levels = 4;
+      cout << "Invalid arguments." << endl;
+      cout << "Usage: ./execution_engine [sched_file] [num_threads] [num_levels] [rand_thresh] [mode (BOOSTER, ALAP, PLAINTEXT)] [VERIFY (True, False)] [output_num]" << endl;
+      exit(-1);
     }
     sched_file = argv[1];
     filename = sched_file + ".sched";
@@ -474,54 +481,52 @@ int main(int argc, char **argv)
   cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
 
   cout << "Parsing schedule..." << endl;
-  auto sched_info = parse_schedule(filename, num_workers, do_T2_style_bootstrapping);
+  auto sched_info = parse_schedule(filename, num_workers, mode);
   cout << "Done." << endl;
   omp_set_num_threads(sched_info.circuit.size());
   ExecutionVariables vars;
-  duration<double> time_span;
   srand(time(NULL));
   cout << "Generating random inputs..." << endl;
   gen_random_vals(sched_info, vars, keyPair.publicKey, cryptoContext, rand_thresh);
   cout << "Done." << endl;
-  if (!test_mode)
-  {
-    // if (do_T2_style_bootstrapping) {
-    cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << endl;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    bootstrap_initial_inputs(vars.e_regs, cryptoContext);
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    cout << "Done." << endl;
-    time_span = duration_cast<duration<double>>(t2 - t1);
-    cout << "Bootstrapping Time: " << time_span.count() << " seconds." << endl;
-    // }
-  }
 
   vars.reg_locks = get_reg_locks(sched_info);
   vars.dep_locks = get_dep_locks(sched_info);
 
-  int num_bootstraps;
-  if (!test_mode)
+  if (mode == PLAINTEXT || verify_results)
   {
+    cout << "Executing in plaintext..." << endl;
+    execute_validation_schedule(sched_info, vars);
+    cout << "Done." << endl;
+    lock_all_mutexes(vars.reg_locks);
+  }
+
+  if (mode == PLAINTEXT)
+  {
+    print_test_info(vars.v_regs);
+  }
+  else
+  {
+    // if (mode == ALAP) {
+    cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << endl;
+    auto t1 = high_resolution_clock::now();
+    bootstrap_initial_inputs(vars.e_regs, cryptoContext);
+    auto t2 = high_resolution_clock::now();
+    cout << "Done." << endl;
+    auto time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "Bootstrapping Time: " << time_span.count() << " seconds." << endl;
+    // }
+
     cout << "Executing in ciphertext..." << endl;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, do_T2_style_bootstrapping, level_to_bootstrap);
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    t1 = high_resolution_clock::now();
+    int num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, mode, level_to_bootstrap);
+    t2 = high_resolution_clock::now();
     cout << "Done." << endl;
     time_span = duration_cast<duration<double>>(t2 - t1);
     cout << "Eval Time: " << time_span.count() << " seconds." << endl;
     cout << "Number of bootstrapping operations: " << num_bootstraps << "." << endl;
 
-    lock_all_mutexes(vars.reg_locks);
-  }
-  if (debug_mode)
-  {
-    cout << "Executing in plaintext..." << endl;
-    execute_validation_schedule(sched_info, vars);
-    cout << "Done." << endl;
-  }
-  if (!test_mode)
-  {
-    if (debug_mode)
+    if (verify_results)
     {
       cout << "Comparing ctxt results against ptxt results..." << endl;
       validate_results(vars, keyPair.secretKey, cryptoContext);
@@ -534,10 +539,6 @@ int main(int argc, char **argv)
     ofstream bootstrap_file(num_bootstraps_filename);
     bootstrap_file << num_bootstraps << endl;
     bootstrap_file.close();
-  }
-  else
-  {
-    print_test_info(vars.v_regs);
   }
 
   return 0;

@@ -10,6 +10,13 @@
 #include <unordered_set>
 #include <unordered_map>
 
+enum ExecMode
+{
+  BOOSTER,
+  ALAP,
+  PLAINTEXT
+};
+
 enum Op
 {
   EMUL,
@@ -32,10 +39,6 @@ public:
   std::vector<std::string> get_inputs()
   {
     return inputs;
-  }
-  void set_inputs(const std::vector<std::string> &new_inputs)
-  {
-    inputs = new_inputs;
   }
   std::string get_output()
   {
@@ -128,5 +131,5 @@ struct ScheduleInfo
   std::unordered_map<std::string, std::unordered_set<std::string>> dependent_outputs;
 };
 
-ScheduleInfo parse_schedule(std::string, int, bool);
-void fix_circuit_io(std::vector<std::queue<Node *>>, const std::map<std::string, std::string> &, std::unordered_set<std::string> &, std::unordered_set<std::string> &);
+ScheduleInfo parse_schedule(std::string, int, ExecMode);
+void find_bootstrap_candidates(ScheduleInfo &);
