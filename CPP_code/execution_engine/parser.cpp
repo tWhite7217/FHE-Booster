@@ -1,26 +1,24 @@
 #include "parser.hpp"
 
-using namespace std;
-
-ScheduleInfo parse_schedule(string sched, int num_workers, ExecMode mode)
+ScheduleInfo parse_schedule(std::string sched, int num_workers, ExecMode mode)
 {
   ScheduleInfo sched_info;
-  std::unordered_set<string> all_inputs;
-  ifstream sched_file(sched);
+  std::unordered_set<std::string> all_inputs;
+  std::ifstream sched_file(sched);
   if (!sched_file)
   {
-    cout << "Error opening file: " << sched << endl;
+    std::cout << "Error opening file: " << sched << std::endl;
     exit(-1);
   }
   sched_info.circuit.resize(num_workers);
-  string line;
-  string *operands = new string[3];
-  string operation;
-  std::set<string> outputs;
-  std::map<string, string> bootstrap_out_to_in;
+  std::string line;
+  std::array<std::string, 3> operands;
+  std::string operation;
+  std::set<std::string> outputs;
+  std::map<std::string, std::string> bootstrap_out_to_in;
   while (getline(sched_file, line))
   {
-    stringstream ss(line);
+    std::stringstream ss(line);
     int idx = 0;
     while (getline(ss, line, ' '))
     {
@@ -28,7 +26,7 @@ ScheduleInfo parse_schedule(string sched, int num_workers, ExecMode mode)
       {
         operation = line;
       }
-      else if (line.find("t") != string::npos)
+      else if (line.find("t") != std::string::npos)
       {
         line.erase(0, 1);
         int thread_idx = std::stoi(line) - 1;
@@ -77,7 +75,6 @@ ScheduleInfo parse_schedule(string sched, int num_workers, ExecMode mode)
       idx++;
     }
   }
-  delete[] operands;
   sched_file.close();
   if (mode == ALAP)
   {
