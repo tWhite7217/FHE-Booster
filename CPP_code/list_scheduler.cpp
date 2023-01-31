@@ -1,29 +1,34 @@
 #include "list_scheduler.h"
 
-ListScheduler::ListScheduler(std::string dag_file_path, std::string lgr_file_path, int num_cores, int gained_levels, int num_paths_multiplier, int slack_multiplier, int urgency_multiplier)
-    : lgr_file_path{lgr_file_path}, num_cores{num_cores}, num_paths_multiplier{num_paths_multiplier}, slack_multiplier{slack_multiplier}, urgency_multiplier{urgency_multiplier}
+ListScheduler::ListScheduler(int argc, char **argv)
 {
+    parse_args(argc, argv);
+    print_options();
+
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(dag_file_path);
+    input_parser.parse_input_to_generate_operations(options.dag_file_path);
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    if (lgr_file_path != "NULL")
+    if (!options.no_bootstrapping)
     {
-        lgr_parser.switchIstream(lgr_file_path);
-        lgr_parser.set_operations(operations);
-        lgr_parser.lex();
-    }
-    else
-    {
-        BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model, gained_levels);
-        bootstrapping_paths = path_generator.get_bootstrapping_paths(dag_file_path);
+        if (!options.lgr_file_path.empty())
+        {
+            lgr_parser.switchIstream(options.lgr_file_path);
+            lgr_parser.set_operations(operations);
+            lgr_parser.lex();
+        }
+        else
+        {
+            BootstrappingPathGenerator path_generator(operations, lgr_parser.used_selective_model, options.num_levels);
+            bootstrapping_paths = path_generator.get_bootstrapping_paths(options.dag_file_path);
+        }
     }
 
-    if (num_cores > 0)
+    if (options.num_threads > 0)
     {
-        core_schedules.assign(num_cores, "");
-        for (auto i = 1; i <= num_cores; i++)
+        core_schedules.assign(options.num_threads, "");
+        for (auto i = 1; i <= options.num_threads; i++)
         {
             core_availability[i] = true;
         }
@@ -177,7 +182,7 @@ void ListScheduler::generate_start_times_and_solver_latency()
     {
         update_simulation_state();
 
-        if (num_cores > 0)
+        if (options.num_threads > 0)
         {
             mark_cores_available(finished_bootstrapping_operations);
         }
@@ -443,10 +448,10 @@ bool ListScheduler::core_is_available(int core_num)
     return core_availability[core_num];
 }
 
-void ListScheduler::write_lgr_like_format(std::string output_file_path)
+void ListScheduler::write_lgr_like_format()
 {
     std::ofstream output_file;
-    output_file.open(output_file_path);
+    output_file.open(options.output_file_path + ".lgr");
 
     output_file << "Objective value: " << solver_latency << ".0" << std::endl;
 
@@ -497,10 +502,10 @@ void ListScheduler::write_lgr_like_format(std::string output_file_path)
     output_file.close();
 }
 
-void ListScheduler::write_assembly_like_format(std::string output_file_path)
+void ListScheduler::write_assembly_like_format()
 {
     std::ofstream output_file;
-    output_file.open(output_file_path);
+    output_file.open(options.output_file_path + ".sched");
 
     for (auto schedule : core_schedules)
     {
@@ -514,12 +519,12 @@ void ListScheduler::choose_operations_to_bootstrap()
     while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
     {
         max_num_paths = update_num_paths_for_every_operation();
-        if (slack_multiplier != 0)
+        if (options.slack_weight != 0)
         {
             update_all_ESTs_and_LSTs();
             max_slack = update_all_ranks();
         }
-        if (urgency_multiplier != 0)
+        if (options.urgency_weight != 0)
         {
             update_all_bootstrap_urgencies();
         }
@@ -584,9 +589,9 @@ double ListScheduler::get_score(OperationPtr operation)
     double normalized_num_paths = ((double)operation->num_unsatisfied_paths) / max_num_paths;
     double normalized_slack = ((double)operation->rank) / max_slack;
 
-    return std::max(num_paths_multiplier * normalized_num_paths +
-                        slack_multiplier * normalized_slack +
-                        urgency_multiplier * operation->bootstrap_urgency,
+    return std::max(options.segments_weight * normalized_num_paths +
+                        options.slack_weight * normalized_slack +
+                        options.urgency_weight * operation->bootstrap_urgency,
                     0.0);
 }
 
@@ -629,7 +634,7 @@ int ListScheduler::update_num_paths_for_every_operation()
 void ListScheduler::perform_list_scheduling()
 {
     std::cout << "here1" << std::endl;
-    if (lgr_file_path == "NULL")
+    if (!options.no_bootstrapping && options.lgr_file_path.empty())
     {
         choose_operations_to_bootstrap();
     }
@@ -640,7 +645,7 @@ void ListScheduler::perform_list_scheduling()
     std::cout << "here4" << std::endl;
     generate_start_times_and_solver_latency();
     std::cout << "here5" << std::endl;
-    if (num_cores > 0)
+    if (options.num_threads > 0)
     {
         generate_core_assignments();
     }
@@ -672,28 +677,86 @@ void ListScheduler::update_pred_count()
     }
 }
 
-int main(int argc, char **argv)
+void ListScheduler::parse_args(int argc, char **argv)
 {
-    if (argc != 9)
+    if (argc < 3)
     {
-        std::cout << "Usage: " << argv[0] << " <dag_file> <lgr_file or \"NULL\"> <output_file> <num_cores> <num_paths_multiplier> <slack_multiplier> <urgency_multiplier> <gained_levels>" << std::endl;
-        return 1;
+        std::cout << help_info << std::endl;
+        exit(1);
     }
 
-    std::string dag_file_path = argv[1];
-    std::string lgr_file_path = argv[2];
-    std::string output_file_path = argv[3];
-    int num_cores = std::stoi(argv[4]);
-    int num_paths_multiplier = std::stoi(argv[5]);
-    int slack_multiplier = std::stoi(argv[6]);
-    int urgency_multiplier = std::stoi(argv[7]);
-    int gained_levels = std::stoi(argv[8]);
+    options.dag_file_path = argv[1];
+    options.output_file_path = argv[2];
 
-    ListScheduler list_scheduler = ListScheduler(dag_file_path, lgr_file_path, num_cores, gained_levels, num_paths_multiplier, slack_multiplier, urgency_multiplier);
+    std::string options_string;
+    for (auto i = 3; i < argc; i++)
+    {
+        options_string += std::string(argv[i]) + " ";
+    }
+
+    auto num_threads_string = get_arg(options_string, "-t", "--num-threads", help_info);
+    if (!num_threads_string.empty())
+    {
+        options.num_threads = stoi(num_threads_string);
+    }
+
+    if (arg_exists(options_string, "-n", "--no-bootstrap"))
+    {
+        options.no_bootstrapping = true;
+        options.num_levels = 0;
+    }
+    else
+    {
+        options.lgr_file_path = get_arg(options_string, "-i", "--input-lgr", help_info);
+        if (options.lgr_file_path.empty())
+        {
+            auto num_levels_string = get_arg(options_string, "-l", "--num-levels", help_info);
+            if (!num_levels_string.empty())
+            {
+                options.num_levels = stoi(num_levels_string);
+            }
+
+            auto segments_weight_string = get_arg(options_string, "-s", "--segments-weight", help_info);
+            if (!segments_weight_string.empty())
+            {
+                options.segments_weight = stoi(segments_weight_string);
+            }
+
+            auto slack_weight_string = get_arg(options_string, "-r", "--slack-weight", help_info);
+            if (!slack_weight_string.empty())
+            {
+                options.slack_weight = stoi(slack_weight_string);
+            }
+
+            auto urgency_weight_string = get_arg(options_string, "-u", "--urgency-weight", help_info);
+            if (!urgency_weight_string.empty())
+            {
+                options.urgency_weight = stoi(urgency_weight_string);
+            }
+        }
+    }
+}
+
+void ListScheduler::print_options()
+{
+    std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
+    std::cout << "output_file_path: " << options.output_file_path << std::endl;
+    std::cout << "lgr_file_path: " << options.lgr_file_path << std::endl;
+    std::cout << "no_bootstrapping: " << (options.no_bootstrapping ? "yes" : "no") << std::endl;
+    std::cout << "num_threads: " << options.num_threads << std::endl;
+    std::cout << "num_levels: " << options.num_levels << std::endl;
+    std::cout << "segments_weight: " << options.segments_weight << std::endl;
+    std::cout << "slack_weight: " << options.slack_weight << std::endl;
+    std::cout << "urgency_weight: " << options.urgency_weight << std::endl;
+}
+
+int main(int argc, char **argv)
+{
+    ListScheduler list_scheduler = ListScheduler(argc, argv);
 
     list_scheduler.perform_list_scheduling();
-    list_scheduler.write_lgr_like_format(output_file_path + ".lgr");
-    list_scheduler.write_assembly_like_format(output_file_path + ".sched");
+    list_scheduler.write_lgr_like_format();
+    list_scheduler.write_assembly_like_format();
 
     return 0;
 }

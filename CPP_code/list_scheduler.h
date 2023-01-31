@@ -12,7 +12,7 @@
 class ListScheduler
 {
 public:
-    ListScheduler(std::string, std::string, int, int, int, int, int);
+    ListScheduler(int, char **);
 
     OperationList get_operations();
 
@@ -24,22 +24,58 @@ public:
     void generate_core_assignments();
     void choose_operations_to_bootstrap();
 
-    void write_lgr_like_format(std::string);
-    void write_assembly_like_format(std::string);
+    void write_lgr_like_format();
+    void write_assembly_like_format();
 
 private:
-    int num_paths_multiplier;
-    int slack_multiplier;
-    int urgency_multiplier;
+    const std::string help_info = R"(
+Usage: ./list_scheduler <dag_file> <output_file> [<options>]
+
+Options:
+  -t <int>, --num-threads=<int>
+    The number of threads on which operations may be scheduled.
+  -n, --no-bootstrap
+    Creates a schedule without bootstrapping.
+  -i <file>, --input-lgr=<file>
+    A path to a .lgr file specifying a set of operations to bootstrap.
+    Ignored if -n/--no-bootstrap is used.
+  -l <int>, --num-levels=<int>
+    The number of levels between bootstraps, also called the noise
+    threshold. Defaults to 9. Ignored if the -n/--no-bootstrap option
+    or the -i/--input-lgr option is used.
+  Weights:
+    The following options apply weights to certain attributes that are
+    used in choosing operations to bootstrap. These options are
+    ignored if the -n/--no-bootstrap option or the -i/--input-lgr
+    option is used. All default to 0.
+      -s <int>, --segments-weight=<int>
+        This attribute correlates to the number of unsatisfied 
+        bootstrapping segments containing the operation.
+      -r <int>, --slack-weight=<int>
+        This attribute correlates to the difference between the
+        operation's latest and earliest starting times.
+      -u <int>, --urgency-weight=<int>
+        This attribute correlates to the current bootstrapping
+        urgency level of the operation.)";
+
+    struct Options
+    {
+        std::string dag_file_path;
+        std::string output_file_path;
+        std::string lgr_file_path;
+        bool no_bootstrapping = false;
+        int num_threads = 1;
+        int num_levels = 9;
+        int segments_weight = 0;
+        int slack_weight = 0;
+        int urgency_weight = 0;
+    } options;
 
     int max_num_paths;
     int max_slack;
 
     int solver_latency;
 
-    std::string lgr_file_path;
-
-    int num_cores;
     std::unordered_map<int, bool> core_availability;
 
     bool create_core_assignments;
@@ -106,4 +142,6 @@ private:
     void update_pred_count();
     void initialize_simulation_state();
     void update_simulation_state();
+    void parse_args(int, char **);
+    void print_options();
 };
