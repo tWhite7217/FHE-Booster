@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <array>
+#include <memory>
 
 enum ExecMode
 {
@@ -139,7 +140,7 @@ public:
 
 struct ScheduleInfo
 {
-  std::vector<std::queue<Node *>> circuit;
+  std::vector<std::queue<std::shared_ptr<Node>>> circuit;
   std::unordered_set<std::string> initial_inputs;
   std::unordered_set<std::string> bootstrap_candidates;
   std::unordered_map<std::string, std::unordered_set<std::string>> dependent_outputs;

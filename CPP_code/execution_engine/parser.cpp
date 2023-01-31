@@ -38,20 +38,21 @@ ScheduleInfo parse_schedule(CommandLineOptions options)
         }
         else
         {
-          if (thread_idx >= sched_info.circuit.size()) {
-            sched_info.circuit.resize(thread_idx+1);
+          if (thread_idx >= sched_info.circuit.size())
+          {
+            sched_info.circuit.resize(thread_idx + 1);
           }
-          
-          Node *tmp;
+
+          std::shared_ptr<Node> tmp;
           if (operation == "ADD" || operation == "SUB" || operation == "MUL")
           {
-            tmp = new Node(operation, operands[0], operands[1], operands[2]);
+            tmp = std::shared_ptr<Node>(new Node(operation, operands[0], operands[1], operands[2]));
             all_inputs.insert(operands[2]);
             sched_info.dependent_outputs[operands[2]].insert(operands[0]);
           }
           else
           {
-            tmp = new Node(operation, operands[0], operands[1], "");
+            tmp = std::shared_ptr<Node>(new Node(operation, operands[0], operands[1], ""));
           }
           sched_info.circuit[thread_idx].push(tmp);
           all_inputs.insert(operands[1]);

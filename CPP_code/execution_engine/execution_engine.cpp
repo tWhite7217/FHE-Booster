@@ -27,7 +27,7 @@ struct ExecutionVariables
   std::map<std::string, std::shared_ptr<std::mutex>> dep_locks;
 };
 
-void print_schedule(std::vector<std::queue<Node *>> schedule)
+void print_schedule(std::vector<std::queue<std::shared_ptr<Node>>> schedule)
 {
   for (uint64_t i = 0; i < schedule.size(); i++)
   {
@@ -50,7 +50,7 @@ bool isCtxt(const std::string &input_index)
   return input_index.find('p') == std::string::npos;
 }
 
-std::pair<std::string, std::string> get_input_indices(const std::queue<Node *> &core_schedule)
+std::pair<std::string, std::string> get_input_indices(const std::queue<std::shared_ptr<Node>> &core_schedule)
 {
   std::vector<std::string> inputs = core_schedule.front()->get_inputs();
   switch (core_schedule.front()->get_op())
