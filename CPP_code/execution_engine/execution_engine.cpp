@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_set>
 #include <atomic>
+#include <stdexcept>
 
 #include "parser.hpp"
 #include "openfhe.h"
@@ -279,39 +280,38 @@ void validate_results(const ExecutionVariables &vars,
   }
 }
 
-void gen_random_vals(const ScheduleInfo &sched_info,
-                     ExecutionVariables &vars,
-                     lbc::PublicKey<lbc::DCRTPoly> &pub_key,
-                     ContextType &context,
-                     double rand_thresh)
+void generate_random_inputs(const ScheduleInfo &sched_info,
+                            ExecutionVariables &vars,
+                            double rand_thresh)
 {
-  auto &enc_regs = vars.e_regs;
-  auto &ptxt_regs = vars.p_regs;
   auto &validation_regs = vars.v_regs;
   for (const auto &key : sched_info.initial_inputs)
   {
-    bool is_ctxt = key.find('p') == std::string::npos;
-    if (is_ctxt)
+    // validation_regs[key] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX / rand_thresh);
+    validation_regs[key] = rand_thresh;
+  }
+}
+
+void encrypt_inputs(ExecutionVariables &vars,
+                    lbc::PublicKey<lbc::DCRTPoly> &pub_key,
+                    ContextType &context)
+{
+  for (const auto &[key, value] : vars.v_regs)
+  {
+    std::vector<double> tmp_vec;
+    tmp_vec.push_back(value);
+    auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
+
+    if (isCtxt(key))
     {
-      std::vector<double> tmp_vec;
-      // tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
-      tmp_vec.push_back(rand_thresh);
-      auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
       auto tmp = context->Encrypt(pub_key, tmp_ptxt);
-      enc_regs[key] = tmp;
-      validation_regs[key] = tmp_vec[0];
+      vars.e_regs[key] = tmp;
     }
     else
     {
-      std::vector<double> tmp_vec;
-      // tmp_vec.push_back(static_cast <double> (rand()) / static_cast <double> (RAND_MAX/rand_thresh));
-      tmp_vec.push_back(rand_thresh);
-      auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
-      ptxt_regs[key] = tmp_ptxt;
-      validation_regs[key] = tmp_vec[0];
+      vars.p_regs[key] = tmp_ptxt;
     }
   }
-  return;
 }
 
 std::map<std::string, std::shared_ptr<std::mutex>> get_reg_locks(ScheduleInfo sched_info)
@@ -382,140 +382,207 @@ void print_test_info(const std::map<std::string, double> &validation_regs)
   std::cout << "bad values: " << bad_count << std::endl;
 }
 
+void print_help_info()
+{
+  std::cout << "Usage: ./execution_engine <sched_file> [<options>]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "<sched_file> should not include the \".sched\" extension." << std::endl;
+  std::cout << std::endl;
+  std::cout << "Options:" << std::endl;
+  std::cout << "\t-t <int>, --num-threads=<int>" << std::endl;
+  std::cout << "\t\tThe number of threads the schedule uses. Defaults to 1." << std::endl;
+  std::cout << "\t-l <int>, --num-levels=<int>" << std::endl;
+  std::cout << "\t\tThe number of levels between bootstraps, also called the noise threshold. Defaults to 9." << std::endl;
+  std::cout << "\t-r <float>, --rand-thresh=<float>" << std::endl;
+  std::cout << "\t\tThe maximum value of randomly generated inputs. Defaults to 1.0." << std::endl;
+  std::cout << "\t-m <mode>, --mode=<mode>" << std::endl;
+  std::cout << "\t\tThe execution mode. There are three possible options, of which BOOSTER is the default." << std::endl;
+  std::cout << "\t\t\tBOOSTER: Standard execution mode, with all operation types supported." << std::endl;
+  std::cout << "\t\t\tPLAINTEXT: Performs the schedule in the plaintext domain, printing output values at the end." << std::endl;
+  std::cout << "\t\t\tALAP: BOOT operations not allowed. Bootstrapping is performed dynamically, as late as possible." << std::endl;
+  std::cout << "\t-v, --verify" << std::endl;
+  std::cout << "\t\tDecrypts the results from the encrypted domain, and compares to expected values. Ignored if mode=PLAINTEXT." << std::endl;
+  std::cout << "\t-b, --bootstrap-inputs" << std::endl;
+  std::cout << "\t\tBootstraps the initial ciphertext inputs before performing the schedule." << std::endl;
+  std::cout << "\t-o <string>, --output-suffix=<string>" << std::endl;
+  std::cout << "\t\tA file named \"<sched_file>_eval_time_<string>.txt\" stores the evaluation time of the schedule." << std::endl;
+  std::cout << "\t-s, --save-num-bootstraps" << std::endl;
+  std::cout << "\t\tA file named \"<sched_file>_num_bootstraps.txt\" stores the number of the bootstraps performed executing the schedule." << std::endl;
+}
+
+bool arg_exists(std::string options_string, std::string short_form, std::string long_form)
+{
+  bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
+  bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;
+  return short_form_exists || long_form_exists;
+}
+
+std::string get_arg(std::string options_string, std::string short_form, std::string long_form)
+{
+  auto short_pos = options_string.find(short_form);
+  auto long_pos = options_string.find(long_form);
+  size_t start_pos;
+  if (short_pos != std::string::npos)
+  {
+    start_pos = short_pos + short_form.size() + 1;
+    if (options_string.at(start_pos - 1) != ' ')
+    {
+      std::cout << "Options must follow the format shown." << std::endl;
+      print_help_info();
+      exit(-1);
+    }
+  }
+  else if (long_pos != std::string::npos)
+  {
+    start_pos = long_pos + long_form.size() + 1;
+    if (options_string.at(start_pos - 1) != '=')
+    {
+      std::cout << "Options must follow the format shown." << std::endl;
+      print_help_info();
+      exit(-1);
+    }
+  }
+  else
+  {
+    return "";
+  }
+  auto end_pos = options_string.substr(start_pos, options_string.size() - start_pos).find(" ");
+  return options_string.substr(start_pos, end_pos);
+}
+
+CommandLineOptions parse_args(int argc, char **argv)
+{
+  CommandLineOptions options;
+
+  std::string sched_file = argv[1];
+  options.input_filename = sched_file + ".sched";
+
+  std::string options_string;
+  for (auto i = 2; i < argc; i++)
+  {
+    options_string += std::string(argv[i]) + " ";
+  }
+  std::cout << options_string << std::endl;
+
+  auto num_threads_string = get_arg(options_string, "-t", "--num-threads");
+  if (!num_threads_string.empty())
+  {
+    options.num_threads = stoi(num_threads_string);
+  }
+
+  auto num_levels_string = get_arg(options_string, "-l", "--num-levels");
+  if (!num_levels_string.empty())
+  {
+    options.num_levels = stoi(num_levels_string);
+  }
+
+  auto rand_thresh_string = get_arg(options_string, "-r", "--rand-thresh");
+  if (!rand_thresh_string.empty())
+  {
+    options.rand_thresh = stod(rand_thresh_string);
+  }
+
+  options.mode_string = get_arg(options_string, "-m", "--mode");
+  if (options.mode_string.empty())
+  {
+    options.mode_string = "BOOSTER";
+    options.mode = BOOSTER;
+  }
+  else if (options.mode_string == "BOOSTER")
+  {
+    options.mode = BOOSTER;
+  }
+  else if (options.mode_string == "ALAP")
+  {
+    options.mode = ALAP;
+  }
+  else if (options.mode_string == "PLAINTEXT")
+  {
+    options.mode = PLAINTEXT;
+  }
+  else
+  {
+    throw std::invalid_argument(options.mode_string + "is not a valid execution mode");
+  }
+
+  if (arg_exists(options_string, "-v", "--verify"))
+  {
+    options.verify_results = true;
+  }
+
+  if (arg_exists(options_string, "-b", "--bootstrap-inputs"))
+  {
+    options.bootstrap_inputs = true;
+  }
+
+  auto output_suffix = get_arg(options_string, "-o", "--output-suffix");
+  if (!output_suffix.empty())
+  {
+    options.eval_time_filename = sched_file + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
+  }
+
+  if (arg_exists(options_string, "-s", "--save-num-bootstraps"))
+  {
+    options.num_bootstraps_filename = sched_file + "_num_bootstraps_" + options.mode_string + ".txt";
+  }
+
+  return options;
+}
+
+void print_options(CommandLineOptions options)
+{
+  std::cout << "FHE-Runner using the following options." << std::endl;
+  std::cout << "num_threads: " << options.num_threads << std::endl;
+  std::cout << "num_levels: " << options.num_levels << std::endl;
+  std::cout << "rand_thresh: " << options.rand_thresh << std::endl;
+  std::cout << "mode: " << options.mode_string << std::endl;
+  std::cout << "verify_results: " << (options.verify_results ? "yes" : "no") << std::endl;
+  std::cout << "bootstrap_inputs: " << (options.bootstrap_inputs ? "yes" : "no") << std::endl;
+  std::cout << "input_filename: " << options.input_filename << std::endl;
+  std::cout << "eval_time_filename: " << options.eval_time_filename << std::endl;
+  std::cout << "num_bootstraps_filename: " << options.num_bootstraps_filename << std::endl;
+}
+
 int main(int argc, char **argv)
 {
-
-  int num_workers = 1;
-  int num_levels = 4;
-  double rand_thresh = 1.0;
-  ExecMode mode = BOOSTER;
-  bool verify_results = false;
-  std::string sched_file = "";
-  std::string filename = "";
-  std::string eval_time_filename = "";
-  std::string num_bootstraps_filename = "";
-  int output_num = 0;
-  if (argc != 8)
+  CommandLineOptions options;
+  if (argc < 2)
   {
-    std::cout << "Usage: ./execution_engine [sched_file] [num_threads] [num_levels] [rand_thresh] [mode (BOOSTER, ALAP, PLAINTEXT)] [VERIFY (True, False)] [output_num]" << std::endl;
+    print_help_info();
     exit(0);
   }
   else
   {
     try
     {
-      num_workers = atoi(argv[2]);
-      num_levels = atoi(argv[3]);
-      rand_thresh = atof(argv[4]);
-      std::string mode_string = argv[5];
-      if (mode_string == "BOOSTER")
-      {
-        mode = BOOSTER;
-      }
-      else if (mode_string == "ALAP")
-      {
-        mode = ALAP;
-      }
-      else if (mode_string == "PLAINTEXT")
-      {
-        mode = PLAINTEXT;
-      }
-      else
-      {
-        throw;
-      }
-
-      if (std::string(argv[6]) == "True")
-      {
-        verify_results = true;
-      }
-      else if (std::string(argv[6]) == "False")
-      {
-        verify_results = false;
-      }
-      else
-      {
-        throw;
-      }
-
-      output_num = atoi(argv[7]);
+      options = parse_args(argc, argv);
+      print_options(options);
     }
     catch (...)
     {
-      std::cout << "Invalid arguments." << std::endl;
-      std::cout << "Usage: ./execution_engine [sched_file] [num_threads] [num_levels] [rand_thresh] [mode (BOOSTER, ALAP, PLAINTEXT)] [VERIFY (True, False)] [output_num]" << std::endl;
+      print_help_info();
       exit(-1);
     }
-    sched_file = argv[1];
-    filename = sched_file + ".sched";
-    eval_time_filename = sched_file + "_eval_time_" + argv[5] + "_" + std::to_string(output_num) + ".txt";
-    num_bootstraps_filename = sched_file + "_num_bootstraps_" + argv[5] + ".txt";
   }
 
-  // Set up crypto context
-  lbc::CCParams<lbc::CryptoContextCKKSRNS> parameters;
-  SecretKeyDist secretKeyDist = UNIFORM_TERNARY;
-  parameters.SetSecretKeyDist(secretKeyDist);
-  // parameters.SetSecurityLevel(HEStd_128_classic);
-  parameters.SetSecurityLevel(lbc::HEStd_NotSet);
-  parameters.SetRingDim(1 << 12);
-
-#if NATIVEINT == 128
-  ScalingTechnique rescaleTech = FIXEDAUTO;
-  usint dcrtBits = 78;
-  usint firstMod = 89;
-#else
-  ScalingTechnique rescaleTech = FLEXIBLEAUTO;
-  usint dcrtBits = 59;
-  usint firstMod = 60;
-#endif
-
-  parameters.SetScalingModSize(dcrtBits);
-  parameters.SetScalingTechnique(rescaleTech);
-  parameters.SetFirstModSize(firstMod);
-
-  std::vector<uint32_t> levelBudget = {4, 4};
-  uint32_t approxBootstrapDepth = 8;
-
-  auto ctxt_level_after_bootstrap = lbc::FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
-  // std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
-  uint32_t level_to_bootstrap = ctxt_level_after_bootstrap + num_levels;
-  usint depth = level_to_bootstrap + 2;
-  // usint depth = level_to_bootstrap + 1;
-  // usint depth = level_to_bootstrap;
-  parameters.SetMultiplicativeDepth(depth);
-
-  ContextType cryptoContext = GenCryptoContext(parameters);
-
-  cryptoContext->Enable(PKE);
-  cryptoContext->Enable(KEYSWITCH);
-  cryptoContext->Enable(LEVELEDSHE);
-  cryptoContext->Enable(ADVANCEDSHE);
-  cryptoContext->Enable(FHE);
-
-  usint ringDim = cryptoContext->GetRingDimension();
-  usint numSlots = ringDim / 2;
-
-  cryptoContext->EvalBootstrapSetup(levelBudget);
-
-  auto keyPair = cryptoContext->KeyGen();
-  cryptoContext->EvalMultKeyGen(keyPair.secretKey);
-  cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
+  omp_set_num_threads(options.num_threads);
 
   std::cout << "Parsing schedule..." << std::endl;
-  auto sched_info = parse_schedule(filename, num_workers, mode);
+  auto sched_info = parse_schedule(options);
   std::cout << "Done." << std::endl;
-  omp_set_num_threads(sched_info.circuit.size());
+
   ExecutionVariables vars;
   srand(time(NULL));
   std::cout << "Generating random inputs..." << std::endl;
-  gen_random_vals(sched_info, vars, keyPair.publicKey, cryptoContext, rand_thresh);
+  generate_random_inputs(sched_info, vars, options.rand_thresh);
   std::cout << "Done." << std::endl;
 
+  std::cout << "Generating mutexes..." << std::endl;
   vars.reg_locks = get_reg_locks(sched_info);
   vars.dep_locks = get_dep_locks(sched_info);
+  std::cout << "Done." << std::endl;
 
-  if (mode == PLAINTEXT || verify_results)
+  if (options.mode == PLAINTEXT || options.verify_results)
   {
     std::cout << "Executing in plaintext..." << std::endl;
     execute_validation_schedule(sched_info, vars);
@@ -523,46 +590,106 @@ int main(int argc, char **argv)
     lock_all_mutexes(vars.reg_locks);
   }
 
-  if (mode == PLAINTEXT)
+  if (options.mode == PLAINTEXT)
   {
     print_test_info(vars.v_regs);
   }
   else
   {
+    std::cout << "Setting up crypto context..." << std::endl;
+    lbc::CCParams<lbc::CryptoContextCKKSRNS> parameters;
+    SecretKeyDist secretKeyDist = UNIFORM_TERNARY;
+    parameters.SetSecretKeyDist(secretKeyDist);
+    // parameters.SetSecurityLevel(HEStd_128_classic);
+    parameters.SetSecurityLevel(lbc::HEStd_NotSet);
+    parameters.SetRingDim(1 << 12);
+
+#if NATIVEINT == 128
+    ScalingTechnique rescaleTech = FIXEDAUTO;
+    usint dcrtBits = 78;
+    usint firstMod = 89;
+#else
+    ScalingTechnique rescaleTech = FLEXIBLEAUTO;
+    usint dcrtBits = 59;
+    usint firstMod = 60;
+#endif
+
+    parameters.SetScalingModSize(dcrtBits);
+    parameters.SetScalingTechnique(rescaleTech);
+    parameters.SetFirstModSize(firstMod);
+
+    std::vector<uint32_t> levelBudget = {4, 4};
+    uint32_t approxBootstrapDepth = 8;
+
+    auto ctxt_level_after_bootstrap = lbc::FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
+    // std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
+    uint32_t level_to_bootstrap = ctxt_level_after_bootstrap + options.num_levels;
+    usint depth = level_to_bootstrap + 2;
+    parameters.SetMultiplicativeDepth(depth);
+
+    ContextType cryptoContext = GenCryptoContext(parameters);
+
+    cryptoContext->Enable(PKE);
+    cryptoContext->Enable(KEYSWITCH);
+    cryptoContext->Enable(LEVELEDSHE);
+    cryptoContext->Enable(ADVANCEDSHE);
+    cryptoContext->Enable(FHE);
+
+    usint ringDim = cryptoContext->GetRingDimension();
+    usint numSlots = ringDim / 2;
+
+    cryptoContext->EvalBootstrapSetup(levelBudget);
+
+    auto keyPair = cryptoContext->KeyGen();
+    cryptoContext->EvalMultKeyGen(keyPair.secretKey);
+    cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
+    std::cout << "Done." << std::endl;
+
+    std::cout << "Encrypting inputs..." << std::endl;
+    encrypt_inputs(vars, keyPair.publicKey, cryptoContext);
+    std::cout << "Done." << std::endl;
+
     using hrc = std::chrono::high_resolution_clock;
     using TimeSpanType = std::chrono::duration<double>;
-    // if (mode == ALAP) {
-    std::cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << std::endl;
+    if (options.bootstrap_inputs)
+    {
+      std::cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << std::endl;
+      auto t1 = hrc::now();
+      bootstrap_initial_inputs(vars.e_regs, cryptoContext);
+      auto t2 = hrc::now();
+      std::cout << "Done." << std::endl;
+      auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
+      std::cout << "Bootstrapping Time: " << time_span.count() << " seconds." << std::endl;
+    }
+
+    std::cout << "Executing in ciphertext..." << std::endl;
     auto t1 = hrc::now();
-    bootstrap_initial_inputs(vars.e_regs, cryptoContext);
+    int num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, options.mode, level_to_bootstrap);
     auto t2 = hrc::now();
     std::cout << "Done." << std::endl;
     auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
-    std::cout << "Bootstrapping Time: " << time_span.count() << " seconds." << std::endl;
-    // }
-
-    std::cout << "Executing in ciphertext..." << std::endl;
-    t1 = hrc::now();
-    int num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, mode, level_to_bootstrap);
-    t2 = hrc::now();
-    std::cout << "Done." << std::endl;
-    time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
     std::cout << "Eval Time: " << time_span.count() << " seconds." << std::endl;
     std::cout << "Number of bootstrapping operations: " << num_bootstraps << "." << std::endl;
 
-    if (verify_results)
+    if (options.verify_results)
     {
       std::cout << "Comparing ctxt results against ptxt results..." << std::endl;
       validate_results(vars, keyPair.secretKey, cryptoContext);
       std::cout << "Done." << std::endl;
     }
 
-    std::ofstream time_file(eval_time_filename);
-    time_file << time_span.count() << std::endl;
-    time_file.close();
-    std::ofstream bootstrap_file(num_bootstraps_filename);
-    bootstrap_file << num_bootstraps << std::endl;
-    bootstrap_file.close();
+    if (!options.eval_time_filename.empty())
+    {
+      std::ofstream time_file(options.eval_time_filename);
+      time_file << time_span.count() << std::endl;
+      time_file.close();
+    }
+    if (!options.num_bootstraps_filename.empty())
+    {
+      std::ofstream bootstrap_file(options.num_bootstraps_filename);
+      bootstrap_file << num_bootstraps << std::endl;
+      bootstrap_file.close();
+    }
   }
 
   return 0;

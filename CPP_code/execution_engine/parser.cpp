@@ -1,16 +1,16 @@
 #include "parser.hpp"
 
-ScheduleInfo parse_schedule(std::string sched, int num_workers, ExecMode mode)
+ScheduleInfo parse_schedule(CommandLineOptions options)
 {
   ScheduleInfo sched_info;
   std::unordered_set<std::string> all_inputs;
-  std::ifstream sched_file(sched);
+  std::ifstream sched_file(options.input_filename);
   if (!sched_file)
   {
-    std::cout << "Error opening file: " << sched << std::endl;
+    std::cout << "Error opening file: " << options.input_filename << std::endl;
     exit(-1);
   }
-  sched_info.circuit.resize(num_workers);
+  sched_info.circuit.resize(options.num_threads);
   std::string line;
   std::array<std::string, 3> operands;
   std::string operation;
@@ -32,7 +32,7 @@ ScheduleInfo parse_schedule(std::string sched, int num_workers, ExecMode mode)
         int thread_idx = std::stoi(line) - 1;
         idx = 0;
 
-        if (mode == ALAP && operation == "BOOT")
+        if (options.mode == ALAP && operation == "BOOT")
         {
           std::cout << "ERROR: ALAP mode schedules cannot contain bootstrapping operations." << std::endl;
           exit(-1);
@@ -76,7 +76,7 @@ ScheduleInfo parse_schedule(std::string sched, int num_workers, ExecMode mode)
     }
   }
   sched_file.close();
-  if (mode == ALAP)
+  if (options.mode == ALAP)
   {
     find_bootstrap_candidates(sched_info);
   }

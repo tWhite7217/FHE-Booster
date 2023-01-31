@@ -18,6 +18,20 @@ enum ExecMode
   PLAINTEXT
 };
 
+struct CommandLineOptions
+{
+  int num_threads = 1;
+  int num_levels = 9;
+  double rand_thresh = 1.0;
+  ExecMode mode = BOOSTER;
+  std::string mode_string = "BOOSTER";
+  bool verify_results = false;
+  bool bootstrap_inputs = false;
+  std::string input_filename;
+  std::string eval_time_filename;
+  std::string num_bootstraps_filename;
+};
+
 enum Op
 {
   EMUL,
@@ -132,5 +146,5 @@ struct ScheduleInfo
   std::unordered_map<std::string, std::unordered_set<std::string>> dependent_outputs;
 };
 
-ScheduleInfo parse_schedule(std::string, int, ExecMode);
+ScheduleInfo parse_schedule(CommandLineOptions);
 void find_bootstrap_candidates(ScheduleInfo &);
