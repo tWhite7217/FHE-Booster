@@ -10,8 +10,34 @@
 #include <atomic>
 #include <stdexcept>
 
+#include "../shared_utils.h"
 #include "parser.hpp"
 #include "openfhe.h"
+
+const std::string help_info =
+    R"(
+Usage: ./execution_engine <sched_file> [<options>]" << std::endl;
+  
+<sched_file> should not include the \".sched\" extension.
+
+Options:
+  -l <int>, --num-levels=<int>
+    The number of levels between bootstraps, also called the noise threshold. Defaults to 9.
+  -r <float>, --rand-thresh=<float>
+    The maximum value of randomly generated inputs. Defaults to 1.0.
+  -m <mode>, --mode=<mode>
+    The execution mode. There are three possible options, of which BOOSTER is the default.
+      BOOSTER: Standard execution mode, with all operation types supported.
+      PLAINTEXT: Performs the schedule in the plaintext domain, printing output values at the end.
+      ALAP: BOOT operations not allowed. Bootstrapping is performed dynamically, as late as possible.
+  -v, --verify
+    Decrypts the results from the encrypted domain, and compares to expected values. Ignored if mode=PLAINTEXT.
+  -b, --bootstrap-inputs
+    Bootstraps the initial ciphertext inputs before performing the schedule.
+  -o <string>, --output-suffix=<string>
+    A file named \"<sched_file>_eval_time_<string>.txt\" stores the evaluation time of the schedule.
+  -s, --save-num-bootstraps
+    A file named \"<sched_file>_num_bootstraps.txt\" stores the number of the bootstraps performed executing the schedule.)";
 
 namespace lbc = lbcrypto;
 using ContextType = lbc::CryptoContext<lbc::DCRTPoly>;
@@ -382,72 +408,6 @@ void print_test_info(const std::map<std::string, double> &validation_regs)
   std::cout << "bad values: " << bad_count << std::endl;
 }
 
-void print_help_info()
-{
-  std::cout << "Usage: ./execution_engine <sched_file> [<options>]" << std::endl;
-  std::cout << std::endl;
-  std::cout << "<sched_file> should not include the \".sched\" extension." << std::endl;
-  std::cout << std::endl;
-  std::cout << "Options:" << std::endl;
-  std::cout << "\t-l <int>, --num-levels=<int>" << std::endl;
-  std::cout << "\t\tThe number of levels between bootstraps, also called the noise threshold. Defaults to 9." << std::endl;
-  std::cout << "\t-r <float>, --rand-thresh=<float>" << std::endl;
-  std::cout << "\t\tThe maximum value of randomly generated inputs. Defaults to 1.0." << std::endl;
-  std::cout << "\t-m <mode>, --mode=<mode>" << std::endl;
-  std::cout << "\t\tThe execution mode. There are three possible options, of which BOOSTER is the default." << std::endl;
-  std::cout << "\t\t\tBOOSTER: Standard execution mode, with all operation types supported." << std::endl;
-  std::cout << "\t\t\tPLAINTEXT: Performs the schedule in the plaintext domain, printing output values at the end." << std::endl;
-  std::cout << "\t\t\tALAP: BOOT operations not allowed. Bootstrapping is performed dynamically, as late as possible." << std::endl;
-  std::cout << "\t-v, --verify" << std::endl;
-  std::cout << "\t\tDecrypts the results from the encrypted domain, and compares to expected values. Ignored if mode=PLAINTEXT." << std::endl;
-  std::cout << "\t-b, --bootstrap-inputs" << std::endl;
-  std::cout << "\t\tBootstraps the initial ciphertext inputs before performing the schedule." << std::endl;
-  std::cout << "\t-o <string>, --output-suffix=<string>" << std::endl;
-  std::cout << "\t\tA file named \"<sched_file>_eval_time_<string>.txt\" stores the evaluation time of the schedule." << std::endl;
-  std::cout << "\t-s, --save-num-bootstraps" << std::endl;
-  std::cout << "\t\tA file named \"<sched_file>_num_bootstraps.txt\" stores the number of the bootstraps performed executing the schedule." << std::endl;
-}
-
-bool arg_exists(std::string options_string, std::string short_form, std::string long_form)
-{
-  bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
-  bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;
-  return short_form_exists || long_form_exists;
-}
-
-std::string get_arg(std::string options_string, std::string short_form, std::string long_form)
-{
-  auto short_pos = options_string.find(short_form);
-  auto long_pos = options_string.find(long_form);
-  size_t start_pos;
-  if (short_pos != std::string::npos)
-  {
-    start_pos = short_pos + short_form.size() + 1;
-    if (options_string.at(start_pos - 1) != ' ')
-    {
-      std::cout << "Options must follow the format shown." << std::endl;
-      print_help_info();
-      exit(-1);
-    }
-  }
-  else if (long_pos != std::string::npos)
-  {
-    start_pos = long_pos + long_form.size() + 1;
-    if (options_string.at(start_pos - 1) != '=')
-    {
-      std::cout << "Options must follow the format shown." << std::endl;
-      print_help_info();
-      exit(-1);
-    }
-  }
-  else
-  {
-    return "";
-  }
-  auto end_pos = options_string.substr(start_pos, options_string.size() - start_pos).find(" ");
-  return options_string.substr(start_pos, end_pos);
-}
-
 CommandLineOptions parse_args(int argc, char **argv)
 {
   CommandLineOptions options;
@@ -460,21 +420,20 @@ CommandLineOptions parse_args(int argc, char **argv)
   {
     options_string += std::string(argv[i]) + " ";
   }
-  std::cout << options_string << std::endl;
 
-  auto num_levels_string = get_arg(options_string, "-l", "--num-levels");
+  auto num_levels_string = get_arg(options_string, "-l", "--num-levels", help_info);
   if (!num_levels_string.empty())
   {
     options.num_levels = stoi(num_levels_string);
   }
 
-  auto rand_thresh_string = get_arg(options_string, "-r", "--rand-thresh");
+  auto rand_thresh_string = get_arg(options_string, "-r", "--rand-thresh", help_info);
   if (!rand_thresh_string.empty())
   {
     options.rand_thresh = stod(rand_thresh_string);
   }
 
-  options.mode_string = get_arg(options_string, "-m", "--mode");
+  options.mode_string = get_arg(options_string, "-m", "--mode", help_info);
   if (options.mode_string.empty())
   {
     options.mode_string = "BOOSTER";
@@ -507,7 +466,7 @@ CommandLineOptions parse_args(int argc, char **argv)
     options.bootstrap_inputs = true;
   }
 
-  auto output_suffix = get_arg(options_string, "-o", "--output-suffix");
+  auto output_suffix = get_arg(options_string, "-o", "--output-suffix", help_info);
   if (!output_suffix.empty())
   {
     options.eval_time_filename = sched_file + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
@@ -539,7 +498,7 @@ int main(int argc, char **argv)
   CommandLineOptions options;
   if (argc < 2)
   {
-    print_help_info();
+    std::cout << help_info << std::endl;
     exit(0);
   }
   else
@@ -551,7 +510,7 @@ int main(int argc, char **argv)
     }
     catch (...)
     {
-      print_help_info();
+      std::cout << help_info << std::endl;
       exit(-1);
     }
   }

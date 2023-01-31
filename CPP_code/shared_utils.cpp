@@ -144,3 +144,42 @@ bool operation_has_multiplication_child(const OperationPtr &operation)
     }
     return false;
 }
+
+bool arg_exists(std::string options_string, std::string short_form, std::string long_form)
+{
+    bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
+    bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;
+    return short_form_exists || long_form_exists;
+}
+
+std::string get_arg(std::string options_string, std::string short_form, std::string long_form, std::string help_info)
+{
+    auto short_pos = options_string.find(short_form);
+    auto long_pos = options_string.find(long_form);
+    size_t start_pos;
+    char expected_char;
+    if (short_pos != std::string::npos)
+    {
+        start_pos = short_pos + short_form.size() + 1;
+        expected_char = ' ';
+    }
+    else if (long_pos != std::string::npos)
+    {
+        start_pos = long_pos + long_form.size() + 1;
+        expected_char = '=';
+    }
+    else
+    {
+        return "";
+    }
+
+    if (options_string.at(start_pos - 1) != expected_char)
+    {
+        std::cout << "Options must follow the format shown." << std::endl;
+        std::cout << help_info << std::endl;
+        exit(-1);
+    }
+
+    auto end_pos = options_string.substr(start_pos, options_string.size() - start_pos).find(" ");
+    return options_string.substr(start_pos, end_pos);
+}

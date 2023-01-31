@@ -160,5 +160,7 @@ bool operation_has_no_parents(OperationPtr &);
 bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
 bool operation_parents_meet_urgency_criteria(OperationPtr &);
 bool operation_has_multiplication_child(const OperationPtr &);
+bool arg_exists(std::string, std::string, std::string);
+std::string get_arg(std::string, std::string, std::string, std::string);
 
 #endif
