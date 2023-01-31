@@ -389,8 +389,6 @@ void print_help_info()
   std::cout << "<sched_file> should not include the \".sched\" extension." << std::endl;
   std::cout << std::endl;
   std::cout << "Options:" << std::endl;
-  std::cout << "\t-t <int>, --num-threads=<int>" << std::endl;
-  std::cout << "\t\tThe number of threads the schedule uses. Defaults to 1." << std::endl;
   std::cout << "\t-l <int>, --num-levels=<int>" << std::endl;
   std::cout << "\t\tThe number of levels between bootstraps, also called the noise threshold. Defaults to 9." << std::endl;
   std::cout << "\t-r <float>, --rand-thresh=<float>" << std::endl;
@@ -464,12 +462,6 @@ CommandLineOptions parse_args(int argc, char **argv)
   }
   std::cout << options_string << std::endl;
 
-  auto num_threads_string = get_arg(options_string, "-t", "--num-threads");
-  if (!num_threads_string.empty())
-  {
-    options.num_threads = stoi(num_threads_string);
-  }
-
   auto num_levels_string = get_arg(options_string, "-l", "--num-levels");
   if (!num_levels_string.empty())
   {
@@ -532,7 +524,6 @@ CommandLineOptions parse_args(int argc, char **argv)
 void print_options(CommandLineOptions options)
 {
   std::cout << "FHE-Runner using the following options." << std::endl;
-  std::cout << "num_threads: " << options.num_threads << std::endl;
   std::cout << "num_levels: " << options.num_levels << std::endl;
   std::cout << "rand_thresh: " << options.rand_thresh << std::endl;
   std::cout << "mode: " << options.mode_string << std::endl;
@@ -565,11 +556,11 @@ int main(int argc, char **argv)
     }
   }
 
-  omp_set_num_threads(options.num_threads);
-
   std::cout << "Parsing schedule..." << std::endl;
   auto sched_info = parse_schedule(options);
   std::cout << "Done." << std::endl;
+
+  omp_set_num_threads(sched_info.circuit.size());
 
   ExecutionVariables vars;
   srand(time(NULL));

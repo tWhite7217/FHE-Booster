@@ -20,7 +20,6 @@ enum ExecMode
 
 struct CommandLineOptions
 {
-  int num_threads = 1;
   int num_levels = 9;
   double rand_thresh = 1.0;
   ExecMode mode = BOOSTER;

@@ -10,7 +10,6 @@ ScheduleInfo parse_schedule(CommandLineOptions options)
     std::cout << "Error opening file: " << options.input_filename << std::endl;
     exit(-1);
   }
-  sched_info.circuit.resize(options.num_threads);
   std::string line;
   std::array<std::string, 3> operands;
   std::string operation;
@@ -39,22 +38,25 @@ ScheduleInfo parse_schedule(CommandLineOptions options)
         }
         else
         {
+          if (thread_idx >= sched_info.circuit.size()) {
+            sched_info.circuit.resize(thread_idx+1);
+          }
+          
+          Node *tmp;
           if (operation == "ADD" || operation == "SUB" || operation == "MUL")
           {
-            Node *tmp = new Node(operation, operands[0], operands[1], operands[2]);
-            sched_info.circuit[thread_idx].push(tmp);
-            all_inputs.insert(operands[1]);
+            tmp = new Node(operation, operands[0], operands[1], operands[2]);
             all_inputs.insert(operands[2]);
-            sched_info.dependent_outputs[operands[1]].insert(operands[0]);
             sched_info.dependent_outputs[operands[2]].insert(operands[0]);
           }
           else
           {
-            Node *tmp = new Node(operation, operands[0], operands[1], "");
-            sched_info.circuit[thread_idx].push(tmp);
-            all_inputs.insert(operands[1]);
-            sched_info.dependent_outputs[operands[1]].insert(operands[0]);
+            tmp = new Node(operation, operands[0], operands[1], "");
           }
+          sched_info.circuit[thread_idx].push(tmp);
+          all_inputs.insert(operands[1]);
+          sched_info.dependent_outputs[operands[1]].insert(operands[0]);
+
           if (outputs.count(operands[0]))
           {
             std::cout << "ERROR: Schedules must maintain SSA form." << std::endl;
