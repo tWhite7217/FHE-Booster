@@ -42,7 +42,7 @@ struct Operation
     int core_num = 0;
     int earliest_start_time;
     int latest_start_time;
-    int rank;
+    int slack;
     double bootstrap_urgency;
     int num_unsatisfied_paths;
     std::vector<size_t> path_nums;
@@ -73,6 +73,11 @@ bool arg_exists(const std::string &, const std::string &, const std::string &);
 std::string get_arg(const std::string &, const std::string &, const std::string &, const std::string &);
 void print_size_mismatch_error(const size_t &, const size_t &, const std::string &, const std::string &);
 bool bool_arg_converter(const std::string &);
+void update_earliest_start_time(OperationPtr &, const std::map<std::string, int> &);
+int get_earliest_possible_program_end_time(OperationList &, const std::map<std::string, int> &);
+void update_latest_start_time(OperationPtr &, int, const std::map<std::string, int> &);
+void update_all_ESTs_and_LSTs(OperationList &, const std::map<std::string, int> &);
+int update_all_slacks(OperationList &);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)
@@ -163,21 +168,21 @@ void remove_key_subset_from_map(std::map<T, S> &map, const std::unordered_set<T>
     }
 }
 
-// template <typename T, typename F>
 template <typename T>
 std::vector<T> get_list_arg(const std::string &options_string,
                             const std::string &short_form,
                             const std::string &long_form,
                             const std::string &help_info,
                             const size_t &expected_size,
-                            const T &default_value,
                             const std::function<T(std::string)> &string_converter)
-// const F &string_converter)
 {
-    std::vector<T> list;
-    list.resize(expected_size, default_value);
+    std::vector<T> list(expected_size);
     auto arg_string = get_arg(options_string, short_form, long_form, help_info);
-    if (!arg_string.empty())
+    if (arg_string.empty())
+    {
+        throw std::invalid_argument("Size mismatch.");
+    }
+    else
     {
         auto string_list = split_string_by_character(arg_string, ',');
         if (string_list.size() != expected_size)
@@ -191,6 +196,32 @@ std::vector<T> get_list_arg(const std::string &options_string,
     }
 
     return list;
+}
+
+template <typename T>
+std::vector<T> get_list_arg(const std::string &options_string,
+                            const std::string &short_form,
+                            const std::string &long_form,
+                            const std::string &help_info,
+                            const size_t &expected_size,
+                            const T &default_value,
+                            const std::function<T(std::string)> &string_converter)
+{
+    try
+    {
+        return get_list_arg(options_string,
+                            short_form,
+                            long_form,
+                            help_info,
+                            expected_size,
+                            string_converter);
+    }
+    catch (std::invalid_argument)
+    {
+        std::vector<T> list;
+        list.resize(expected_size, default_value);
+        return list;
+    }
 }
 
 #endif

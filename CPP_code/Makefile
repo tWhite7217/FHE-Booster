@@ -6,7 +6,7 @@ lgr_parser_dependencies := $(BIN)/lex.o $(BIN)/LGRParser.o
 
 CPP_FLAGS = -std=c++17 -O3
 
-all: list_scheduler.out limited_to_selective_converter.out input_file_processor.out random_graph_generator.out
+all: bootstrap_set_selector.out list_scheduler.out limited_to_selective_converter.out input_file_processor.out random_graph_generator.out
 
 $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ shared_utils.cpp
@@ -24,11 +24,17 @@ $(BIN)/lex.o: LGRParser.l Makefile
 $(BIN)/LGRParser.o: LGRParser.cpp LGRParser.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ LGRParser.cpp
 
+$(BIN)/bootstrap_set_selector.o: bootstrap_set_selector.cpp bootstrap_set_selector.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ bootstrap_set_selector.cpp
+
+bootstrap_set_selector.out: $(BIN)/bootstrap_set_selector.o $(shared_depenedencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/bootstrap_set_selector.o $(shared_depenedencies)
+
 $(BIN)/list_scheduler.o: list_scheduler.cpp list_scheduler.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ list_scheduler.cpp
 
-list_scheduler.out: $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
-	g++ $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(shared_depenedencies) $(lgr_parser_dependencies)
+list_scheduler.out: $(BIN)/list_scheduler.o $(BIN)/shared_utils.o $(BIN)/custom_ddg_format_parser.o $(lgr_parser_dependencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(BIN)/shared_utils.o $(BIN)/custom_ddg_format_parser.o $(lgr_parser_dependencies)
 
 $(BIN)/limited_to_selective_converter.o: limited_to_selective_converter.cpp limited_to_selective_converter.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ limited_to_selective_converter.cpp

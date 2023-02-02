@@ -203,3 +203,103 @@ void print_size_mismatch_error(const size_t &expected_size, const size_t &actual
     std::cout << "Command line argument " << short_form << "/" << long_form << " has " << actual_size << "elements, but was expected to have " << expected_size << " elements." << std::endl;
     exit(1);
 }
+
+void update_earliest_start_time(OperationPtr &operation, const std::map<std::string, int> &operation_type_to_latency_map)
+{
+    for (auto parent : operation->parent_ptrs)
+    {
+        int parent_latency = operation_type_to_latency_map.at(parent->type);
+        if (vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation))
+        {
+            parent_latency += bootstrapping_latency;
+        }
+        int possible_est =
+            parent->earliest_start_time +
+            parent_latency;
+        if (possible_est > operation->earliest_start_time)
+        {
+            operation->earliest_start_time = possible_est;
+        }
+    }
+}
+
+int get_earliest_possible_program_end_time(OperationList &operations, const std::map<std::string, int> &operation_type_to_latency_map)
+{
+    int earliest_possible_program_end_time = 0;
+    for (auto operation : operations)
+    {
+        auto latency = operation_type_to_latency_map.at(operation->type);
+        int operation_earliest_end_time = operation->earliest_start_time + latency;
+        if (operation_earliest_end_time > earliest_possible_program_end_time)
+        {
+            earliest_possible_program_end_time = operation_earliest_end_time;
+        }
+    }
+    return earliest_possible_program_end_time;
+}
+
+void update_latest_start_time(OperationPtr &operation, int earliest_possible_program_end_time, const std::map<std::string, int> &operation_type_to_latency_map)
+{
+    operation->latest_start_time = std::numeric_limits<decltype(operation->latest_start_time)>::max();
+
+    if (operation->child_ptrs.empty())
+    {
+        operation->latest_start_time =
+            earliest_possible_program_end_time - operation_type_to_latency_map.at(operation->type);
+    }
+    else
+    {
+        for (auto child : operation->child_ptrs)
+        {
+            int child_latency = operation_type_to_latency_map.at(child->type);
+            if (operation_is_bootstrapped(child))
+            {
+                child_latency += bootstrapping_latency;
+            }
+            int possible_lst =
+                child->latest_start_time -
+                child_latency;
+            if (possible_lst < operation->latest_start_time)
+            {
+                operation->latest_start_time = possible_lst;
+            }
+        }
+    }
+}
+
+void update_all_ESTs_and_LSTs(OperationList &operations, const std::map<std::string, int> &operation_type_to_latency_map)
+{
+    // auto operations_in_topological_order = get_operations_in_topological_order();
+    // TGFF puts operations in topological order so we do not need to do that here
+    auto operations_in_topological_order = operations;
+
+    for (auto operation : operations_in_topological_order)
+    {
+        update_earliest_start_time(operation, operation_type_to_latency_map);
+    }
+
+    int earliest_program_end_time = get_earliest_possible_program_end_time(operations, operation_type_to_latency_map);
+
+    auto operations_in_reverse_topological_order = operations_in_topological_order;
+    std::reverse(operations_in_reverse_topological_order.begin(), operations_in_reverse_topological_order.end());
+
+    for (auto operation : operations_in_reverse_topological_order)
+    {
+        update_latest_start_time(operation, earliest_program_end_time, operation_type_to_latency_map);
+    }
+}
+
+int update_all_slacks(OperationList &operations)
+{
+    int max = 0;
+    for (auto &operation : operations)
+    {
+        int slack = operation->latest_start_time - operation->earliest_start_time;
+        operation->slack = slack;
+        if (slack > max)
+        {
+            max = slack;
+        }
+    }
+    return max;
+}
