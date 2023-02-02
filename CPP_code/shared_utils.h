@@ -51,8 +51,28 @@ struct Operation
 using OperationList = std::vector<OperationPtr>;
 
 OperationPtr get_operation_ptr_from_id(OperationList &, int);
-
 bool operations_bootstrap_on_same_core(OperationPtr, OperationPtr);
+void remove_chars_from_string(std::string &, std::vector<char>);
+int extract_number_from_string(std::string, size_t, size_t);
+void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
+bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &);
+bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &);
+int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
+bool bootstrapping_path_is_satisfied(OperationList &);
+bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
+bool operation_is_bootstrapped(OperationPtr);
+void write_lgr_like_format(std::string, OperationList);
+std::vector<std::string> split_string_by_character(std::string, char);
+std::vector<OperationList> get_bootstrapping_paths();
+bool path_is_urgent(OperationList &);
+bool operation_has_no_parents(OperationPtr &);
+bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
+bool operation_parents_meet_urgency_criteria(OperationPtr &);
+bool operation_has_multiplication_child(const OperationPtr &);
+bool arg_exists(const std::string &, const std::string &, const std::string &);
+std::string get_arg(const std::string &, const std::string &, const std::string &, const std::string &);
+void print_size_mismatch_error(const size_t &, const size_t &, const std::string &, const std::string &);
+bool bool_arg_converter(const std::string &);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)
@@ -143,24 +163,34 @@ void remove_key_subset_from_map(std::map<T, S> &map, const std::unordered_set<T>
     }
 }
 
-void remove_chars_from_string(std::string &, std::vector<char>);
-int extract_number_from_string(std::string, size_t, size_t);
-void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
-bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &);
-bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &);
-int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
-bool bootstrapping_path_is_satisfied(OperationList &);
-bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &);
-bool operation_is_bootstrapped(OperationPtr);
-void write_lgr_like_format(std::string, OperationList);
-std::vector<std::string> split_string_by_character(std::string, char);
-std::vector<OperationList> get_bootstrapping_paths();
-bool path_is_urgent(OperationList &);
-bool operation_has_no_parents(OperationPtr &);
-bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
-bool operation_parents_meet_urgency_criteria(OperationPtr &);
-bool operation_has_multiplication_child(const OperationPtr &);
-bool arg_exists(std::string, std::string, std::string);
-std::string get_arg(std::string, std::string, std::string, std::string);
+// template <typename T, typename F>
+template <typename T>
+std::vector<T> get_list_arg(const std::string &options_string,
+                            const std::string &short_form,
+                            const std::string &long_form,
+                            const std::string &help_info,
+                            const size_t &expected_size,
+                            const T &default_value,
+                            const std::function<T(std::string)> &string_converter)
+// const F &string_converter)
+{
+    std::vector<T> list;
+    list.resize(expected_size, default_value);
+    auto arg_string = get_arg(options_string, short_form, long_form, help_info);
+    if (!arg_string.empty())
+    {
+        auto string_list = split_string_by_character(arg_string, ',');
+        if (string_list.size() != expected_size)
+        {
+            print_size_mismatch_error(expected_size, string_list.size(), short_form, long_form);
+        }
+        for (auto i = 0; i < expected_size; i++)
+        {
+            list[i] = string_converter(string_list[i]);
+        }
+    }
+
+    return list;
+}
 
 #endif

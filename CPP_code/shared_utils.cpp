@@ -145,14 +145,14 @@ bool operation_has_multiplication_child(const OperationPtr &operation)
     return false;
 }
 
-bool arg_exists(std::string options_string, std::string short_form, std::string long_form)
+bool arg_exists(const std::string options_string, const std::string &short_form, const std::string &long_form)
 {
     bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
     bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;
     return short_form_exists || long_form_exists;
 }
 
-std::string get_arg(std::string options_string, std::string short_form, std::string long_form, std::string help_info)
+std::string get_arg(const std::string &options_string, const std::string &short_form, const std::string &long_form, const std::string &help_info)
 {
     auto short_pos = options_string.find(short_form);
     auto long_pos = options_string.find(long_form);
@@ -182,4 +182,24 @@ std::string get_arg(std::string options_string, std::string short_form, std::str
 
     auto end_pos = options_string.substr(start_pos, options_string.size() - start_pos).find(" ");
     return options_string.substr(start_pos, end_pos);
+}
+
+bool bool_arg_converter(const std::string &arg_val)
+{
+    if (arg_val == "y")
+    {
+        return true;
+    }
+    else if (arg_val == "n")
+    {
+        return false;
+    }
+
+    throw;
+}
+
+void print_size_mismatch_error(const size_t &expected_size, const size_t &actual_size, const std::string &short_form, const std::string &long_form)
+{
+    std::cout << "Command line argument " << short_form << "/" << long_form << " has " << actual_size << "elements, but was expected to have " << expected_size << " elements." << std::endl;
+    exit(1);
 }
