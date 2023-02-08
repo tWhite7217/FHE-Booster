@@ -12,6 +12,7 @@ class BootstrappingPathGenerator
 public:
   BootstrappingPathGenerator(int, char **);
   bool bootstrapping_files_are_current();
+  bool is_in_forced_generation_mode();
   void generate_bootstrapping_paths();
   void write_segments_to_files();
 
@@ -52,6 +53,7 @@ Arguments:
     std::string output_file_path;
     int num_levels;
     int initial_levels = 0;
+    bool force_generation;
   } options;
 
   std::string executable_file;

@@ -9,6 +9,11 @@ BootstrappingPathGenerator::BootstrappingPathGenerator(int argc, char **argv)
     selective_output_file_path = options.output_file_path + "_selective.txt";
 }
 
+bool BootstrappingPathGenerator::is_in_forced_generation_mode()
+{
+    return options.force_generation;
+}
+
 bool BootstrappingPathGenerator::bootstrapping_files_are_current()
 {
     struct stat executable_file_info;
@@ -63,6 +68,18 @@ void BootstrappingPathGenerator::parse_args(int argc, char **argv)
     {
         options.initial_levels = std::stoi(initial_levels_string);
     }
+
+    options.force_generation = arg_exists(options_string, "-F", "--force");
+}
+
+void BootstrappingPathGenerator::print_options()
+{
+    std::cout << "Generator using the following options." << std::endl;
+    std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
+    std::cout << "output_file_path: " << options.output_file_path << std::endl;
+    std::cout << "num_levels: " << options.num_levels << std::endl;
+    std::cout << "initial_levels: " << options.initial_levels << std::endl;
+    std::cout << "force_generation: " << (options.force_generation ? "yes" : "no") << std::endl;
 }
 
 void BootstrappingPathGenerator::generate_bootstrapping_paths()
@@ -280,16 +297,16 @@ int main(int argc, char **argv)
 {
     auto generator = BootstrappingPathGenerator(argc, argv);
 
-    if (generator.bootstrapping_files_are_current())
+    if (generator.is_in_forced_generation_mode() || !generator.bootstrapping_files_are_current())
+    {
+        generator.generate_bootstrapping_paths();
+        generator.write_segments_to_files();
+    }
+    else
     {
         std::cout << "Segments generation cancelled. Current bootstrapping_segments files" << std::endl;
         std::cout << "seem up to date. Use argument -F/--force to generate segments anyway." << std::endl;
         return 0;
-    }
-    else
-    {
-        generator.generate_bootstrapping_paths();
-        generator.write_segments_to_files();
     }
     return 0;
 }
