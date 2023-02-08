@@ -5,11 +5,11 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     parse_args(argc, argv);
     print_options();
 
-    standard_output_file_path = options.output_file_path + ".txt";
-    selective_output_file_path = options.output_file_path + "_selective.txt";
+    standard_output_filename = options.output_filename + ".txt";
+    selective_output_filename = options.output_filename + "_selective.txt";
 
     InputParser parser;
-    parser.parse_input_to_generate_operations(options.dag_file_path);
+    parser.parse_input_to_generate_operations(options.dag_filename);
     operations = parser.get_operations();
 }
 
@@ -26,9 +26,9 @@ bool BootstrapSegmentGenerator::bootstrap_files_are_current()
     struct stat selective_file_info;
 
     stat(executable_file.c_str(), &executable_file_info);
-    stat(options.dag_file_path.c_str(), &dag_file_info);
-    auto result1 = stat(standard_output_file_path.c_str(), &standard_file_info);
-    auto result2 = stat(selective_output_file_path.c_str(), &selective_file_info);
+    stat(options.dag_filename.c_str(), &dag_file_info);
+    auto result1 = stat(standard_output_filename.c_str(), &standard_file_info);
+    auto result2 = stat(selective_output_filename.c_str(), &selective_file_info);
 
     auto executable_time = executable_file_info.st_mtime;
     auto dag_time = dag_file_info.st_mtime;
@@ -56,9 +56,9 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
         exit(1);
     }
 
-    executable_file = argv[0];
-    options.dag_file_path = argv[1];
-    options.output_file_path = argv[2];
+    executable_filename = argv[0];
+    options.dag_filename = argv[1];
+    options.output_filename = argv[2];
     options.num_levels = std::stoi(argv[3]);
 
     std::string options_string;
@@ -79,8 +79,8 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
 void BootstrapSegmentGenerator::print_options()
 {
     std::cout << "Generator using the following options." << std::endl;
-    std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
-    std::cout << "output_file_path: " << options.output_file_path << std::endl;
+    std::cout << "dag_filename: " << options.dag_filename << std::endl;
+    std::cout << "output_filename: " << options.output_filename << std::endl;
     std::cout << "num_levels: " << options.num_levels << std::endl;
     std::cout << "initial_levels: " << options.initial_levels << std::endl;
     std::cout << "force_generation: " << (options.force_generation ? "yes" : "no") << std::endl;
@@ -272,13 +272,13 @@ void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_fil
 
 void BootstrapSegmentGenerator::write_segments_to_files()
 {
-    std::ofstream selective_file(selective_output_file_path);
+    std::ofstream selective_file(selective_output_filename);
     write_segments_to_file(selective_file);
     selective_file.close();
 
     convert_segments_to_standard();
 
-    std::ofstream standard_file(standard_output_file_path);
+    std::ofstream standard_file(standard_output_filename);
     write_segments_to_file(standard_file);
     standard_file.close();
 }

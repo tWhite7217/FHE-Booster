@@ -253,9 +253,9 @@ void RandomGraphGenerator::fix_constants()
     }
 }
 
-void RandomGraphGenerator::write_graph_to_txt_file(std::string output_file_path)
+void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
 {
-    std::ofstream output_file(output_file_path);
+    std::ofstream output_file(output_filename);
 
     output_file << "ADD,1" << std::endl;
     output_file << "SUB,1" << std::endl;

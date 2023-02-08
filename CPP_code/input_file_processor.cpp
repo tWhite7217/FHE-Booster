@@ -3,22 +3,22 @@
 #include <functional>
 
 bool using_selective_model;
-std::string dag_file_path;
-std::string bootstrap_file_path;
-std::string output_file_path;
+std::string dag_filename;
+std::string bootstrap_filename;
+std::string output_filename;
 int gained_levels;
 
 std::map<std::string, int> operation_type_to_latency_map;
 OperationList operations;
 std::vector<std::vector<OperationPtr>> bootstrap_segments;
 
-std::fstream output_file;
+std::ofstream output_file;
 
 void read_command_line_args(int argc, char **argv)
 {
-    dag_file_path = argv[1];
-    bootstrap_file_path = argv[2];
-    output_file_path = argv[3];
+    dag_filename = argv[1];
+    bootstrap_filename = argv[2];
+    output_filename = argv[3];
     using_selective_model = (std::string(argv[4]) == "True");
     gained_levels = std::stoi(argv[5]);
 }
@@ -26,7 +26,7 @@ void read_command_line_args(int argc, char **argv)
 void get_info_from_input_parser()
 {
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(dag_file_path);
+    input_parser.parse_input_to_generate_operations(dag_filename);
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
     operations = input_parser.get_operations();
 }
@@ -135,10 +135,10 @@ int main(int argc, char *argv[])
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    std::ifstream bootstrap_file(bootstrap_file_path);
+    std::ifstream bootstrap_file(bootstrap_filename);
     bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
 
-    output_file.open(output_file_path, std::ios::out);
+    output_file.open(output_filename, std::ios::out);
 
     std::vector<std::function<void()>> write_functions = {
         // write_operation_type_latencies_to_output_file,

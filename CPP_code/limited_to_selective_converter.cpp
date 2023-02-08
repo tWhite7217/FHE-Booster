@@ -1,16 +1,16 @@
 #include "limited_to_selective_converter.h"
 
-LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string dag_file_path, std::string bootstrap_file_path, std::string input_lgr_file_path, int gained_levels)
+LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string dag_filename, std::string bootstrap_filename, std::string input_lgr_filename, int gained_levels)
 {
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(dag_file_path);
+    input_parser.parse_input_to_generate_operations(dag_filename);
 
     operations = input_parser.get_operations();
 
-    std::ifstream bootstrap_file(bootstrap_file_path);
+    std::ifstream bootstrap_file(bootstrap_filename);
     bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
 
-    auto lgr_parser = LGRParser(input_lgr_file_path, "-");
+    auto lgr_parser = LGRParser(input_lgr_filename, "-");
     lgr_parser.set_operations(operations);
     lgr_parser.lex();
 }
@@ -67,10 +67,10 @@ bool LimitedToSelectiveConverter::segment_relies_on_parent_child_bootstrap_pair(
     return true;
 }
 
-void LimitedToSelectiveConverter::write_selective_lgr_file(std::string output_lgr_file_path)
+void LimitedToSelectiveConverter::write_selective_lgr_file(std::string output_lgr_filename)
 {
     std::ofstream output_file;
-    output_file.open(output_lgr_file_path);
+    output_file.open(output_lgr_filename);
 
     for (auto operation : operations)
     {
@@ -89,17 +89,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    std::string dag_file_path = argv[1];
-    std::string bootstrap_file_path = argv[2];
-    std::string input_lgr_file_path = argv[3];
-    std::string output_lgr_file_path = argv[4];
+    std::string dag_filename = argv[1];
+    std::string bootstrap_filename = argv[2];
+    std::string input_lgr_filename = argv[3];
+    std::string output_lgr_filename = argv[4];
     int gained_levels = std::atoi(argv[5]);
 
     auto limited_to_selective_converter =
-        LimitedToSelectiveConverter(dag_file_path, bootstrap_file_path, input_lgr_file_path, gained_levels);
+        LimitedToSelectiveConverter(dag_filename, bootstrap_filename, input_lgr_filename, gained_levels);
 
     limited_to_selective_converter.remove_unnecessary_bootstrapped_results();
-    limited_to_selective_converter.write_selective_lgr_file(output_lgr_file_path);
+    limited_to_selective_converter.write_selective_lgr_file(output_lgr_filename);
 
     return 0;
 }

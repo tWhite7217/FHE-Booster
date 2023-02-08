@@ -41,9 +41,9 @@ Options:
 
     struct Options
     {
-        std::string dag_file_path;
-        std::string output_file_path;
-        std::string lgr_file_path = "NULL";
+        std::string dag_filename;
+        std::string output_filename;
+        std::string lgr_filename = "NULL";
         int num_threads = 1;
     } options;
 

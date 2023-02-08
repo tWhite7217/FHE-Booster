@@ -5,11 +5,11 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
     parse_args(argc, argv);
 
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(options.dag_file_path);
+    input_parser.parse_input_to_generate_operations(options.dag_filename);
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    std::ifstream bootstrap_file(options.bootstrap_file_path);
+    std::ifstream bootstrap_file(options.bootstrap_filename);
     bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
 }
 
@@ -36,7 +36,7 @@ void BootstrapSetSelector::reset()
 void BootstrapSetSelector::write_lgr_like_format()
 {
     std::ofstream output_file;
-    output_file.open(options.output_file_paths[set_index] + ".lgr");
+    output_file.open(options.output_filenames[set_index] + ".lgr");
 
     for (auto operation : operations)
     {
@@ -170,10 +170,10 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
         exit(1);
     }
 
-    options.dag_file_path = argv[1];
-    options.bootstrap_file_path = argv[2];
-    options.output_file_paths = split_string_by_character(argv[3], ',');
-    num_sets = options.output_file_paths.size();
+    options.dag_filename = argv[1];
+    options.bootstrap_filename = argv[2];
+    options.output_filenames = split_string_by_character(argv[3], ',');
+    num_sets = options.output_filenames.size();
 
     options.num_levels = std::stoi(argv[4]);
 
@@ -193,9 +193,9 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
 
 void BootstrapSetSelector::print_options()
 {
-    std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
-    std::cout << "bootstrap_file_path: " << options.bootstrap_file_path << std::endl;
-    std::cout << "output_file_path: " << options.output_file_paths[set_index] << std::endl;
+    std::cout << "dag_filename: " << options.dag_filename << std::endl;
+    std::cout << "bootstrap_filename: " << options.bootstrap_filename << std::endl;
+    std::cout << "output_filename: " << options.output_filenames[set_index] << std::endl;
     std::cout << "num_levels: " << options.num_levels << std::endl;
     std::cout << "segments_weight: " << options.segments_weight[set_index] << std::endl;
     std::cout << "slack_weight: " << options.slack_weight[set_index] << std::endl;

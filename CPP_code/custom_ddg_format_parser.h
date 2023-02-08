@@ -24,7 +24,7 @@ private:
     std::map<std::string, int> operation_type_to_latency_map;
     std::vector<std::vector<OperationPtr>> bootstrap_segments;
 
-    void parse_lines(std::fstream &);
+    void parse_lines(std::ifstream &);
     void parse_operation_type(std::vector<std::string>);
     void parse_operation_and_its_dependences(std::vector<std::string>);
     void parse_constant(std::vector<std::string> line);

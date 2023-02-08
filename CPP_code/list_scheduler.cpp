@@ -6,13 +6,13 @@ ListScheduler::ListScheduler(int argc, char **argv)
     print_options();
 
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(options.dag_file_path);
+    input_parser.parse_input_to_generate_operations(options.dag_filename);
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    if (options.lgr_file_path != "NULL")
+    if (options.lgr_filename != "NULL")
     {
-        lgr_parser.switchIstream(options.lgr_file_path);
+        lgr_parser.switchIstream(options.lgr_filename);
         lgr_parser.set_operations(operations);
         lgr_parser.lex();
     }
@@ -331,7 +331,7 @@ bool ListScheduler::core_is_available(int core_num)
 void ListScheduler::write_lgr_like_format()
 {
     std::ofstream output_file;
-    output_file.open(options.output_file_path + ".lgr");
+    output_file.open(options.output_filename + ".lgr");
 
     output_file << "Objective value: " << solver_latency << ".0" << std::endl;
 
@@ -385,7 +385,7 @@ void ListScheduler::write_lgr_like_format()
 void ListScheduler::write_assembly_like_format()
 {
     std::ofstream output_file;
-    output_file.open(options.output_file_path + ".sched");
+    output_file.open(options.output_filename + ".sched");
 
     for (auto schedule : core_schedules)
     {
@@ -441,8 +441,8 @@ void ListScheduler::parse_args(int argc, char **argv)
         exit(1);
     }
 
-    options.dag_file_path = argv[1];
-    options.output_file_path = argv[2];
+    options.dag_filename = argv[1];
+    options.output_filename = argv[2];
 
     std::string options_string;
     for (auto i = 3; i < argc; i++)
@@ -459,15 +459,15 @@ void ListScheduler::parse_args(int argc, char **argv)
     auto lgr_arg = get_arg(options_string, "-i", "--input-lgr", help_info);
     if (!lgr_arg.empty())
     {
-        options.lgr_file_path = lgr_arg;
+        options.lgr_filename = lgr_arg;
     }
 }
 
 void ListScheduler::print_options()
 {
-    std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
-    std::cout << "output_file_path: " << options.output_file_path << std::endl;
-    std::cout << "lgr_file_path: " << options.lgr_file_path << std::endl;
+    std::cout << "dag_filename: " << options.dag_filename << std::endl;
+    std::cout << "output_filename: " << options.output_filename << std::endl;
+    std::cout << "lgr_filename: " << options.lgr_filename << std::endl;
     std::cout << "num_threads: " << options.num_threads << std::endl;
 }
 

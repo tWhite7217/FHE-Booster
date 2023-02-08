@@ -55,10 +55,10 @@ Batching:
 
   struct Options
   {
-    std::string dag_file_path;
-    std::string bootstrap_file_path;
+    std::string dag_filename;
+    std::string bootstrap_filename;
     int num_levels;
-    std::vector<std::string> output_file_paths;
+    std::vector<std::string> output_filenames;
     std::vector<int> segments_weight;
     std::vector<int> slack_weight;
     std::vector<int> urgency_weight;

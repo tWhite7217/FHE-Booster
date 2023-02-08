@@ -50,16 +50,16 @@ Arguments:
 
   struct Options
   {
-    std::string dag_file_path;
-    std::string output_file_path;
+    std::string dag_filename;
+    std::string output_filename;
     int num_levels;
     int initial_levels = 0;
     bool force_generation;
   } options;
 
-  std::string executable_file;
-  std::string standard_output_file_path;
-  std::string selective_output_file_path;
+  std::string executable_filename;
+  std::string standard_output_filename;
+  std::string selective_output_filename;
 
   void create_raw_bootstrap_segments();
   std::vector<std::vector<OperationPtr>> create_bootstrap_segments_helper(OperationPtr, std::vector<OperationPtr>, int);

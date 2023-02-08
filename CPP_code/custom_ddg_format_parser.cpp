@@ -7,7 +7,7 @@ OperationList InputParser::get_operations() { return operations; }
 
 void InputParser::parse_input_to_generate_operations(std::string filename)
 {
-    std::fstream input_file;
+    std::ifstream input_file;
     input_file.open(filename, std::ios::in);
 
     parse_lines(input_file);
@@ -17,7 +17,7 @@ void InputParser::parse_input_to_generate_operations(std::string filename)
     add_child_ptrs_to_operation_list_with_existing_parent_ptrs(operations);
 }
 
-void InputParser::parse_lines(std::fstream &input_file)
+void InputParser::parse_lines(std::ifstream &input_file)
 {
     int phase = 0;
     std::string line;

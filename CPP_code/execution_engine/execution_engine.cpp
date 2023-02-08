@@ -412,8 +412,8 @@ CommandLineOptions parse_args(int argc, char **argv)
 {
   CommandLineOptions options;
 
-  std::string sched_file = argv[1];
-  options.input_filename = sched_file + ".sched";
+  std::string sched_filename = argv[1];
+  options.input_filename = sched_filename + ".sched";
 
   std::string options_string;
   for (auto i = 2; i < argc; i++)
@@ -469,12 +469,12 @@ CommandLineOptions parse_args(int argc, char **argv)
   auto output_suffix = get_arg(options_string, "-o", "--output-suffix", help_info);
   if (!output_suffix.empty())
   {
-    options.eval_time_filename = sched_file + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
+    options.eval_time_filename = sched_filename + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
   }
 
   if (arg_exists(options_string, "-s", "--save-num-bootstraps"))
   {
-    options.num_bootstraps_filename = sched_file + "_num_bootstraps_" + options.mode_string + ".txt";
+    options.num_bootstraps_filename = sched_filename + "_num_bootstraps_" + options.mode_string + ".txt";
   }
 
   return options;

@@ -2,22 +2,22 @@
 
 #include <functional>
 
-std::string input_file_path;
-std::string output_file_path;
+std::string input_filename;
+std::string output_filename;
 
 OperationList operations;
 std::set<int> constant_ids;
 
 void read_command_line_args(int argc, char **argv)
 {
-    input_file_path = std::string{argv[1]};
-    output_file_path = std::string{argv[2]};
+    input_filename = std::string{argv[1]};
+    output_filename = std::string{argv[2]};
 }
 
 void get_info_from_input_parser()
 {
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(input_file_path);
+    input_parser.parse_input_to_generate_operations(input_filename);
     operations = input_parser.get_operations();
 
     for (auto operation : operations)
@@ -45,9 +45,9 @@ std::string get_vcg_node_color(OperationPtr operation)
     }
 }
 
-void write_graph_to_vcg_file(std::string output_file_path)
+void write_graph_to_vcg_file(std::string output_filename)
 {
-    std::ofstream output_file(output_file_path);
+    std::ofstream output_file(output_filename);
 
     output_file << "graph: { title: \"Graph\"" << std::endl;
 
@@ -90,5 +90,5 @@ int main(int argc, char *argv[])
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    write_graph_to_vcg_file(output_file_path);
+    write_graph_to_vcg_file(output_filename);
 }
