@@ -1,47 +1,74 @@
 #include "bootstrapping_path_generator.h"
 
-BootstrappingPathGenerator::BootstrappingPathGenerator(OperationList operations, bool using_selective_model, int gained_levels)
-    : operations{operations}, using_selective_model{using_selective_model}, gained_levels{gained_levels} {}
-
-std::vector<OperationList> BootstrappingPathGenerator::get_bootstrapping_paths(std::string input_dag_file_path)
+BootstrappingPathGenerator::BootstrappingPathGenerator(int argc, char **argv)
 {
-    auto dag_path_as_array = split_string_by_character(input_dag_file_path, '/');
-    std::string bootstrapping_file_path = (dag_path_as_array[0] + "/" +
-                                           dag_path_as_array[1] + "/" +
-                                           std::to_string(gained_levels) +
-                                           "_levels/bootstrapping_paths");
-    if (using_selective_model)
-    {
-        bootstrapping_file_path += "_selective";
-    }
-    bootstrapping_file_path += ".txt";
-    struct stat input_dag_file_info;
-    struct stat output_bootstrapping_file_info;
+    parse_args(argc, argv);
+    print_options();
 
-    stat(input_dag_file_path.c_str(), &input_dag_file_info);
-    auto result = stat(bootstrapping_file_path.c_str(), &output_bootstrapping_file_info);
+    standard_output_file_path = options.output_file_path + ".txt";
+    selective_output_file_path = options.output_file_path + "_selective.txt";
+}
 
-    if (result == 0 && input_dag_file_info.st_mtime < output_bootstrapping_file_info.st_mtime)
+bool BootstrappingPathGenerator::bootstrapping_files_are_current()
+{
+    struct stat executable_file_info;
+    struct stat dag_file_info;
+    struct stat standard_file_info;
+    struct stat selective_file_info;
+
+    stat(executable_file.c_str(), &executable_file_info);
+    stat(options.dag_file_path.c_str(), &dag_file_info);
+    auto result1 = stat(standard_output_file_path.c_str(), &standard_file_info);
+    auto result2 = stat(selective_output_file_path.c_str(), &selective_file_info);
+
+    auto executable_time = executable_file_info.st_mtime;
+    auto dag_time = dag_file_info.st_mtime;
+    time_t standard_time;
+    time_t selective_time;
+    if (result1 == 0 && result2 == 0)
     {
-        auto input_file = std::ifstream(bootstrapping_file_path);
-        std::cout << "Reading bootstrapping paths from file." << std::endl;
-        return read_bootstrapping_paths(input_file, operations);
+        standard_time = standard_file_info.st_mtime;
+        selective_time = selective_file_info.st_mtime;
     }
     else
     {
-        auto output_file = std::ofstream(bootstrapping_file_path);
-        std::cout << "Generating bootstrapping paths." << std::endl;
-        generate_bootstrapping_paths();
-        write_paths_to_file(output_file);
-        add_path_num_info_to_all_operations();
-        return bootstrapping_paths;
+        return false;
+    }
+
+    return standard_time > executable_time && standard_time > dag_time &&
+           selective_time > executable_time && selective_time > dag_time;
+}
+
+void BootstrappingPathGenerator::parse_args(int argc, char **argv)
+{
+    if (argc < 3)
+    {
+        std::cout << help_info << std::endl;
+        exit(1);
+    }
+
+    executable_file = argv[0];
+    options.dag_file_path = argv[1];
+    options.output_file_path = argv[2];
+    options.num_levels = std::stoi(argv[3]);
+
+    std::string options_string;
+    for (auto i = 4; i < argc; i++)
+    {
+        options_string += std::string(argv[i]) + " ";
+    }
+
+    auto initial_levels_string = get_arg(options_string, "-i", "--initial_levels", help_info);
+    if (!initial_levels_string.empty())
+    {
+        options.initial_levels = std::stoi(initial_levels_string);
     }
 }
 
 void BootstrappingPathGenerator::generate_bootstrapping_paths()
 {
     create_raw_bootstrapping_paths();
-    clean_raw_bootstrapping_paths();
+    remove_redundant_bootstrapping_paths();
 }
 
 void BootstrappingPathGenerator::create_raw_bootstrapping_paths()
@@ -125,74 +152,52 @@ std::vector<std::vector<OperationPtr>> BootstrappingPathGenerator::create_bootst
     return paths_to_return;
 }
 
-void BootstrappingPathGenerator::clean_raw_bootstrapping_paths()
-{
-    remove_redundant_bootstrapping_paths();
-
-    if (!using_selective_model)
-    {
-        remove_last_operation_from_bootstrapping_paths();
-        remove_duplicate_bootstrapping_paths();
-    }
-}
-
-void BootstrappingPathGenerator::remove_last_operation_from_bootstrapping_paths()
-{
-    for (auto &path : bootstrapping_paths)
-    {
-        path.pop_back();
-    }
-}
-
-void BootstrappingPathGenerator::remove_duplicate_bootstrapping_paths()
-{
-    if (bootstrapping_paths.size() <= 1)
-    {
-        return;
-    }
-
-    std::sort(bootstrapping_paths.begin(), bootstrapping_paths.end());
-
-    auto logical_end = std::unique(bootstrapping_paths.begin(), bootstrapping_paths.end());
-
-    bootstrapping_paths.erase(logical_end,
-                              bootstrapping_paths.end());
-}
-
 void BootstrappingPathGenerator::remove_redundant_bootstrapping_paths()
 {
-    auto count = 0;
+    auto duplicate_count = 0;
+    auto redundant_count = 0;
     for (auto i = 0; i < bootstrapping_paths.size(); i++)
     {
-        for (auto j = i + 1;
-             j < bootstrapping_paths.size() &&
-             bootstrapping_paths[i].front() == bootstrapping_paths[j].front() &&
-             bootstrapping_paths[i].back() == bootstrapping_paths[j].back();
-             j++)
+        auto j = i + 1;
+        while (j < bootstrapping_paths.size() &&
+               bootstrapping_paths[i].front() == bootstrapping_paths[j].front() &&
+               bootstrapping_paths[i].back() == bootstrapping_paths[j].back())
         {
-            if (bootstrapping_paths[i].size() != bootstrapping_paths[j].size())
+            if (bootstrapping_paths[i].size() <= bootstrapping_paths[j].size())
             {
                 if (paths_are_redundant(bootstrapping_paths[i], bootstrapping_paths[j]))
                 {
                     bootstrapping_paths.erase(bootstrapping_paths.begin() + j);
-                    count++;
-                    j--;
+                    if (bootstrapping_paths[i].size() == bootstrapping_paths[j].size())
+                    {
+                        duplicate_count++;
+                    }
+                    else
+                    {
+                        redundant_count++;
+                    }
+                }
+                else
+                {
+                    j++;
                 }
             }
         }
     }
-    std::cout << "Number of redundant bootstrapping paths removed: " << count << std::endl;
+    std::cout << "Number of duplicate bootstrapping paths removed: " << duplicate_count << std::endl;
+    std::cout << "Number of redundant bootstrapping paths removed: " << redundant_count << std::endl;
 }
 
-bool BootstrappingPathGenerator::paths_are_redundant(std::vector<OperationPtr> path1, std::vector<OperationPtr> path2)
+bool BootstrappingPathGenerator::paths_are_redundant(std::vector<OperationPtr> smaller_path, std::vector<OperationPtr> larger_path)
 {
     auto j = 0;
-    for (auto i = 0; i < path1.size(); i++)
+    auto size_diff = larger_path.size() - smaller_path.size();
+    for (auto i = 0; i < smaller_path.size(); i++)
     {
-        while (path1[i] != path2[j])
+        while (smaller_path[i] != larger_path[j])
         {
             j++;
-            if (j >= path2.size())
+            if (j - i > size_diff)
             {
                 return false;
             }
@@ -232,7 +237,7 @@ void BootstrappingPathGenerator::print_bootstrapping_paths()
     }
 }
 
-void BootstrappingPathGenerator::write_paths_to_file(std::ofstream &output_file)
+void BootstrappingPathGenerator::write_segments_to_file(std::ofstream &output_file)
 {
     for (auto path : bootstrapping_paths)
     {
@@ -244,44 +249,47 @@ void BootstrappingPathGenerator::write_paths_to_file(std::ofstream &output_file)
     }
 }
 
-std::vector<OperationList> BootstrappingPathGenerator::read_bootstrapping_paths(std::ifstream &input_file, OperationList operations)
+void BootstrappingPathGenerator::write_segments_to_files()
 {
-    std::vector<OperationList> bootstrapping_paths;
-    std::string line;
+    std::ofstream selective_file(selective_output_file_path);
+    write_segments_to_file(selective_file);
+    selective_file.close();
 
-    while (std::getline(input_file, line))
-    {
-        auto line_as_list = split_string_by_character(line, ',');
+    convert_segments_to_standard();
 
-        if (line_as_list[0] == "")
-        {
-            continue;
-        }
-
-        auto path_num = bootstrapping_paths.size();
-
-        bootstrapping_paths.emplace_back();
-
-        for (auto op_str : line_as_list)
-        {
-            auto op_num = std::stoi(op_str);
-            auto op_ptr = get_operation_ptr_from_id(operations, op_num);
-            op_ptr->path_nums.push_back(path_num);
-            bootstrapping_paths.back().push_back(op_ptr);
-        }
-    }
-    return bootstrapping_paths;
+    std::ofstream standard_file(standard_output_file_path);
+    write_segments_to_file(standard_file);
+    standard_file.close();
 }
 
-void BootstrappingPathGenerator::add_path_num_info_to_all_operations()
+void BootstrappingPathGenerator::convert_segments_to_standard()
 {
-    auto path_num = 0;
+    remove_last_operation_from_bootstrapping_paths();
+    remove_redundant_bootstrapping_paths();
+}
+
+void BootstrappingPathGenerator::remove_last_operation_from_bootstrapping_paths()
+{
     for (auto &path : bootstrapping_paths)
     {
-        for (auto &operation : path)
-        {
-            operation->path_nums.push_back(path_num);
-        }
-        path_num++;
+        path.pop_back();
     }
+}
+
+int main(int argc, char **argv)
+{
+    auto generator = BootstrappingPathGenerator(argc, argv);
+
+    if (generator.bootstrapping_files_are_current())
+    {
+        std::cout << "Segments generation cancelled. Current bootstrapping_segments files" << std::endl;
+        std::cout << "seem up to date. Use argument -F/--force to generate segments anyway." << std::endl;
+        return 0;
+    }
+    else
+    {
+        generator.generate_bootstrapping_paths();
+        generator.write_segments_to_files();
+    }
+    return 0;
 }

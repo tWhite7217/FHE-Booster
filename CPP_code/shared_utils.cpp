@@ -303,3 +303,45 @@ int update_all_slacks(OperationList &operations)
     }
     return max;
 }
+
+void add_segment_num_info_to_all_operations(const std::vector<OperationList> &bootstrapping_segments)
+{
+    auto segment_num = 0;
+    for (const auto &segment : bootstrapping_segments)
+    {
+        for (auto &operation : segment)
+        {
+            operation->path_nums.push_back(segment_num);
+        }
+        segment_num++;
+    }
+}
+
+std::vector<OperationList> read_bootstrapping_paths(std::ifstream &input_file, OperationList &operations)
+{
+    std::vector<OperationList> bootstrapping_paths;
+    std::string line;
+
+    while (std::getline(input_file, line))
+    {
+        auto line_as_list = split_string_by_character(line, ',');
+
+        if (line_as_list[0] == "")
+        {
+            continue;
+        }
+
+        auto path_num = bootstrapping_paths.size();
+
+        bootstrapping_paths.emplace_back();
+
+        for (auto op_str : line_as_list)
+        {
+            auto op_num = std::stoi(op_str);
+            auto op_ptr = get_operation_ptr_from_id(operations, op_num);
+            op_ptr->path_nums.push_back(path_num);
+            bootstrapping_paths.back().push_back(op_ptr);
+        }
+    }
+    return bootstrapping_paths;
+}

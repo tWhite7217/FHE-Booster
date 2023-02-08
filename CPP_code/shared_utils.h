@@ -78,6 +78,8 @@ int get_earliest_possible_program_end_time(OperationList &, const std::map<std::
 void update_latest_start_time(OperationPtr &, int, const std::map<std::string, int> &);
 void update_all_ESTs_and_LSTs(OperationList &, const std::map<std::string, int> &);
 int update_all_slacks(OperationList &);
+void add_path_num_info_to_all_operations(const std::vector<OperationList> &);
+std::vector<OperationList> read_bootstrapping_paths(std::ifstream &, OperationList &);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)
