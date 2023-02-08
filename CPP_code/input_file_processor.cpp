@@ -1,10 +1,10 @@
 #include "custom_ddg_format_parser.h"
-#include "bootstrap_segment_generator.h"
 
 #include <functional>
 
 bool using_selective_model;
-std::string input_file_path;
+std::string dag_file_path;
+std::string bootstrap_file_path;
 std::string output_file_path;
 int gained_levels;
 
@@ -16,16 +16,17 @@ std::fstream output_file;
 
 void read_command_line_args(int argc, char **argv)
 {
-    input_file_path = std::string{argv[1]};
-    output_file_path = std::string{argv[2]};
-    using_selective_model = (std::string(argv[3]) == "True");
-    gained_levels = std::atoi(argv[4]);
+    dag_file_path = argv[1];
+    bootstrap_file_path = argv[2];
+    output_file_path = argv[3];
+    using_selective_model = (std::string(argv[4]) == "True");
+    gained_levels = std::stoi(argv[5]);
 }
 
 void get_info_from_input_parser()
 {
     InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(input_file_path);
+    input_parser.parse_input_to_generate_operations(dag_file_path);
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
     operations = input_parser.get_operations();
 }
@@ -125,19 +126,17 @@ void write_bootstrapping_constraints_to_output_file()
 
 int main(int argc, char *argv[])
 {
-    if (argc != 5)
+    if (argc != 6)
     {
-        std::cout << "Usage: " << argv[0] << " <input_file> <output_file> <using_selective_model> <gained_levels>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <dag_file> <bootstrap_file> <output_file> <using_selective_model> <gained_levels>" << std::endl;
         return 1;
     }
 
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    BootstrapSegmentGenerator segment_generator(operations, using_selective_model, gained_levels);
-    bootstrap_segments = segment_generator.get_bootstrap_segments(input_file_path);
-    // bootstrap_segments = segment_generator.generate_bootstrap_segments();
-    // bootstrap_segments = segment_generator.generate_bootstrap_segments_for_validation();
+    std::ifstream bootstrap_file(bootstrap_file_path);
+    bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
 
     output_file.open(output_file_path, std::ios::out);
 

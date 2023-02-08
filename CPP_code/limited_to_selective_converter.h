@@ -1,13 +1,12 @@
 #include "custom_ddg_format_parser.h"
 #include "LGRParser.h"
-#include "bootstrap_segment_generator.h"
 
 #include <iostream>
 
 class LimitedToSelectiveConverter
 {
 public:
-    LimitedToSelectiveConverter(std::string, std::string, int);
+    LimitedToSelectiveConverter(std::string, std::string, std::string, int);
     void remove_unnecessary_bootstrapped_results();
     void write_selective_lgr_file(std::string);
 

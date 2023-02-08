@@ -1,7 +1,7 @@
 #include "LGRParser.h"
 #include "custom_ddg_format_parser.h"
 #include "shared_utils.h"
-#include "bootstrap_segment_generator.h"
+#include "bootstrap_segments_generator.h"
 
 #include <vector>
 #include <map>

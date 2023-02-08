@@ -9,8 +9,8 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    BootstrapSegmentGenerator segment_generator(operations, false, options.num_levels);
-    bootstrap_segments = segment_generator.get_bootstrap_segments(options.dag_file_path);
+    std::ifstream bootstrap_file(options.bootstrap_file_path);
+    bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
 }
 
 void BootstrapSetSelector::choose_and_output_bootstrap_sets()
@@ -171,16 +171,17 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     }
 
     options.dag_file_path = argv[1];
-    options.output_file_paths = split_string_by_character(argv[2], ',');
+    options.bootstrap_file_path = argv[2];
+    options.output_file_paths = split_string_by_character(argv[3], ',');
     num_sets = options.output_file_paths.size();
 
-    options.num_levels = std::stoi(argv[3]);
+    options.num_levels = std::stoi(argv[4]);
 
     const std::function<int(std::string)> stoi_function = [](std::string str)
     { return std::stoi(str); };
 
     std::string options_string;
-    for (auto i = 4; i < argc; i++)
+    for (auto i = 5; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }
@@ -193,6 +194,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
 void BootstrapSetSelector::print_options()
 {
     std::cout << "dag_file_path: " << options.dag_file_path << std::endl;
+    std::cout << "bootstrap_file_path: " << options.bootstrap_file_path << std::endl;
     std::cout << "output_file_path: " << options.output_file_paths[set_index] << std::endl;
     std::cout << "num_levels: " << options.num_levels << std::endl;
     std::cout << "segments_weight: " << options.segments_weight[set_index] << std::endl;

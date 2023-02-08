@@ -1,4 +1,4 @@
-#include "bootstrap_segment_generator.h"
+#include "bootstrap_segments_generator.h"
 
 BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
 {
@@ -7,6 +7,10 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
 
     standard_output_file_path = options.output_file_path + ".txt";
     selective_output_file_path = options.output_file_path + "_selective.txt";
+
+    InputParser parser;
+    parser.parse_input_to_generate_operations(options.dag_file_path);
+    operations = parser.get_operations();
 }
 
 bool BootstrapSegmentGenerator::is_in_forced_generation_mode()

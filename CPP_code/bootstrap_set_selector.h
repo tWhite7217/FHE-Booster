@@ -1,6 +1,5 @@
 #include "custom_ddg_format_parser.h"
 #include "shared_utils.h"
-#include "bootstrap_segment_generator.h"
 
 #include <vector>
 #include <map>
@@ -16,7 +15,8 @@ public:
 
 private:
   const std::string help_info = R"(
-Usage: ./list_scheduler <dag_file> 
+Usage: ./list_scheduler <dag_file>
+                        <bootstrap_file>
                         <output_file_1>[,<output_file_2>,...,<output_file_n>]
                         <num_levels>
                         [-s <int_1>[,<int_2>,...,<int_n>]]
@@ -26,6 +26,8 @@ Usage: ./list_scheduler <dag_file>
 Arguments:
   <dag_file>
     The text file describing the FHE program as a DAG.
+  <bootstrap_file>
+    The text file listing the bootstrap segments of the program.
   <output_file>
     The path to the file where the bootstrap set should be saved.
   <num_levels>
@@ -54,6 +56,7 @@ Batching:
   struct Options
   {
     std::string dag_file_path;
+    std::string bootstrap_file_path;
     int num_levels;
     std::vector<std::string> output_file_paths;
     std::vector<int> segments_weight;
