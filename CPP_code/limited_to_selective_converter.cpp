@@ -11,9 +11,9 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_f
     lgr_parser.set_operations(operations);
     lgr_parser.lex();
 
-    auto bootstrapping_path_generator = BootstrappingPathGenerator(operations, true, gained_levels);
-    bootstrapping_paths = bootstrapping_path_generator.get_bootstrapping_paths(input_dag_file_path);
-    // bootstrapping_paths = bootstrapping_path_generator.generate_bootstrapping_paths();
+    auto bootstrapping_segment_generator = BootstrappingSegmentGenerator(operations, true, gained_levels);
+    bootstrapping_segments = bootstrapping_segment_generator.get_bootstrapping_segments(input_dag_file_path);
+    // bootstrapping_segments = bootstrapping_segment_generator.generate_bootstrapping_segments();
 }
 
 void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
@@ -25,7 +25,7 @@ void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
         while (child_it != parent->child_ptrs_that_receive_bootstrapped_result.end())
         {
             auto child = *child_it;
-            if (no_path_relies_on_parent_child_bootstrapping_pair(parent, child))
+            if (no_segment_relies_on_parent_child_bootstrapping_pair(parent, child))
             {
                 child_it = parent->child_ptrs_that_receive_bootstrapped_result.erase(child_it);
                 num_removed++;
@@ -39,11 +39,11 @@ void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
     std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
 }
 
-bool LimitedToSelectiveConverter::no_path_relies_on_parent_child_bootstrapping_pair(OperationPtr &parent, OperationPtr &child)
+bool LimitedToSelectiveConverter::no_segment_relies_on_parent_child_bootstrapping_pair(OperationPtr &parent, OperationPtr &child)
 {
-    for (auto path : bootstrapping_paths)
+    for (auto segment : bootstrapping_segments)
     {
-        if (path_relies_on_parent_child_bootstrapping_pair(path, parent, child))
+        if (segment_relies_on_parent_child_bootstrapping_pair(segment, parent, child))
         {
             return false;
         }
@@ -51,12 +51,12 @@ bool LimitedToSelectiveConverter::no_path_relies_on_parent_child_bootstrapping_p
     return true;
 }
 
-bool LimitedToSelectiveConverter::path_relies_on_parent_child_bootstrapping_pair(OperationList &path, OperationPtr &parent, OperationPtr &child)
+bool LimitedToSelectiveConverter::segment_relies_on_parent_child_bootstrapping_pair(OperationList &segment, OperationPtr &parent, OperationPtr &child)
 {
-    for (auto i = 0; i < path.size() - 1; i++)
+    for (auto i = 0; i < segment.size() - 1; i++)
     {
-        auto other_parent = path[i];
-        auto other_child = path[i + 1];
+        auto other_parent = segment[i];
+        auto other_child = segment[i + 1];
         if (other_parent != parent || other_child != child)
         {
             if (vector_contains_element(other_parent->child_ptrs_that_receive_bootstrapped_result, other_child))

@@ -41,21 +41,21 @@ void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList op
     }
 }
 
-bool bootstrapping_paths_are_satisfied(std::vector<OperationList> &bootstrapping_paths)
+bool bootstrapping_segments_are_satisfied(std::vector<OperationList> &bootstrapping_segments)
 {
-    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths, bootstrapping_path_is_satisfied) == -1;
+    return find_unsatisfied_bootstrapping_segment_index(bootstrapping_segments, bootstrapping_segment_is_satisfied) == -1;
 }
 
-bool bootstrapping_paths_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrapping_paths)
+bool bootstrapping_segments_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrapping_segments)
 {
-    return find_unsatisfied_bootstrapping_path_index(bootstrapping_paths, bootstrapping_path_is_satisfied_for_selective_model) == -1;
+    return find_unsatisfied_bootstrapping_segment_index(bootstrapping_segments, bootstrapping_segment_is_satisfied_for_selective_model) == -1;
 }
 
-int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootstrapping_paths, std::function<bool(OperationList &)> path_is_satisfied)
+int find_unsatisfied_bootstrapping_segment_index(std::vector<OperationList> &bootstrapping_segments, std::function<bool(OperationList &)> segment_is_satisfied)
 {
-    for (int i = 0; i < bootstrapping_paths.size(); i++)
+    for (int i = 0; i < bootstrapping_segments.size(); i++)
     {
-        if (!path_is_satisfied(bootstrapping_paths[i]))
+        if (!segment_is_satisfied(bootstrapping_segments[i]))
         {
             return i;
         }
@@ -63,9 +63,9 @@ int find_unsatisfied_bootstrapping_path_index(std::vector<OperationList> &bootst
     return -1;
 }
 
-bool bootstrapping_path_is_satisfied(OperationList &bootstrapping_path)
+bool bootstrapping_segment_is_satisfied(OperationList &bootstrapping_segment)
 {
-    for (auto operation : bootstrapping_path)
+    for (auto operation : bootstrapping_segment)
     {
         if (operation_is_bootstrapped(operation))
         {
@@ -75,11 +75,11 @@ bool bootstrapping_path_is_satisfied(OperationList &bootstrapping_path)
     return false;
 }
 
-bool bootstrapping_path_is_satisfied_for_selective_model(OperationList &bootstrapping_path)
+bool bootstrapping_segment_is_satisfied_for_selective_model(OperationList &bootstrapping_segment)
 {
-    for (auto i = 0; i < bootstrapping_path.size() - 1; i++)
+    for (auto i = 0; i < bootstrapping_segment.size() - 1; i++)
     {
-        if (vector_contains_element(bootstrapping_path[i]->child_ptrs_that_receive_bootstrapped_result, bootstrapping_path[i + 1]))
+        if (vector_contains_element(bootstrapping_segment[i]->child_ptrs_that_receive_bootstrapped_result, bootstrapping_segment[i + 1]))
         {
             return true;
         }
@@ -104,17 +104,17 @@ std::vector<std::string> split_string_by_character(std::string str, char separat
     return str_as_list;
 }
 
-bool path_is_urgent(OperationList &path)
+bool segment_is_urgent(OperationList &segment)
 {
-    auto first_operation = path.front();
-    return !bootstrapping_path_is_satisfied(path) && operation_parents_meet_urgency_criteria(first_operation);
+    auto first_operation = segment.front();
+    return !bootstrapping_segment_is_satisfied(segment) && operation_parents_meet_urgency_criteria(first_operation);
 }
 
 bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
 {
     for (auto parent : operation->parent_ptrs)
     {
-        if ((parent->path_nums.size() > 0) && !operation_is_bootstrapped(parent))
+        if ((parent->segment_nums.size() > 0) && !operation_is_bootstrapped(parent))
         {
             return false;
         }
@@ -311,15 +311,15 @@ void add_segment_num_info_to_all_operations(const std::vector<OperationList> &bo
     {
         for (auto &operation : segment)
         {
-            operation->path_nums.push_back(segment_num);
+            operation->segment_nums.push_back(segment_num);
         }
         segment_num++;
     }
 }
 
-std::vector<OperationList> read_bootstrapping_paths(std::ifstream &input_file, OperationList &operations)
+std::vector<OperationList> read_bootstrapping_segments(std::ifstream &input_file, OperationList &operations)
 {
-    std::vector<OperationList> bootstrapping_paths;
+    std::vector<OperationList> bootstrapping_segments;
     std::string line;
 
     while (std::getline(input_file, line))
@@ -331,17 +331,17 @@ std::vector<OperationList> read_bootstrapping_paths(std::ifstream &input_file, O
             continue;
         }
 
-        auto path_num = bootstrapping_paths.size();
+        auto segment_num = bootstrapping_segments.size();
 
-        bootstrapping_paths.emplace_back();
+        bootstrapping_segments.emplace_back();
 
         for (auto op_str : line_as_list)
         {
             auto op_num = std::stoi(op_str);
             auto op_ptr = get_operation_ptr_from_id(operations, op_num);
-            op_ptr->path_nums.push_back(path_num);
-            bootstrapping_paths.back().push_back(op_ptr);
+            op_ptr->segment_nums.push_back(segment_num);
+            bootstrapping_segments.back().push_back(op_ptr);
         }
     }
-    return bootstrapping_paths;
+    return bootstrapping_segments;
 }

@@ -22,7 +22,7 @@ private:
     OperationList operations;
     // ConstantList constants;
     std::map<std::string, int> operation_type_to_latency_map;
-    std::vector<std::vector<OperationPtr>> bootstrapping_paths;
+    std::vector<std::vector<OperationPtr>> bootstrapping_segments;
 
     void parse_lines(std::fstream &);
     void parse_operation_type(std::vector<std::string>);

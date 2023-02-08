@@ -7,13 +7,13 @@
 
 // options.initial_levels = get_list_arg(options_string, "-i", "--initial_levels", help_info, num_sets, 0, stoi_function);
 
-class BootstrappingPathGenerator
+class BootstrappingSegmentGenerator
 {
 public:
-  BootstrappingPathGenerator(int, char **);
+  BootstrappingSegmentGenerator(int, char **);
   bool bootstrapping_files_are_current();
   bool is_in_forced_generation_mode();
-  void generate_bootstrapping_paths();
+  void generate_bootstrapping_segments();
   void write_segments_to_files();
 
 private:
@@ -44,7 +44,7 @@ Arguments:
 
   int gained_levels;
 
-  std::vector<std::vector<OperationPtr>> bootstrapping_paths;
+  std::vector<std::vector<OperationPtr>> bootstrapping_segments;
   OperationList operations;
 
   struct Options
@@ -60,15 +60,15 @@ Arguments:
   std::string standard_output_file_path;
   std::string selective_output_file_path;
 
-  void create_raw_bootstrapping_paths();
-  std::vector<std::vector<OperationPtr>> create_bootstrapping_paths_helper(OperationPtr, std::vector<OperationPtr>, int);
+  void create_raw_bootstrapping_segments();
+  std::vector<std::vector<OperationPtr>> create_bootstrapping_segments_helper(OperationPtr, std::vector<OperationPtr>, int);
 
-  void print_number_of_paths();
-  void print_bootstrapping_paths();
+  void print_number_of_segments();
+  void print_bootstrapping_segments();
 
-  void remove_last_operation_from_bootstrapping_paths();
-  void remove_redundant_bootstrapping_paths();
-  bool paths_are_redundant(std::vector<OperationPtr>, std::vector<OperationPtr>);
+  void remove_last_operation_from_bootstrapping_segments();
+  void remove_redundant_bootstrapping_segments();
+  bool segments_are_redundant(std::vector<OperationPtr>, std::vector<OperationPtr>);
   void write_segments_to_file(std::ofstream &);
   void convert_segments_to_standard();
 

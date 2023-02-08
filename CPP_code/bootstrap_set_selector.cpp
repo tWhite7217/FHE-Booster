@@ -9,8 +9,8 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    BootstrappingPathGenerator path_generator(operations, false, options.num_levels);
-    bootstrapping_paths = path_generator.get_bootstrapping_paths(options.dag_file_path);
+    BootstrappingSegmentGenerator segment_generator(operations, false, options.num_levels);
+    bootstrapping_segments = segment_generator.get_bootstrapping_segments(options.dag_file_path);
 }
 
 void BootstrapSetSelector::choose_and_output_bootstrapping_sets()
@@ -52,9 +52,9 @@ void BootstrapSetSelector::write_lgr_like_format()
 void BootstrapSetSelector::choose_operations_to_bootstrap()
 {
     auto count = 0;
-    while (!bootstrapping_paths_are_satisfied(bootstrapping_paths))
+    while (!bootstrapping_segments_are_satisfied(bootstrapping_segments))
     {
-        max_num_paths = update_num_paths_for_every_operation();
+        max_num_segments = update_num_segments_for_every_operation();
         if (options.slack_weight[set_index] != 0)
         {
             update_all_ESTs_and_LSTs(operations, operation_type_to_latency_map);
@@ -76,16 +76,16 @@ void BootstrapSetSelector::update_all_bootstrap_urgencies()
     }
 
     auto count = 0;
-    for (auto &path : bootstrapping_paths)
+    for (auto &segment : bootstrapping_segments)
     {
-        if (path_is_urgent(path))
+        if (segment_is_urgent(segment))
         {
             count++;
-            auto path_size = path.size();
-            for (double i = 0; i < path_size; i++)
+            auto segment_size = segment.size();
+            for (double i = 0; i < segment_size; i++)
             {
-                path[i]->bootstrap_urgency = std::max(
-                    path[i]->bootstrap_urgency, (i + 1) / path_size);
+                segment[i]->bootstrap_urgency = std::max(
+                    segment[i]->bootstrap_urgency, (i + 1) / segment_size);
             }
         }
     }
@@ -117,34 +117,34 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
 
 double BootstrapSetSelector::get_score(OperationPtr operation)
 {
-    if (operation->num_unsatisfied_paths == 0)
+    if (operation->num_unsatisfied_segments == 0)
     {
         return 0;
     }
 
-    double normalized_num_paths = ((double)operation->num_unsatisfied_paths) / max_num_paths;
+    double normalized_num_segments = ((double)operation->num_unsatisfied_segments) / max_num_segments;
     double normalized_slack = ((double)operation->slack) / max_slack;
 
-    return std::max(options.segments_weight[set_index] * normalized_num_paths +
+    return std::max(options.segments_weight[set_index] * normalized_num_segments +
                         options.slack_weight[set_index] * normalized_slack +
                         options.urgency_weight[set_index] * operation->bootstrap_urgency,
                     0.0);
 }
 
-int BootstrapSetSelector::update_num_paths_for_every_operation()
+int BootstrapSetSelector::update_num_segments_for_every_operation()
 {
     for (auto &operation : operations)
     {
-        operation->num_unsatisfied_paths = 0;
+        operation->num_unsatisfied_segments = 0;
     }
 
-    for (auto path : bootstrapping_paths)
+    for (auto segment : bootstrapping_segments)
     {
-        if (!bootstrapping_path_is_satisfied(path))
+        if (!bootstrapping_segment_is_satisfied(segment))
         {
-            for (auto &operation : path)
+            for (auto &operation : segment)
             {
-                operation->num_unsatisfied_paths++;
+                operation->num_unsatisfied_segments++;
             }
         }
     }
@@ -153,9 +153,9 @@ int BootstrapSetSelector::update_num_paths_for_every_operation()
 
     for (auto &operation : operations)
     {
-        if (operation->num_unsatisfied_paths > max)
+        if (operation->num_unsatisfied_segments > max)
         {
-            max = operation->num_unsatisfied_paths;
+            max = operation->num_unsatisfied_segments;
         }
     }
 

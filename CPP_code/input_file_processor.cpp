@@ -1,5 +1,5 @@
 #include "custom_ddg_format_parser.h"
-#include "bootstrapping_path_generator.h"
+#include "bootstrapping_segment_generator.h"
 
 #include <functional>
 
@@ -10,7 +10,7 @@ int gained_levels;
 
 std::map<std::string, int> operation_type_to_latency_map;
 OperationList operations;
-std::vector<std::vector<OperationPtr>> bootstrapping_paths;
+std::vector<std::vector<OperationPtr>> bootstrapping_segments;
 
 std::fstream output_file;
 
@@ -91,29 +91,29 @@ void write_bootstrapping_latency_to_output_file()
 
 void write_bootstrapping_constraints_to_output_file()
 {
-    for (auto path : bootstrapping_paths)
+    for (auto segment : bootstrapping_segments)
     {
         std::string constraint_string;
         if (using_selective_model)
         {
-            for (auto i = 0; i < path.size() - 1; i++)
+            for (auto i = 0; i < segment.size() - 1; i++)
             {
                 if ((i > 0) && (i % 10 == 0))
                 {
                     constraint_string += "\n";
                 }
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ", " + std::to_string(path[i + 1]->id) + ") + ";
+                constraint_string += "BOOTSTRAPPED(" + std::to_string(segment[i]->id) + ", " + std::to_string(segment[i + 1]->id) + ") + ";
             }
         }
         else
         {
-            for (auto i = 0; i < path.size(); i++)
+            for (auto i = 0; i < segment.size(); i++)
             {
                 if ((i > 0) && (i % 20 == 0))
                 {
                     constraint_string += "\n";
                 }
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(path[i]->id) + ") + ";
+                constraint_string += "BOOTSTRAPPED(" + std::to_string(segment[i]->id) + ") + ";
             }
         }
         constraint_string.pop_back();
@@ -134,10 +134,10 @@ int main(int argc, char *argv[])
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    BootstrappingPathGenerator path_generator(operations, using_selective_model, gained_levels);
-    bootstrapping_paths = path_generator.get_bootstrapping_paths(input_file_path);
-    // bootstrapping_paths = path_generator.generate_bootstrapping_paths();
-    // bootstrapping_paths = path_generator.generate_bootstrapping_paths_for_validation();
+    BootstrappingSegmentGenerator segment_generator(operations, using_selective_model, gained_levels);
+    bootstrapping_segments = segment_generator.get_bootstrapping_segments(input_file_path);
+    // bootstrapping_segments = segment_generator.generate_bootstrapping_segments();
+    // bootstrapping_segments = segment_generator.generate_bootstrapping_segments_for_validation();
 
     output_file.open(output_file_path, std::ios::out);
 

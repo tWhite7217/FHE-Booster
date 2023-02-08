@@ -1,6 +1,6 @@
 #include "custom_ddg_format_parser.h"
 #include "LGRParser.h"
-#include "bootstrapping_path_generator.h"
+#include "bootstrapping_segment_generator.h"
 
 #include <iostream>
 
@@ -13,8 +13,8 @@ public:
 
 private:
     OperationList operations;
-    std::vector<OperationList> bootstrapping_paths;
+    std::vector<OperationList> bootstrapping_segments;
 
-    bool no_path_relies_on_parent_child_bootstrapping_pair(OperationPtr &, OperationPtr &);
-    bool path_relies_on_parent_child_bootstrapping_pair(OperationList &, OperationPtr &, OperationPtr &);
+    bool no_segment_relies_on_parent_child_bootstrapping_pair(OperationPtr &, OperationPtr &);
+    bool segment_relies_on_parent_child_bootstrapping_pair(OperationList &, OperationPtr &, OperationPtr &);
 };

@@ -1,6 +1,6 @@
 BIN = ./bin
 
-shared_depenedencies := $(BIN)/shared_utils.o $(BIN)/custom_ddg_format_parser.o $(BIN)/bootstrapping_path_generator.o
+shared_depenedencies := $(BIN)/shared_utils.o $(BIN)/custom_ddg_format_parser.o $(BIN)/bootstrapping_segment_generator.o
 
 lgr_parser_dependencies := $(BIN)/lex.o $(BIN)/LGRParser.o
 
@@ -14,8 +14,8 @@ $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
 $(BIN)/custom_ddg_format_parser.o: custom_ddg_format_parser.cpp custom_ddg_format_parser.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ custom_ddg_format_parser.cpp
 
-$(BIN)/bootstrapping_path_generator.o: bootstrapping_path_generator.cpp bootstrapping_path_generator.h Makefile
-	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_path_generator.cpp
+$(BIN)/bootstrapping_segment_generator.o: bootstrapping_segment_generator.cpp bootstrapping_segment_generator.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ bootstrapping_segment_generator.cpp
 
 $(BIN)/lex.o: LGRParser.l Makefile
 	flexc++ LGRParser.l
