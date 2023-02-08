@@ -31,7 +31,7 @@ do
     for ((j = 0; j < ${#source_lgrs[@]}; j++))
     do
         if [[ "${source_lgrs[j]}" != "NULL" ]]; then
-            source_lgr_bases+="results/random_graph$i/${num_levels}_levels/bootstrapping_sets/rg${i}_"
+            source_lgr_bases+="results/random_graph$i/${num_levels}_levels/bootstrap_sets/rg${i}_"
         fi
         input_lgrs="$input_lgrs${source_lgr_bases[j]}${source_lgrs[j]},"
     done

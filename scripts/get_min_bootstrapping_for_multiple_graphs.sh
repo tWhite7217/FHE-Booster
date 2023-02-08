@@ -13,12 +13,12 @@ do
     
     mkdir /mnt/d/LINGO64_19/FHE_Model/results/random_graph$i
     mkdir /mnt/d/LINGO64_19/FHE_Model/results/random_graph$i/${num_levels}_levels
-    mkdir /mnt/d/LINGO64_19/FHE_Model/results/random_graph$i/${num_levels}_levels/bootstrapping_sets
+    mkdir /mnt/d/LINGO64_19/FHE_Model/results/random_graph$i/${num_levels}_levels/bootstrap_sets
     
     echo "TAKE D:\LINGO64_19\FHE_Model\FHE_Model_min_bootstrapping.lng
 ALTER ALL 'custom_graph1'random_graph${i}'
 ALTER ALL '0_levels'${num_levels}_levels'
-    DIVERT D:\LINGO64_19\FHE_Model\results\random_graph$i\\${num_levels}_levels\bootstrapping_sets\rg${i}_min_bootstrapping.lgr" > model_customizer.ltf
+    DIVERT D:\LINGO64_19\FHE_Model\results\random_graph$i\\${num_levels}_levels\bootstrap_sets\rg${i}_min_bootstrapping.lgr" > model_customizer.ltf
     
     powershell.exe "RunLingo .\run_solver.ltf"
     

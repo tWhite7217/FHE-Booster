@@ -9,7 +9,7 @@ num_levels=$4
 
 
 # ./scripts/list_schedule_multiple.sh min_bootstrapping.lgr $first_graph_num $last_graph_num min_bootstrapping limited $num_levels $num_cores
-# ./scripts/convert_multiple_to_selective.sh min_bootstrapping bootstrapping_sets min_bootstrapping $first_graph_num $last_graph_num $num_levels
+# ./scripts/convert_multiple_to_selective.sh min_bootstrapping bootstrap_sets min_bootstrapping $first_graph_num $last_graph_num $num_levels
 # ./scripts/list_schedule_multiple.sh min_bootstrapping_converted.lgr $first_graph_num $last_graph_num min_bootstrapping selective $num_levels $num_cores
 
 

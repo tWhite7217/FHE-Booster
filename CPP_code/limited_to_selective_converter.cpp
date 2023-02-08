@@ -11,9 +11,9 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string input_dag_f
     lgr_parser.set_operations(operations);
     lgr_parser.lex();
 
-    auto bootstrapping_segment_generator = BootstrappingSegmentGenerator(operations, true, gained_levels);
-    bootstrapping_segments = bootstrapping_segment_generator.get_bootstrapping_segments(input_dag_file_path);
-    // bootstrapping_segments = bootstrapping_segment_generator.generate_bootstrapping_segments();
+    auto bootstrap_segment_generator = BootstrapSegmentGenerator(operations, true, gained_levels);
+    bootstrap_segments = bootstrap_segment_generator.get_bootstrap_segments(input_dag_file_path);
+    // bootstrap_segments = bootstrap_segment_generator.generate_bootstrap_segments();
 }
 
 void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
@@ -25,7 +25,7 @@ void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
         while (child_it != parent->child_ptrs_that_receive_bootstrapped_result.end())
         {
             auto child = *child_it;
-            if (no_segment_relies_on_parent_child_bootstrapping_pair(parent, child))
+            if (no_segment_relies_on_parent_child_bootstrap_pair(parent, child))
             {
                 child_it = parent->child_ptrs_that_receive_bootstrapped_result.erase(child_it);
                 num_removed++;
@@ -39,11 +39,11 @@ void LimitedToSelectiveConverter::remove_unnecessary_bootstrapped_results()
     std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
 }
 
-bool LimitedToSelectiveConverter::no_segment_relies_on_parent_child_bootstrapping_pair(OperationPtr &parent, OperationPtr &child)
+bool LimitedToSelectiveConverter::no_segment_relies_on_parent_child_bootstrap_pair(OperationPtr &parent, OperationPtr &child)
 {
-    for (auto segment : bootstrapping_segments)
+    for (auto segment : bootstrap_segments)
     {
-        if (segment_relies_on_parent_child_bootstrapping_pair(segment, parent, child))
+        if (segment_relies_on_parent_child_bootstrap_pair(segment, parent, child))
         {
             return false;
         }
@@ -51,7 +51,7 @@ bool LimitedToSelectiveConverter::no_segment_relies_on_parent_child_bootstrappin
     return true;
 }
 
-bool LimitedToSelectiveConverter::segment_relies_on_parent_child_bootstrapping_pair(OperationList &segment, OperationPtr &parent, OperationPtr &child)
+bool LimitedToSelectiveConverter::segment_relies_on_parent_child_bootstrap_pair(OperationList &segment, OperationPtr &parent, OperationPtr &child)
 {
     for (auto i = 0; i < segment.size() - 1; i++)
     {

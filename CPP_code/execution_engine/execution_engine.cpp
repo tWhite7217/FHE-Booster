@@ -619,7 +619,7 @@ int main(int argc, char **argv)
     std::cout << "Done." << std::endl;
     auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
     std::cout << "Eval Time: " << time_span.count() << " seconds." << std::endl;
-    std::cout << "Number of bootstrapping operations: " << num_bootstraps << "." << std::endl;
+    std::cout << "Number of bootstrap operations: " << num_bootstraps << "." << std::endl;
 
     if (options.verify_results)
     {

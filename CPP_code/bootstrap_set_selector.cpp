@@ -9,11 +9,11 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
     operations = input_parser.get_operations();
     operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
 
-    BootstrappingSegmentGenerator segment_generator(operations, false, options.num_levels);
-    bootstrapping_segments = segment_generator.get_bootstrapping_segments(options.dag_file_path);
+    BootstrapSegmentGenerator segment_generator(operations, false, options.num_levels);
+    bootstrap_segments = segment_generator.get_bootstrap_segments(options.dag_file_path);
 }
 
-void BootstrapSetSelector::choose_and_output_bootstrapping_sets()
+void BootstrapSetSelector::choose_and_output_bootstrap_sets()
 {
     while (set_index < num_sets)
     {
@@ -52,7 +52,7 @@ void BootstrapSetSelector::write_lgr_like_format()
 void BootstrapSetSelector::choose_operations_to_bootstrap()
 {
     auto count = 0;
-    while (!bootstrapping_segments_are_satisfied(bootstrapping_segments))
+    while (!bootstrap_segments_are_satisfied(bootstrap_segments))
     {
         max_num_segments = update_num_segments_for_every_operation();
         if (options.slack_weight[set_index] != 0)
@@ -76,7 +76,7 @@ void BootstrapSetSelector::update_all_bootstrap_urgencies()
     }
 
     auto count = 0;
-    for (auto &segment : bootstrapping_segments)
+    for (auto &segment : bootstrap_segments)
     {
         if (segment_is_urgent(segment))
         {
@@ -138,9 +138,9 @@ int BootstrapSetSelector::update_num_segments_for_every_operation()
         operation->num_unsatisfied_segments = 0;
     }
 
-    for (auto segment : bootstrapping_segments)
+    for (auto segment : bootstrap_segments)
     {
-        if (!bootstrapping_segment_is_satisfied(segment))
+        if (!bootstrap_segment_is_satisfied(segment))
         {
             for (auto &operation : segment)
             {
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 {
     BootstrapSetSelector bootstrap_set_selector = BootstrapSetSelector(argc, argv);
 
-    bootstrap_set_selector.choose_and_output_bootstrapping_sets();
+    bootstrap_set_selector.choose_and_output_bootstrap_sets();
 
     return 0;
 }

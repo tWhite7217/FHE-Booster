@@ -1,6 +1,6 @@
 #include "custom_ddg_format_parser.h"
 #include "shared_utils.h"
-#include "bootstrapping_segment_generator.h"
+#include "bootstrap_segment_generator.h"
 
 #include <vector>
 #include <map>
@@ -12,7 +12,7 @@ class BootstrapSetSelector
 {
 public:
   BootstrapSetSelector(int, char **);
-  void choose_and_output_bootstrapping_sets();
+  void choose_and_output_bootstrap_sets();
 
 private:
   const std::string help_info = R"(
@@ -27,7 +27,7 @@ Arguments:
   <dag_file>
     The text file describing the FHE program as a DAG.
   <output_file>
-    The path to the file where the bootstrapping set should be saved.
+    The path to the file where the bootstrap set should be saved.
   <num_levels>
     The number of levels between bootstraps, also called the noise
     threshold.
@@ -36,18 +36,18 @@ Arguments:
     used in choosing operations to bootstrap. All default to 0.
       -s <int>, --segments-weight=<int>
         This attribute correlates to the number of unsatisfied 
-        bootstrapping segments containing the operation.
+        bootstrap segments containing the operation.
       -r <int>, --slack-weight=<int>
         This attribute correlates to the difference between the
         operation's latest and earliest starting times.
       -u <int>, --urgency-weight=<int>
-        This attribute correlates to the current bootstrapping
+        This attribute correlates to the current bootstrap
         urgency level of the operation.
         
 Batching:
   Notice that multiple output files may be specified as a comma-
-  separated list. This is so multiple bootstrapping sets can be created
-  for a single graph without loading that graph's bootstrapping segments
+  separated list. This is so multiple bootstrap sets can be created
+  for a single graph without loading that graph's bootstrap segments
   multiple times. To accomodate this, all used weights must also be
   comma-separated lists of the same length as the list of output files.)";
 
@@ -69,7 +69,7 @@ Batching:
 
   OperationList operations;
   std::map<std::string, int> operation_type_to_latency_map;
-  std::vector<OperationList> bootstrapping_segments;
+  std::vector<OperationList> bootstrap_segments;
 
   void choose_operations_to_bootstrap();
   void write_lgr_like_format();

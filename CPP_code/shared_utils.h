@@ -23,7 +23,7 @@
 //     MUL,
 // };
 
-const int bootstrapping_latency = 300;
+const int bootstrap_latency = 300;
 
 struct Operation;
 
@@ -55,15 +55,15 @@ bool operations_bootstrap_on_same_core(OperationPtr, OperationPtr);
 void remove_chars_from_string(std::string &, std::vector<char>);
 int extract_number_from_string(std::string, size_t, size_t);
 void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
-bool bootstrapping_segments_are_satisfied(std::vector<OperationList> &);
-bool bootstrapping_segments_are_satisfied_for_selective_model(std::vector<OperationList> &);
-int find_unsatisfied_bootstrapping_segment_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
-bool bootstrapping_segment_is_satisfied(OperationList &);
-bool bootstrapping_segment_is_satisfied_for_selective_model(OperationList &);
+bool bootstrap_segments_are_satisfied(std::vector<OperationList> &);
+bool bootstrap_segments_are_satisfied_for_selective_model(std::vector<OperationList> &);
+int find_unsatisfied_bootstrap_segment_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
+bool bootstrap_segment_is_satisfied(OperationList &);
+bool bootstrap_segment_is_satisfied_for_selective_model(OperationList &);
 bool operation_is_bootstrapped(OperationPtr);
 void write_lgr_like_format(std::string, OperationList);
 std::vector<std::string> split_string_by_character(std::string, char);
-std::vector<OperationList> get_bootstrapping_segments();
+std::vector<OperationList> get_bootstrap_segments();
 bool segment_is_urgent(OperationList &);
 bool operation_has_no_parents(OperationPtr &);
 bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
@@ -79,7 +79,7 @@ void update_latest_start_time(OperationPtr &, int, const std::map<std::string, i
 void update_all_ESTs_and_LSTs(OperationList &, const std::map<std::string, int> &);
 int update_all_slacks(OperationList &);
 void add_segment_num_info_to_all_operations(const std::vector<OperationList> &);
-std::vector<OperationList> read_bootstrapping_segments(std::ifstream &, OperationList &);
+std::vector<OperationList> read_bootstrap_segments(std::ifstream &, OperationList &);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)

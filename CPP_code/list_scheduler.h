@@ -1,7 +1,7 @@
 #include "LGRParser.h"
 #include "custom_ddg_format_parser.h"
 #include "shared_utils.h"
-#include "bootstrapping_segment_generator.h"
+#include "bootstrap_segment_generator.h"
 
 #include <vector>
 #include <map>
@@ -56,7 +56,7 @@ Options:
 
     OperationList operations;
     std::map<std::string, int> operation_type_to_latency_map;
-    std::vector<OperationList> bootstrapping_segments;
+    std::vector<OperationList> bootstrap_segments;
     LGRParser lgr_parser;
 
     struct SlackCmp

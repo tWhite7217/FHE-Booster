@@ -281,7 +281,7 @@ void ListScheduler::start_bootstrapping_necessary_operations()
     {
         if (operation_is_bootstrapped(operation))
         {
-            bootstrapping_operations[operation] = bootstrapping_latency;
+            bootstrapping_operations[operation] = bootstrap_latency;
             core_availability[operation->core_num] = false;
         }
     }
@@ -291,7 +291,7 @@ void ListScheduler::start_bootstrapping_ready_operations_for_unlimited_model()
 {
     for (auto operation : bootstrapping_queue)
     {
-        bootstrapping_operations[operation] = bootstrapping_latency;
+        bootstrapping_operations[operation] = bootstrap_latency;
     }
     bootstrapping_queue.clear();
 }
@@ -305,7 +305,7 @@ void ListScheduler::start_bootstrapping_ready_operations_for_limited_model()
         operation->bootstrap_start_time = clock_cycle;
         operation->core_num = available_core_num;
         core_availability[available_core_num] = false;
-        bootstrapping_operations[operation] = bootstrapping_latency;
+        bootstrapping_operations[operation] = bootstrap_latency;
         bootstrapping_queue.erase(bootstrapping_queue.begin());
         available_core_num = get_available_core_num();
     }

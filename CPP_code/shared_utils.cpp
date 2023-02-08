@@ -41,21 +41,21 @@ void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList op
     }
 }
 
-bool bootstrapping_segments_are_satisfied(std::vector<OperationList> &bootstrapping_segments)
+bool bootstrap_segments_are_satisfied(std::vector<OperationList> &bootstrap_segments)
 {
-    return find_unsatisfied_bootstrapping_segment_index(bootstrapping_segments, bootstrapping_segment_is_satisfied) == -1;
+    return find_unsatisfied_bootstrap_segment_index(bootstrap_segments, bootstrap_segment_is_satisfied) == -1;
 }
 
-bool bootstrapping_segments_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrapping_segments)
+bool bootstrap_segments_are_satisfied_for_selective_model(std::vector<OperationList> &bootstrap_segments)
 {
-    return find_unsatisfied_bootstrapping_segment_index(bootstrapping_segments, bootstrapping_segment_is_satisfied_for_selective_model) == -1;
+    return find_unsatisfied_bootstrap_segment_index(bootstrap_segments, bootstrap_segment_is_satisfied_for_selective_model) == -1;
 }
 
-int find_unsatisfied_bootstrapping_segment_index(std::vector<OperationList> &bootstrapping_segments, std::function<bool(OperationList &)> segment_is_satisfied)
+int find_unsatisfied_bootstrap_segment_index(std::vector<OperationList> &bootstrap_segments, std::function<bool(OperationList &)> segment_is_satisfied)
 {
-    for (int i = 0; i < bootstrapping_segments.size(); i++)
+    for (int i = 0; i < bootstrap_segments.size(); i++)
     {
-        if (!segment_is_satisfied(bootstrapping_segments[i]))
+        if (!segment_is_satisfied(bootstrap_segments[i]))
         {
             return i;
         }
@@ -63,9 +63,9 @@ int find_unsatisfied_bootstrapping_segment_index(std::vector<OperationList> &boo
     return -1;
 }
 
-bool bootstrapping_segment_is_satisfied(OperationList &bootstrapping_segment)
+bool bootstrap_segment_is_satisfied(OperationList &bootstrap_segment)
 {
-    for (auto operation : bootstrapping_segment)
+    for (auto operation : bootstrap_segment)
     {
         if (operation_is_bootstrapped(operation))
         {
@@ -75,11 +75,11 @@ bool bootstrapping_segment_is_satisfied(OperationList &bootstrapping_segment)
     return false;
 }
 
-bool bootstrapping_segment_is_satisfied_for_selective_model(OperationList &bootstrapping_segment)
+bool bootstrap_segment_is_satisfied_for_selective_model(OperationList &bootstrap_segment)
 {
-    for (auto i = 0; i < bootstrapping_segment.size() - 1; i++)
+    for (auto i = 0; i < bootstrap_segment.size() - 1; i++)
     {
-        if (vector_contains_element(bootstrapping_segment[i]->child_ptrs_that_receive_bootstrapped_result, bootstrapping_segment[i + 1]))
+        if (vector_contains_element(bootstrap_segment[i]->child_ptrs_that_receive_bootstrapped_result, bootstrap_segment[i + 1]))
         {
             return true;
         }
@@ -107,7 +107,7 @@ std::vector<std::string> split_string_by_character(std::string str, char separat
 bool segment_is_urgent(OperationList &segment)
 {
     auto first_operation = segment.front();
-    return !bootstrapping_segment_is_satisfied(segment) && operation_parents_meet_urgency_criteria(first_operation);
+    return !bootstrap_segment_is_satisfied(segment) && operation_parents_meet_urgency_criteria(first_operation);
 }
 
 bool operation_parents_meet_urgency_criteria(OperationPtr &operation)
@@ -211,7 +211,7 @@ void update_earliest_start_time(OperationPtr &operation, const std::map<std::str
         int parent_latency = operation_type_to_latency_map.at(parent->type);
         if (vector_contains_element(parent->child_ptrs_that_receive_bootstrapped_result, operation))
         {
-            parent_latency += bootstrapping_latency;
+            parent_latency += bootstrap_latency;
         }
         int possible_est =
             parent->earliest_start_time +
@@ -254,7 +254,7 @@ void update_latest_start_time(OperationPtr &operation, int earliest_possible_pro
             int child_latency = operation_type_to_latency_map.at(child->type);
             if (operation_is_bootstrapped(child))
             {
-                child_latency += bootstrapping_latency;
+                child_latency += bootstrap_latency;
             }
             int possible_lst =
                 child->latest_start_time -
@@ -304,10 +304,10 @@ int update_all_slacks(OperationList &operations)
     return max;
 }
 
-void add_segment_num_info_to_all_operations(const std::vector<OperationList> &bootstrapping_segments)
+void add_segment_num_info_to_all_operations(const std::vector<OperationList> &bootstrap_segments)
 {
     auto segment_num = 0;
-    for (const auto &segment : bootstrapping_segments)
+    for (const auto &segment : bootstrap_segments)
     {
         for (auto &operation : segment)
         {
@@ -317,9 +317,9 @@ void add_segment_num_info_to_all_operations(const std::vector<OperationList> &bo
     }
 }
 
-std::vector<OperationList> read_bootstrapping_segments(std::ifstream &input_file, OperationList &operations)
+std::vector<OperationList> read_bootstrap_segments(std::ifstream &input_file, OperationList &operations)
 {
-    std::vector<OperationList> bootstrapping_segments;
+    std::vector<OperationList> bootstrap_segments;
     std::string line;
 
     while (std::getline(input_file, line))
@@ -331,17 +331,17 @@ std::vector<OperationList> read_bootstrapping_segments(std::ifstream &input_file
             continue;
         }
 
-        auto segment_num = bootstrapping_segments.size();
+        auto segment_num = bootstrap_segments.size();
 
-        bootstrapping_segments.emplace_back();
+        bootstrap_segments.emplace_back();
 
         for (auto op_str : line_as_list)
         {
             auto op_num = std::stoi(op_str);
             auto op_ptr = get_operation_ptr_from_id(operations, op_num);
             op_ptr->segment_nums.push_back(segment_num);
-            bootstrapping_segments.back().push_back(op_ptr);
+            bootstrap_segments.back().push_back(op_ptr);
         }
     }
-    return bootstrapping_segments;
+    return bootstrap_segments;
 }

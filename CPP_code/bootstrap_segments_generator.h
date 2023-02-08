@@ -7,13 +7,13 @@
 
 // options.initial_levels = get_list_arg(options_string, "-i", "--initial_levels", help_info, num_sets, 0, stoi_function);
 
-class BootstrappingSegmentGenerator
+class BootstrapSegmentGenerator
 {
 public:
-  BootstrappingSegmentGenerator(int, char **);
-  bool bootstrapping_files_are_current();
+  BootstrapSegmentGenerator(int, char **);
+  bool bootstrap_files_are_current();
   bool is_in_forced_generation_mode();
-  void generate_bootstrapping_segments();
+  void generate_bootstrap_segments();
   void write_segments_to_files();
 
 private:
@@ -31,20 +31,20 @@ Arguments:
   <dag_file>
     The text file describing the FHE program as a DAG.
   <output_file>
-    The path to the file where the bootstrapping set should be saved.
+    The path to the file where the bootstrap set should be saved.
   <num_levels>
     The number of levels between bootstraps, also called the noise
     threshold.
   -i <int>, --initial_levels=<int>
-    The number of levels to ignore before generating bootstrapping
+    The number of levels to ignore before generating bootstrap
     segments. Defaults to 0.
   -F, --force
-    Forces generation of bootstrapping segments, even if the files
+    Forces generation of bootstrap segments, even if the files
     seem current.)";
 
   int gained_levels;
 
-  std::vector<std::vector<OperationPtr>> bootstrapping_segments;
+  std::vector<std::vector<OperationPtr>> bootstrap_segments;
   OperationList operations;
 
   struct Options
@@ -60,14 +60,14 @@ Arguments:
   std::string standard_output_file_path;
   std::string selective_output_file_path;
 
-  void create_raw_bootstrapping_segments();
-  std::vector<std::vector<OperationPtr>> create_bootstrapping_segments_helper(OperationPtr, std::vector<OperationPtr>, int);
+  void create_raw_bootstrap_segments();
+  std::vector<std::vector<OperationPtr>> create_bootstrap_segments_helper(OperationPtr, std::vector<OperationPtr>, int);
 
   void print_number_of_segments();
-  void print_bootstrapping_segments();
+  void print_bootstrap_segments();
 
-  void remove_last_operation_from_bootstrapping_segments();
-  void remove_redundant_bootstrapping_segments();
+  void remove_last_operation_from_bootstrap_segments();
+  void remove_redundant_bootstrap_segments();
   bool segments_are_redundant(std::vector<OperationPtr>, std::vector<OperationPtr>);
   void write_segments_to_file(std::ofstream &);
   void convert_segments_to_standard();

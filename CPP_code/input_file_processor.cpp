@@ -1,5 +1,5 @@
 #include "custom_ddg_format_parser.h"
-#include "bootstrapping_segment_generator.h"
+#include "bootstrap_segment_generator.h"
 
 #include <functional>
 
@@ -10,7 +10,7 @@ int gained_levels;
 
 std::map<std::string, int> operation_type_to_latency_map;
 OperationList operations;
-std::vector<std::vector<OperationPtr>> bootstrapping_segments;
+std::vector<std::vector<OperationPtr>> bootstrap_segments;
 
 std::fstream output_file;
 
@@ -84,14 +84,14 @@ void write_operation_dependencies_to_output_file()
     }
 }
 
-void write_bootstrapping_latency_to_output_file()
+void write_bootstrap_latency_to_output_file()
 {
-    output_file << bootstrapping_latency << std::endl;
+    output_file << bootstrap_latency << std::endl;
 }
 
 void write_bootstrapping_constraints_to_output_file()
 {
-    for (auto segment : bootstrapping_segments)
+    for (auto segment : bootstrap_segments)
     {
         std::string constraint_string;
         if (using_selective_model)
@@ -134,10 +134,10 @@ int main(int argc, char *argv[])
     read_command_line_args(argc, argv);
     get_info_from_input_parser();
 
-    BootstrappingSegmentGenerator segment_generator(operations, using_selective_model, gained_levels);
-    bootstrapping_segments = segment_generator.get_bootstrapping_segments(input_file_path);
-    // bootstrapping_segments = segment_generator.generate_bootstrapping_segments();
-    // bootstrapping_segments = segment_generator.generate_bootstrapping_segments_for_validation();
+    BootstrapSegmentGenerator segment_generator(operations, using_selective_model, gained_levels);
+    bootstrap_segments = segment_generator.get_bootstrap_segments(input_file_path);
+    // bootstrap_segments = segment_generator.generate_bootstrap_segments();
+    // bootstrap_segments = segment_generator.generate_bootstrap_segments_for_validation();
 
     output_file.open(output_file_path, std::ios::out);
 
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
         write_operation_list_to_output_file,
         write_operation_types_to_output_file,
         write_operation_dependencies_to_output_file,
-        // write_bootstrapping_latency_to_output_file,
+        // write_bootstrap_latency_to_output_file,
         write_bootstrapping_constraints_to_output_file};
 
     for (auto write_function : write_functions)

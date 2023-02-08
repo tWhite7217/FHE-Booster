@@ -33,7 +33,7 @@ ScheduleInfo parse_schedule(CommandLineOptions options)
 
         if (options.mode == ALAP && operation == "BOOT")
         {
-          std::cout << "ERROR: ALAP mode schedules cannot contain bootstrapping operations." << std::endl;
+          std::cout << "ERROR: ALAP mode schedules cannot contain bootstrap operations." << std::endl;
           exit(-1);
         }
         else
