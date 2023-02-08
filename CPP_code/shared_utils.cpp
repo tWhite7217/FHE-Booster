@@ -145,7 +145,7 @@ bool operation_has_multiplication_child(const OperationPtr &operation)
     return false;
 }
 
-bool arg_exists(const std::string options_string, const std::string &short_form, const std::string &long_form)
+bool arg_exists(const std::string &options_string, const std::string &short_form, const std::string &long_form)
 {
     bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
     bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;

@@ -6,8 +6,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// options.initial_levels = get_list_arg(options_string, "-i", "--initial_levels", help_info, num_sets, 0, stoi_function);
-
 class BootstrapSegmentGenerator
 {
 public:

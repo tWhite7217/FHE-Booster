@@ -25,7 +25,7 @@ bool BootstrapSegmentGenerator::bootstrap_files_are_current()
     struct stat standard_file_info;
     struct stat selective_file_info;
 
-    stat(executable_file.c_str(), &executable_file_info);
+    stat(executable_filename.c_str(), &executable_file_info);
     stat(options.dag_filename.c_str(), &dag_file_info);
     auto result1 = stat(standard_output_filename.c_str(), &standard_file_info);
     auto result2 = stat(selective_output_filename.c_str(), &selective_file_info);

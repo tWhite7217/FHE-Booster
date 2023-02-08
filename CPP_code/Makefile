@@ -6,7 +6,7 @@ lgr_parser_dependencies := $(BIN)/lex.o $(BIN)/LGRParser.o
 
 CPP_FLAGS = -std=c++17 -O3
 
-all: bootstrap_set_selector.out list_scheduler.out limited_to_selective_converter.out input_file_processor.out random_graph_generator.out
+all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out limited_to_selective_converter.out ldt_generator.out random_graph_generator.out
 
 $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ shared_utils.cpp
@@ -45,11 +45,11 @@ $(BIN)/limited_to_selective_converter.o: limited_to_selective_converter.cpp limi
 limited_to_selective_converter.out: $(BIN)/limited_to_selective_converter.o $(shared_depenedencies) $(lgr_parser_dependencies)
 	g++ $(CPP_FLAGS) -o $@ $(BIN)/limited_to_selective_converter.o $(shared_depenedencies) $(lgr_parser_dependencies)
 
-$(BIN)/input_file_processor.o: input_file_processor.cpp Makefile
-	g++ $(CPP_FLAGS) -c -o $@ input_file_processor.cpp
+$(BIN)/ldt_generator.o: ldt_generator.cpp Makefile
+	g++ $(CPP_FLAGS) -c -o $@ ldt_generator.cpp
 
-input_file_processor.out: $(BIN)/input_file_processor.o $(shared_depenedencies)
-	g++ $(CPP_FLAGS) -o $@ $(BIN)/input_file_processor.o $(shared_depenedencies)
+ldt_generator.out: $(BIN)/ldt_generator.o $(shared_depenedencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/ldt_generator.o $(shared_depenedencies)
 
 $(BIN)/random_graph_generator.o: random_graph_generator.cpp random_graph_generator.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ random_graph_generator.cpp
