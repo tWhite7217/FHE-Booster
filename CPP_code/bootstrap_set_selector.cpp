@@ -4,94 +4,41 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
 {
     parse_args(argc, argv);
 
-    InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(options.dag_filename);
-    operations = input_parser.get_operations();
-    operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
+    Program::ConstructorInput in;
+    in.dag_filename = options.dag_filename;
+    in.segments_filename = options.segments_filename;
 
-    std::ifstream bootstrap_file(options.bootstrap_filename);
-    bootstrap_segments = read_bootstrap_segments(bootstrap_file, operations);
+    program = Program(in);
 }
 
 void BootstrapSetSelector::choose_and_output_bootstrap_sets()
 {
     while (set_index < num_sets)
     {
-        reset();
+        program.reset_bootstrap_set();
         print_options();
         choose_operations_to_bootstrap();
-        write_lgr_like_format();
+        program.write_bootstrapping_set_to_file(options.output_filenames[set_index] + ".lgr");
         set_index++;
     }
-}
-
-void BootstrapSetSelector::reset()
-{
-    for (auto operation : operations)
-    {
-        operation->child_ptrs_that_receive_bootstrapped_result.clear();
-    }
-}
-
-void BootstrapSetSelector::write_lgr_like_format()
-{
-    std::ofstream output_file;
-    output_file.open(options.output_filenames[set_index] + ".lgr");
-
-    for (auto operation : operations)
-    {
-        if (operation_is_bootstrapped(operation))
-        {
-            output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
-        }
-    }
-
-    output_file.close();
 }
 
 void BootstrapSetSelector::choose_operations_to_bootstrap()
 {
     auto count = 0;
-    while (!bootstrap_segments_are_satisfied(bootstrap_segments))
+    while (!program.bootstrap_segments_are_satisfied())
     {
-        max_num_segments = update_num_segments_for_every_operation();
+        max_num_segments = program.update_num_segments_for_every_operation();
         if (options.slack_weight[set_index] != 0)
         {
-            update_all_ESTs_and_LSTs(operations, operation_type_to_latency_map);
-            max_slack = update_all_slacks(operations);
+            program.update_ESTs_and_LSTs();
+            max_slack = program.get_maximum_slack();
         }
         if (options.urgency_weight[set_index] != 0)
         {
-            update_all_bootstrap_urgencies();
+            program.update_all_bootstrap_urgencies();
         }
         choose_operation_to_bootstrap_based_on_score();
-    }
-}
-
-void BootstrapSetSelector::update_all_bootstrap_urgencies()
-{
-    for (auto &operation : operations)
-    {
-        operation->bootstrap_urgency = -1;
-    }
-
-    auto count = 0;
-    for (auto &segment : bootstrap_segments)
-    {
-        if (segment_is_urgent(segment))
-        {
-            count++;
-            auto segment_size = segment.size();
-            for (double i = 0; i < segment_size; i++)
-            {
-                segment[i]->bootstrap_urgency = std::max(
-                    segment[i]->bootstrap_urgency, (i + 1) / segment_size);
-            }
-        }
-    }
-    if (count == 0)
-    {
-        std::cout << "here" << std::endl;
     }
 }
 
@@ -99,9 +46,9 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
 {
     auto max_score = -1;
     OperationPtr max_score_operation;
-    for (auto &operation : operations)
+    for (const auto &operation : program)
     {
-        if (!operation_is_bootstrapped(operation))
+        if (!operation->is_bootstrapped())
         {
             auto score = get_score(operation);
             if (score > max_score)
@@ -112,54 +59,27 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
         }
     }
 
-    max_score_operation->child_ptrs_that_receive_bootstrapped_result = max_score_operation->child_ptrs;
+    for (const auto &child : max_score_operation->get_child_ptrs())
+    {
+        max_score_operation->add_bootstrap_child(child);
+    }
 }
 
-double BootstrapSetSelector::get_score(OperationPtr operation)
+double BootstrapSetSelector::get_score(const OperationPtr &operation)
 {
-    if (operation->num_unsatisfied_segments == 0)
+    auto num_segments = operation->get_num_unsatisfied_segments();
+    if (num_segments == 0)
     {
         return 0;
     }
 
-    double normalized_num_segments = ((double)operation->num_unsatisfied_segments) / max_num_segments;
-    double normalized_slack = ((double)operation->slack) / max_slack;
+    double normalized_num_segments = ((double)num_segments) / max_num_segments;
+    double normalized_slack = ((double)operation->get_slack()) / max_slack;
 
     return std::max(options.segments_weight[set_index] * normalized_num_segments +
                         options.slack_weight[set_index] * normalized_slack +
-                        options.urgency_weight[set_index] * operation->bootstrap_urgency,
+                        options.urgency_weight[set_index] * operation->get_bootstrap_urgency(),
                     0.0);
-}
-
-int BootstrapSetSelector::update_num_segments_for_every_operation()
-{
-    for (auto &operation : operations)
-    {
-        operation->num_unsatisfied_segments = 0;
-    }
-
-    for (auto segment : bootstrap_segments)
-    {
-        if (!bootstrap_segment_is_satisfied(segment))
-        {
-            for (auto &operation : segment)
-            {
-                operation->num_unsatisfied_segments++;
-            }
-        }
-    }
-
-    int max = 0;
-
-    for (auto &operation : operations)
-    {
-        if (operation->num_unsatisfied_segments > max)
-        {
-            max = operation->num_unsatisfied_segments;
-        }
-    }
-
-    return max;
 }
 
 void BootstrapSetSelector::parse_args(int argc, char **argv)
@@ -171,7 +91,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     }
 
     options.dag_filename = argv[1];
-    options.bootstrap_filename = argv[2];
+    options.segments_filename = argv[2];
     options.output_filenames = split_string_by_character(argv[3], ',');
     num_sets = options.output_filenames.size();
 
@@ -194,7 +114,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
 void BootstrapSetSelector::print_options()
 {
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
-    std::cout << "bootstrap_filename: " << options.bootstrap_filename << std::endl;
+    std::cout << "segments_filename: " << options.segments_filename << std::endl;
     std::cout << "output_filename: " << options.output_filenames[set_index] << std::endl;
     std::cout << "num_levels: " << options.num_levels << std::endl;
     std::cout << "segments_weight: " << options.segments_weight[set_index] << std::endl;

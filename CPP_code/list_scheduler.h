@@ -1,5 +1,5 @@
 #include "LGRParser.h"
-#include "custom_ddg_format_parser.h"
+#include "program.h"
 #include "shared_utils.h"
 #include "bootstrap_segments_generator.h"
 
@@ -14,19 +14,18 @@ class ListScheduler
 public:
     ListScheduler(int, char **);
 
-    // OperationList get_operations();
-
     void perform_list_scheduling();
 
     void generate_start_times_and_solver_latency();
     void generate_core_assignments();
 
-    void write_lgr_like_format();
-    void write_assembly_like_format();
+    void write_sched_to_file(const std::string &);
+    void write_to_output_files();
 
 private:
     const std::string help_info = R"(
-Usage: ./list_scheduler <dag_file> 
+Usage: ./list_scheduler <dag_file>
+                        <latency_file>
                         <output_file>
                         [<options>]
 
@@ -42,8 +41,9 @@ Options:
     struct Options
     {
         std::string dag_filename;
+        std::string latency_filename;
         std::string output_filename;
-        std::string lgr_filename = "NULL";
+        std::string bootstrap_filename = "NULL";
         int num_threads = 1;
     } options;
 
@@ -54,16 +54,13 @@ Options:
     bool create_core_assignments;
     std::vector<std::string> core_schedules;
 
-    OperationList operations;
-    std::map<std::string, int> operation_type_to_latency_map;
-    std::vector<OperationList> bootstrap_segments;
-    LGRParser lgr_parser;
+    Program program;
 
     struct SlackCmp
     {
         bool operator()(const OperationPtr &a, const OperationPtr &b) const
         {
-            return a->slack < b->slack;
+            return a->get_slack() < b->get_slack();
         }
     };
 
@@ -71,8 +68,9 @@ Options:
     std::map<OperationPtr, int> running_operations;
     std::map<OperationPtr, int> bootstrapping_operations;
     std::multiset<OperationPtr, SlackCmp> prioritized_unstarted_operations;
-    OperationList ready_operations;
+    OpVector ready_operations;
     int clock_cycle;
+    int bootstrap_latency;
 
     std::unordered_set<OperationPtr> finished_running_operations;
     std::unordered_set<OperationPtr> finished_bootstrapping_operations;

@@ -8,24 +8,21 @@
 #include <map>
 
 #include "shared_utils.h"
+#include "program.h"
+#include "LGRParser.h"
 
 class InputParser
 {
 public:
-    // InputParser();
-    void parse_input_to_generate_operations(std::string);
-
-    std::map<std::string, int> get_operation_type_to_latency_map();
-    OperationList get_operations();
+    LatencyMap parse_latency_file(const std::string &);
+    OpVector parse_dag_file(const std::string &);
+    OpVector parse_dag_file_with_bootstrap_file(const std::string &, const std::string &);
+    std::vector<BootstrapSegment> parse_segments_file(const std::string &);
 
 private:
-    OperationList operations;
-    // ConstantList constants;
-    std::map<std::string, int> operation_type_to_latency_map;
-    std::vector<std::vector<OperationPtr>> bootstrap_segments;
+    OpVector operations;
 
-    void parse_lines(std::ifstream &);
-    void parse_operation_type(std::vector<std::string>);
-    void parse_operation_and_its_dependences(std::vector<std::string>);
-    void parse_constant(std::vector<std::string> line);
+    OperationType get_operation_type_from_string(const std::string &);
+    void parse_operation_and_its_dependences(const std::vector<std::string> &);
+    void parse_constant(std::vector<std::string>);
 };

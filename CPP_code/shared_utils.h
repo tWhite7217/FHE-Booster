@@ -1,4 +1,3 @@
-
 #ifndef shared_utils_INCLUDED_
 #define shared_utils_INCLUDED_
 
@@ -17,69 +16,19 @@
 #include <sstream>
 #include <cmath>
 
-// enum class OperationType
-// {
-//     ADD,
-//     MUL,
-// };
-
-const int bootstrap_latency = 300;
-
-struct Operation;
-
-using OperationPtr = std::shared_ptr<Operation>;
-
-struct Operation
+enum class BootstrapMode
 {
-    std::string type;
-    int id;
-    std::vector<OperationPtr> parent_ptrs;
-    std::vector<int> constant_parent_ids;
-    std::vector<OperationPtr> child_ptrs;
-    std::vector<OperationPtr> child_ptrs_that_receive_bootstrapped_result;
-    int start_time;
-    int bootstrap_start_time = 0;
-    int core_num = 0;
-    int earliest_start_time;
-    int latest_start_time;
-    int slack;
-    double bootstrap_urgency;
-    int num_unsatisfied_segments;
-    std::vector<size_t> segment_nums;
+    COMPLETE,
+    SELECTIVE
 };
 
-using OperationList = std::vector<OperationPtr>;
-
-OperationPtr get_operation_ptr_from_id(OperationList &, int);
-bool operations_bootstrap_on_same_core(OperationPtr, OperationPtr);
 void remove_chars_from_string(std::string &, std::vector<char>);
 int extract_number_from_string(std::string, size_t, size_t);
-void add_child_ptrs_to_operation_list_with_existing_parent_ptrs(OperationList);
-bool bootstrap_segments_are_satisfied(std::vector<OperationList> &);
-bool bootstrap_segments_are_satisfied_for_selective_model(std::vector<OperationList> &);
-int find_unsatisfied_bootstrap_segment_index(std::vector<OperationList> &, std::function<bool(OperationList &)>);
-bool bootstrap_segment_is_satisfied(OperationList &);
-bool bootstrap_segment_is_satisfied_for_selective_model(OperationList &);
-bool operation_is_bootstrapped(OperationPtr);
-void write_lgr_like_format(std::string, OperationList);
 std::vector<std::string> split_string_by_character(std::string, char);
-std::vector<OperationList> get_bootstrap_segments();
-bool segment_is_urgent(OperationList &);
-bool operation_has_no_parents(OperationPtr &);
-bool operation_receives_a_bootstrapped_result_from_parent(const OperationPtr &, const OperationPtr &);
-bool operation_parents_meet_urgency_criteria(OperationPtr &);
-bool operation_has_multiplication_child(const OperationPtr &);
 bool arg_exists(const std::string &, const std::string &, const std::string &);
 std::string get_arg(const std::string &, const std::string &, const std::string &, const std::string &);
 void print_size_mismatch_error(const size_t &, const size_t &, const std::string &, const std::string &);
 bool bool_arg_converter(const std::string &);
-void update_earliest_start_time(OperationPtr &, const std::map<std::string, int> &);
-int get_earliest_possible_program_end_time(OperationList &, const std::map<std::string, int> &);
-void update_latest_start_time(OperationPtr &, int, const std::map<std::string, int> &);
-void update_all_ESTs_and_LSTs(OperationList &, const std::map<std::string, int> &);
-int update_all_slacks(OperationList &);
-void add_segment_num_info_to_all_operations(const std::vector<OperationList> &);
-std::vector<OperationList> read_bootstrap_segments(std::ifstream &, OperationList &);
 
 template <typename T>
 bool vector_contains_element(const std::vector<T> &vector, const T &element)

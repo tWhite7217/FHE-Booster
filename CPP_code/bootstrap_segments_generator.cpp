@@ -9,8 +9,7 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     selective_output_filename = options.output_filename + "_selective.txt";
 
     InputParser parser;
-    parser.parse_input_to_generate_operations(options.dag_filename);
-    operations = parser.get_operations();
+    operations = parser.parse_dag_file(options.dag_filename);
 }
 
 bool BootstrapSegmentGenerator::is_in_forced_generation_mode()
@@ -18,7 +17,7 @@ bool BootstrapSegmentGenerator::is_in_forced_generation_mode()
     return options.force_generation;
 }
 
-bool BootstrapSegmentGenerator::bootstrap_files_are_current()
+bool BootstrapSegmentGenerator::segments_files_are_current()
 {
     struct stat executable_file_info;
     struct stat dag_file_info;
@@ -96,8 +95,8 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
 {
     for (auto operation : operations)
     {
-        std::vector<std::vector<OperationPtr>> bootstrap_segments_to_add;
-        if (operation->type == "MUL")
+        std::vector<OpVector> bootstrap_segments_to_add;
+        if (operation->get_type() == OperationType::MUL)
         {
             bootstrap_segments_to_add = create_bootstrap_segments_helper(operation, {}, 0);
         }
@@ -107,7 +106,7 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     class comparator_class
     {
     public:
-        bool operator()(std::vector<OperationPtr> segment1, std::vector<OperationPtr> segment2)
+        bool operator()(OpVector segment1, OpVector segment2)
         {
             if (segment1.back() == segment2.back())
             {
@@ -115,7 +114,7 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
             }
             else
             {
-                return segment1.back()->id < segment2.back()->id;
+                return segment1.back()->get_id() < segment2.back()->get_id();
             }
         }
     };
@@ -140,17 +139,17 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     }
 }
 
-std::vector<std::vector<OperationPtr>> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, std::vector<OperationPtr> segment, int num_multiplications)
+std::vector<OpVector> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, OpVector segment, int num_multiplications)
 {
-    if (operation->type == "MUL")
+    if (operation->get_type() == OperationType::MUL)
     {
         num_multiplications++;
     }
     segment.push_back(operation);
-    if (num_multiplications >= gained_levels && operation_has_multiplication_child(operation))
+    if (num_multiplications >= gained_levels && operation->has_multiplication_child())
     {
-        std::vector<OperationList> segments_to_return;
-        for (auto child : operation->child_ptrs)
+        std::vector<OpVector> segments_to_return;
+        for (auto child : operation->get_child_ptrs())
         {
             auto segment_to_return = segment;
             segment_to_return.push_back(child);
@@ -158,15 +157,15 @@ std::vector<std::vector<OperationPtr>> BootstrapSegmentGenerator::create_bootstr
         }
         return segments_to_return;
     }
-    else if (operation->child_ptrs.size() == 0)
+    else if (operation->get_child_ptrs().size() == 0)
     {
         return {};
     }
 
-    std::vector<OperationList> segments_to_return;
-    for (auto child : operation->child_ptrs)
+    std::vector<OpVector> segments_to_return;
+    for (auto child : operation->get_child_ptrs())
     {
-        std::vector<std::vector<OperationPtr>> segments_to_add;
+        std::vector<OpVector> segments_to_add;
         segments_to_add = create_bootstrap_segments_helper(child, segment, num_multiplications);
         segments_to_return.insert(segments_to_return.end(), segments_to_add.begin(), segments_to_add.end());
     }
@@ -209,7 +208,7 @@ void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
     std::cout << "Number of redundant bootstrap segments removed: " << redundant_count << std::endl;
 }
 
-bool BootstrapSegmentGenerator::segments_are_redundant(std::vector<OperationPtr> smaller_segment, std::vector<OperationPtr> larger_segment)
+bool BootstrapSegmentGenerator::segments_are_redundant(OpVector smaller_segment, OpVector larger_segment)
 {
     auto j = 0;
     auto size_diff = larger_segment.size() - smaller_segment.size();
@@ -233,7 +232,7 @@ void BootstrapSegmentGenerator::print_number_of_segments()
     for (auto operation : operations)
     {
         num_segments_to[operation] = 1;
-        for (auto parent : operation->parent_ptrs)
+        for (auto parent : operation->get_parent_ptrs())
         {
             num_segments_to[operation] += num_segments_to[parent] + 1;
         }
@@ -252,7 +251,7 @@ void BootstrapSegmentGenerator::print_bootstrap_segments()
     {
         for (auto operation : segment)
         {
-            std::cout << operation->id << ",";
+            std::cout << operation->get_id() << ",";
         }
         std::cout << std::endl;
     }
@@ -264,7 +263,7 @@ void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_fil
     {
         for (auto operation : segment)
         {
-            output_file << operation->id << ",";
+            output_file << operation->get_id() << ",";
         }
         output_file << std::endl;
     }
@@ -301,7 +300,7 @@ int main(int argc, char **argv)
 {
     auto generator = BootstrapSegmentGenerator(argc, argv);
 
-    if (generator.is_in_forced_generation_mode() || !generator.bootstrap_files_are_current())
+    if (generator.is_in_forced_generation_mode() || !generator.segments_files_are_current())
     {
         generator.generate_bootstrap_segments();
         generator.write_segments_to_files();

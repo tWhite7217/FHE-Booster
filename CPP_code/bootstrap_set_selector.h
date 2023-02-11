@@ -1,4 +1,4 @@
-#include "custom_ddg_format_parser.h"
+#include "program.h"
 #include "shared_utils.h"
 
 #include <vector>
@@ -16,7 +16,7 @@ public:
 private:
   const std::string help_info = R"(
 Usage: ./list_scheduler <dag_file>
-                        <bootstrap_file>
+                        <segments_file>
                         <output_file_1>[,<output_file_2>,...,<output_file_n>]
                         <num_levels>
                         [-s <int_1>[,<int_2>,...,<int_n>]]
@@ -26,7 +26,7 @@ Usage: ./list_scheduler <dag_file>
 Arguments:
   <dag_file>
     The text file describing the FHE program as a DAG.
-  <bootstrap_file>
+  <segments_file>
     The text file listing the bootstrap segments of the program.
   <output_file>
     The path to the file where the bootstrap set should be saved.
@@ -56,7 +56,7 @@ Batching:
   struct Options
   {
     std::string dag_filename;
-    std::string bootstrap_filename;
+    std::string segments_filename;
     int num_levels;
     std::vector<std::string> output_filenames;
     std::vector<int> segments_weight;
@@ -70,18 +70,12 @@ Batching:
   size_t num_sets;
   size_t set_index = 0;
 
-  OperationList operations;
-  std::map<std::string, int> operation_type_to_latency_map;
-  std::vector<OperationList> bootstrap_segments;
+  Program program;
 
   void choose_operations_to_bootstrap();
-  void write_lgr_like_format();
 
-  void update_all_bootstrap_urgencies();
-  int update_num_segments_for_every_operation();
   void choose_operation_to_bootstrap_based_on_score();
-  double get_score(OperationPtr);
+  double get_score(const OperationPtr &);
   void parse_args(int, char **);
   void print_options();
-  void reset();
 };

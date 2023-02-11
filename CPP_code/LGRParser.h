@@ -27,7 +27,7 @@ public:
     bool used_bootstrap_limited_model = false;
     bool used_selective_model = false;
 
-    void set_operations(OperationList &);
+    void set_operations(OpVector &);
 
 private:
     int lex_();
@@ -42,7 +42,7 @@ private:
     // be exec'ed after the rules's actions.
 
     // My private members
-    OperationList operations;
+    OpVector operations;
 
     OperationPtr get_first_operation_ptr(std::string);
     OperationPtr get_second_operation_ptr(std::string);

@@ -4,14 +4,14 @@
 
 "BOOTSTRAPPED( OP"[0-9]+")"[ \t]+"1" {
     auto operation = get_first_operation_ptr(matched());
-    operation->child_ptrs_that_receive_bootstrapped_result = operation->child_ptrs;
+    operation->bootstrap_children = operation->child_ptrs;
 }
 
 "BOOTSTRAPPED( OP"[0-9]+", OP"[0-9]+")"[ \t]+"1" {
     used_selective_model = true;
     auto operation1 = get_first_operation_ptr(matched());
     auto operation2 = get_second_operation_ptr(matched());
-    operation1->child_ptrs_that_receive_bootstrapped_result.push_back(operation2);
+    operation1->bootstrap_children.push_back(operation2);
 }
 
 "BOOTSTRAP_FINISH_TIME( OP"[0-9]+")"[ \t]+[0-9]+ {}

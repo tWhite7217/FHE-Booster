@@ -5,17 +5,14 @@ ListScheduler::ListScheduler(int argc, char **argv)
     parse_args(argc, argv);
     print_options();
 
-    InputParser input_parser;
-    input_parser.parse_input_to_generate_operations(options.dag_filename);
-    operations = input_parser.get_operations();
-    operation_type_to_latency_map = input_parser.get_operation_type_to_latency_map();
+    Program::ConstructorInput in;
+    in.dag_filename = options.dag_filename;
+    in.latency_filename = options.latency_filename;
+    in.bootstrap_filename = options.bootstrap_filename;
 
-    if (options.lgr_filename != "NULL")
-    {
-        lgr_parser.switchIstream(options.lgr_filename);
-        lgr_parser.set_operations(operations);
-        lgr_parser.lex();
-    }
+    program = Program(in);
+
+    bootstrap_latency = program.get_latency_of(OperationType::BOOT);
 
     const auto num_threads = options.num_threads;
     if (num_threads > 0)
@@ -37,9 +34,9 @@ ListScheduler::ListScheduler(int argc, char **argv)
 
 void ListScheduler::initialize_pred_count()
 {
-    for (auto operation : operations)
+    for (auto operation : program)
     {
-        pred_count[operation] = operation->parent_ptrs.size();
+        pred_count[operation] = operation->get_parent_ptrs().size();
     }
 }
 
@@ -101,7 +98,7 @@ void ListScheduler::initialize_simulation_state()
 {
     clock_cycle = 0;
     prioritized_unstarted_operations.clear();
-    prioritized_unstarted_operations.insert(operations.begin(), operations.end());
+    prioritized_unstarted_operations.insert(program.begin(), program.end());
     running_operations.clear();
     bootstrapping_queue.clear();
     bootstrapping_operations.clear();
@@ -127,7 +124,7 @@ void ListScheduler::mark_cores_available(std::unordered_set<OperationPtr> &finis
 {
     for (auto &op : finished_operations)
     {
-        core_availability[op->core_num] = true;
+        core_availability[op->get_core_num()] = true;
     }
 }
 
@@ -156,23 +153,23 @@ void ListScheduler::start_ready_operations()
     {
         auto operation = *it;
         it = ready_operations.erase(it);
-        operation->start_time = clock_cycle;
-        running_operations[operation] = operation_type_to_latency_map[operation->type];
+        operation->set_start_time(clock_cycle);
+        running_operations[operation] = program.get_latency_of(operation->get_type());
         if (create_core_assignments)
         {
             int best_core = get_best_core_for_operation(operation, available_core);
-            operation->core_num = best_core;
+            operation->set_core_num(best_core);
             core_availability[best_core] = false;
 
             auto core_schedules_index = best_core - 1;
 
-            std::string result_var = " c" + std::to_string(operation->id);
+            std::string result_var = " c" + std::to_string(operation->get_id());
 
             std::string arg1;
             std::string arg2;
 
-            auto num_var_parents = operation->parent_ptrs.size();
-            auto num_const_parents = operation->constant_parent_ids.size();
+            auto num_var_parents = operation->get_parent_ptrs().size();
+            auto num_const_parents = operation->get_constant_parent_ids().size();
 
             if (num_var_parents == 2)
             {
@@ -204,10 +201,10 @@ void ListScheduler::start_ready_operations()
 
             std::string thread = " t" + std::to_string(best_core);
 
-            core_schedules[core_schedules_index] += operation->type + result_var + arg1 + arg2 + thread + "\n";
-            if (operation_is_bootstrapped(operation))
+            core_schedules[core_schedules_index] += operation->get_type().to_string() + result_var + arg1 + arg2 + thread + "\n";
+            if (operation->is_bootstrapped())
             {
-                core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->id) + " c" + std::to_string(operation->id) + " t" + std::to_string(best_core) + "\n";
+                core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->get_id()) + " c" + std::to_string(operation->get_id()) + " t" + std::to_string(best_core) + "\n";
             }
         }
     }
@@ -215,27 +212,28 @@ void ListScheduler::start_ready_operations()
 
 std::string ListScheduler::get_constant_arg(OperationPtr operation, size_t parent_num)
 {
-    return " k" + std::to_string(operation->constant_parent_ids[parent_num]);
+    return " k" + std::to_string(operation->get_constant_parent_ids()[parent_num]);
 }
 
 std::string ListScheduler::get_variable_arg(OperationPtr operation, size_t parent_num)
 {
     std::string arg = " c";
-    if (vector_contains_element(operation->parent_ptrs[parent_num]->child_ptrs_that_receive_bootstrapped_result, operation))
+    auto parent = operation->get_parent_ptrs()[parent_num];
+    if (operation->receives_bootstrapped_result_from(parent))
     {
         arg += "0";
     }
-    return arg + std::to_string(operation->parent_ptrs[parent_num]->id);
+    return arg + std::to_string(parent->get_id());
 }
 
 int ListScheduler::get_best_core_for_operation(OperationPtr operation, int fallback_core)
 {
     int best_core = fallback_core;
-    for (auto parent : operation->parent_ptrs)
+    for (const auto &parent : operation->get_parent_ptrs())
     {
-        if (core_is_available(parent->core_num))
+        if (core_is_available(parent->get_core_num()))
         {
-            best_core = parent->core_num;
+            best_core = parent->get_core_num();
         }
     }
     return best_core;
@@ -268,7 +266,7 @@ void ListScheduler::add_necessary_operations_to_bootstrapping_queue()
 {
     for (auto operation : finished_running_operations)
     {
-        if (operation_is_bootstrapped(operation))
+        if (operation->is_bootstrapped())
         {
             bootstrapping_queue.insert(operation);
         }
@@ -279,10 +277,10 @@ void ListScheduler::start_bootstrapping_necessary_operations()
 {
     for (auto operation : finished_running_operations)
     {
-        if (operation_is_bootstrapped(operation))
+        if (operation->is_bootstrapped())
         {
             bootstrapping_operations[operation] = bootstrap_latency;
-            core_availability[operation->core_num] = false;
+            core_availability[operation->get_core_num()] = false;
         }
     }
 }
@@ -302,8 +300,8 @@ void ListScheduler::start_bootstrapping_ready_operations_for_limited_model()
     while (available_core_num != -1 && !bootstrapping_queue.empty())
     {
         auto operation = *(bootstrapping_queue.begin());
-        operation->bootstrap_start_time = clock_cycle;
-        operation->core_num = available_core_num;
+        operation->set_bootstrap_start_time(clock_cycle);
+        operation->set_core_num(available_core_num);
         core_availability[available_core_num] = false;
         bootstrapping_operations[operation] = bootstrap_latency;
         bootstrapping_queue.erase(bootstrapping_queue.begin());
@@ -328,64 +326,9 @@ bool ListScheduler::core_is_available(int core_num)
     return core_availability[core_num];
 }
 
-void ListScheduler::write_lgr_like_format()
+void ListScheduler::write_sched_to_file(const std::string &filename)
 {
-    std::ofstream output_file;
-    output_file.open(options.output_filename + ".lgr");
-
-    output_file << "Objective value: " << solver_latency << ".0" << std::endl;
-
-    if (lgr_parser.used_selective_model)
-    {
-        for (auto operation : operations)
-        {
-            for (auto child : operation->child_ptrs_that_receive_bootstrapped_result)
-            {
-                output_file << "BOOTSTRAPPED( OP" << operation->id << ", OP" << child->id << ") 1" << std::endl;
-            }
-        }
-    }
-    else
-    {
-        for (auto operation : operations)
-        {
-            if (operation_is_bootstrapped(operation))
-            {
-                output_file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
-            }
-        }
-    }
-
-    for (auto operation : operations)
-    {
-        output_file << "START_TIME( OP" << operation->id << ") " << operation->start_time << std::endl;
-    }
-
-    for (auto operation : operations)
-    {
-        if (operation->core_num > 0)
-        {
-            output_file << "B2C( OP" << operation->id << ", C" << operation->core_num << ") 1" << std::endl;
-        }
-    }
-
-    for (auto operation : operations)
-    {
-        if (operation->bootstrap_start_time > 0)
-        {
-            output_file << "BOOTSTRAP_START_TIME( OP" << operation->id << ") " << operation->bootstrap_start_time << std::endl;
-        }
-    }
-
-    output_file << "FINISH_TIME( OP0) " << solver_latency << std::endl;
-
-    output_file.close();
-}
-
-void ListScheduler::write_assembly_like_format()
-{
-    std::ofstream output_file;
-    output_file.open(options.output_filename + ".sched");
+    std::ofstream output_file(filename);
 
     for (auto schedule : core_schedules)
     {
@@ -395,8 +338,8 @@ void ListScheduler::write_assembly_like_format()
 
 void ListScheduler::perform_list_scheduling()
 {
-    update_all_ESTs_and_LSTs(operations, operation_type_to_latency_map);
-    update_all_slacks(operations);
+    program.update_ESTs_and_LSTs();
+    // program.update_slacks_and_get_maximum();
     std::cout << "Generating lgr..." << std::endl;
     generate_start_times_and_solver_latency();
     std::cout << "Done." << std::endl;
@@ -412,9 +355,9 @@ void ListScheduler::update_pred_count()
 {
     for (auto &op : finished_running_operations)
     {
-        for (auto &child : op->child_ptrs)
+        for (const auto &child : op->get_child_ptrs())
         {
-            if (!operation_receives_a_bootstrapped_result_from_parent(child, op) && multiset_contains_element(prioritized_unstarted_operations, child))
+            if (!child->receives_bootstrapped_result_from(op) && multiset_contains_element(prioritized_unstarted_operations, child))
             {
                 pred_count[child]--;
             }
@@ -423,7 +366,7 @@ void ListScheduler::update_pred_count()
 
     for (auto &op : finished_bootstrapping_operations)
     {
-        for (auto &child : op->child_ptrs_that_receive_bootstrapped_result)
+        for (const auto &child : op->get_bootstrap_children())
         {
             if (multiset_contains_element(prioritized_unstarted_operations, child))
             {
@@ -442,10 +385,11 @@ void ListScheduler::parse_args(int argc, char **argv)
     }
 
     options.dag_filename = argv[1];
-    options.output_filename = argv[2];
+    options.latency_filename = argv[2];
+    options.output_filename = argv[3];
 
     std::string options_string;
-    for (auto i = 3; i < argc; i++)
+    for (auto i = 4; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }
@@ -456,19 +400,26 @@ void ListScheduler::parse_args(int argc, char **argv)
         options.num_threads = std::stoi(num_threads_string);
     }
 
-    auto lgr_arg = get_arg(options_string, "-i", "--input-lgr", help_info);
-    if (!lgr_arg.empty())
+    auto bootstrap_arg = get_arg(options_string, "-i", "--input-lgr", help_info);
+    if (!bootstrap_arg.empty())
     {
-        options.lgr_filename = lgr_arg;
+        options.bootstrap_filename = bootstrap_arg;
     }
 }
 
 void ListScheduler::print_options()
 {
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
+    std::cout << "latency_filename: " << options.latency_filename << std::endl;
     std::cout << "output_filename: " << options.output_filename << std::endl;
-    std::cout << "lgr_filename: " << options.lgr_filename << std::endl;
+    std::cout << "bootstrap_filename: " << options.bootstrap_filename << std::endl;
     std::cout << "num_threads: " << options.num_threads << std::endl;
+}
+
+void ListScheduler::write_to_output_files()
+{
+    program.write_lgr_info_to_file(options.output_filename + ".lgr", solver_latency);
+    write_sched_to_file(options.output_filename + ".sched");
 }
 
 int main(int argc, char **argv)
@@ -476,8 +427,7 @@ int main(int argc, char **argv)
     ListScheduler list_scheduler = ListScheduler(argc, argv);
 
     list_scheduler.perform_list_scheduling();
-    list_scheduler.write_lgr_like_format();
-    list_scheduler.write_assembly_like_format();
+    list_scheduler.write_to_output_files();
 
     return 0;
 }

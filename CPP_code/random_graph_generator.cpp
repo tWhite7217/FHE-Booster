@@ -43,7 +43,6 @@ void RandomGraphGenerator::create_graph(graph_generator_options new_options)
         add_random_parents_to_operation(operation, options.probability_of_two_parents, 1, 0);
     }
 
-    add_child_ptrs_to_operation_list_with_existing_parent_ptrs(operations);
     fix_constants();
 }
 
@@ -69,10 +68,10 @@ std::vector<int> RandomGraphGenerator::get_random_level_widths(int num_levels)
     return level_widths;
 }
 
-std::vector<OperationList> RandomGraphGenerator::get_random_level_ops(std::vector<int> level_widths)
+std::vector<OpVector> RandomGraphGenerator::get_random_level_ops(std::vector<int> level_widths)
 {
     auto num_levels = level_widths.size();
-    std::vector<OperationList> level_ops(num_levels);
+    std::vector<OpVector> level_ops(num_levels);
     int i = 0;
     for (int j = 0; j < num_levels; j++)
     {
@@ -88,25 +87,25 @@ std::vector<OperationList> RandomGraphGenerator::get_random_level_ops(std::vecto
 
 void RandomGraphGenerator::add_random_child_to_operation(OperationPtr operation, int child_level)
 {
-    OperationList operations_without_two_parents;
+    OpVector operations_without_two_parents;
     for (auto op : level_ops[child_level])
     {
-        if (op->parent_ptrs.size() < 2)
+        if (op->get_parent_ptrs().size() < 2)
         {
             operations_without_two_parents.push_back(op);
         }
     }
     int random_index = random_int_between(0, operations_without_two_parents.size() - 1, rand_gen);
-    operations_without_two_parents[random_index]->parent_ptrs.push_back(operation);
+    operations_without_two_parents[random_index]->add_parent_ptr(operation);
 }
 
 OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operation_id)
 {
     int operation_type_num = rand_gen() % 13;
-    std::string operation_type;
+    OperationType operation_type;
     if (operation_type_num < 6)
     {
-        operation_type = "ADD";
+        operation_type = OperationType::ADD;
     }
     // else if (operation_type_num < 6)
     // {
@@ -114,15 +113,15 @@ OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operat
     // }
     else
     {
-        operation_type = "MUL";
+        operation_type = OperationType::MUL;
     }
-    operations.emplace_back(new Operation{operation_type, operation_id});
+    operations.emplace_back(new Operation(operation_type, operation_id));
     return operations.back();
 }
 
 void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operation, double two_parent_probability, double constant_probability, int level)
 {
-    auto num_current_parents = operation->parent_ptrs.size();
+    auto num_current_parents = operation->get_parent_ptrs().size();
     if (num_current_parents == 2)
     {
         return;
@@ -159,7 +158,7 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
         int prev_parent_index = -1;
         if (num_current_parents == 1)
         {
-            prev_parent_index = operation->parent_ptrs[0]->id - 1;
+            prev_parent_index = operation->get_parent_ptrs()[0]->get_id() - 1;
         }
 
         bool should_not_compare_indices = (num_parents == 1) ||
@@ -176,8 +175,8 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
             }
             else if (i == 0 && num_current_parents == 0)
             {
-                auto min_index = level_ops[level - 1].front()->id - 1;
-                auto max_index = level_ops[level - 1].back()->id - 1;
+                auto min_index = level_ops[level - 1].front()->get_id() - 1;
+                auto max_index = level_ops[level - 1].back()->get_id() - 1;
                 parent_index = random_int_between(min_index, max_index, rand_gen);
             }
             else
@@ -193,12 +192,12 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
             {
                 if (parent_is_constant)
                 {
-                    operation->constant_parent_ids.push_back(parent_index);
+                    operation->add_constant_parent_id(parent_index);
                 }
                 else
                 {
                     auto parent_ptr = operations[parent_index];
-                    operation->parent_ptrs.push_back(parent_ptr);
+                    operation->add_parent_ptr(parent_ptr);
                 }
                 prev_parent_index = parent_index;
                 i++;
@@ -207,21 +206,19 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
 
         if (!operation_is_unique(operation))
         {
-            if (num_current_parents == 0)
+            auto first_parent_ptr = operation->get_parent_ptrs().front();
+            operation->clear_parent_ptrs();
+            operation->clear_constant_parent_ids();
+            if (num_current_parents != 0 && operation->get_parent_ptrs().size() == 2)
             {
-                operation->parent_ptrs.clear();
+                operation->add_parent_ptr(first_parent_ptr);
             }
-            else if (operation->parent_ptrs.size() == 2)
-            {
-                operation->parent_ptrs.pop_back();
-            }
-            operation->constant_parent_ids.clear();
         }
         else
         {
             added_parents = true;
-            used_constants.insert(operation->constant_parent_ids.begin(),
-                                  operation->constant_parent_ids.end());
+            used_constants.insert(operation->get_constant_parent_ids().begin(),
+                                  operation->get_constant_parent_ids().end());
         }
     }
 }
@@ -246,9 +243,16 @@ void RandomGraphGenerator::fix_constants()
 
     for (auto operation : operations)
     {
-        for (auto &const_id : operation->constant_parent_ids)
+        std::vector<int> new_ids;
+        for (const auto &const_id : operation->get_constant_parent_ids())
         {
-            const_id = constant_remapping[const_id];
+            new_ids.push_back(constant_remapping[const_id]);
+        }
+
+        operation->clear_constant_parent_ids();
+        for (auto id : new_ids)
+        {
+            operation->add_constant_parent_id(id);
         }
     }
 }
@@ -272,15 +276,15 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
 
     for (auto &operation : operations)
     {
-        output_file << operation->id << ",";
-        output_file << operation->type;
+        output_file << operation->get_id() << ",";
+        output_file << operation->get_type();
 
         std::string dependency_string = ",";
-        for (auto parent : operation->parent_ptrs)
+        for (const auto &parent : operation->get_parent_ptrs())
         {
-            dependency_string += "c" + std::to_string(parent->id) + ",";
+            dependency_string += "c" + std::to_string(parent->get_id()) + ",";
         }
-        for (auto parent_id : operation->constant_parent_ids)
+        for (const auto &parent_id : operation->get_constant_parent_ids())
         {
             dependency_string += "k" + std::to_string(parent_id) + ",";
         }
@@ -292,24 +296,24 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
 
 bool RandomGraphGenerator::operation_is_unique(OperationPtr operation)
 {
-    auto num_var_parents = operation->parent_ptrs.size();
-    auto num_const_parents = operation->constant_parent_ids.size();
+    auto num_var_parents = operation->get_parent_ptrs().size();
+    auto num_const_parents = operation->get_constant_parent_ids().size();
 
     std::unordered_set<OperationPtr> var_parents_set;
     std::unordered_set<OperationPtr> other_var_parents_set;
     std::unordered_set<int> const_parents_set;
     std::unordered_set<int> other_const_parents_set;
 
-    var_parents_set.insert(operation->parent_ptrs.begin(), operation->parent_ptrs.end());
-    const_parents_set.insert(operation->constant_parent_ids.begin(), operation->constant_parent_ids.end());
+    var_parents_set.insert(operation->get_parent_ptrs().begin(), operation->get_parent_ptrs().end());
+    const_parents_set.insert(operation->get_constant_parent_ids().begin(), operation->get_constant_parent_ids().end());
 
     for (auto other_operation : operations)
     {
         if (operation != other_operation)
         {
-            if ((operation->type != other_operation->type) ||
-                (num_var_parents != other_operation->parent_ptrs.size()) ||
-                (num_const_parents != other_operation->constant_parent_ids.size()))
+            if ((operation->get_type() != other_operation->get_type()) ||
+                (num_var_parents != other_operation->get_parent_ptrs().size()) ||
+                (num_const_parents != other_operation->get_constant_parent_ids().size()))
             {
                 continue;
             }
@@ -317,8 +321,8 @@ bool RandomGraphGenerator::operation_is_unique(OperationPtr operation)
             other_var_parents_set.clear();
             other_const_parents_set.clear();
 
-            other_var_parents_set.insert(other_operation->parent_ptrs.begin(), other_operation->parent_ptrs.end());
-            other_const_parents_set.insert(other_operation->constant_parent_ids.begin(), other_operation->constant_parent_ids.end());
+            other_var_parents_set.insert(other_operation->get_parent_ptrs().begin(), other_operation->get_parent_ptrs().end());
+            other_const_parents_set.insert(other_operation->get_constant_parent_ids().begin(), other_operation->get_constant_parent_ids().end());
 
             if ((var_parents_set == other_var_parents_set) &&
                 (const_parents_set == other_const_parents_set))

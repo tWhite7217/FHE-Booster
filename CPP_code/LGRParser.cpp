@@ -2,7 +2,7 @@
 
 #include "LGRParser.h"
 
-void LGRParser::set_operations(OperationList &operations) { this->operations = operations; }
+void LGRParser::set_operations(OpVector &operations) { this->operations = operations; }
 
 OperationPtr LGRParser::get_first_operation_ptr(std::string yystring)
 {

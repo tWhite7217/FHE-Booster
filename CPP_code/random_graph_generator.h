@@ -4,6 +4,7 @@
 #include <numeric>
 
 #include "shared_utils.h"
+#include "operation.h"
 
 class RandomGraphGenerator
 {
@@ -27,7 +28,7 @@ public:
 
 private:
     std::vector<int> get_random_level_widths(int);
-    std::vector<OperationList> get_random_level_ops(std::vector<int> level_widths);
+    std::vector<OpVector> get_random_level_ops(std::vector<int> level_widths);
     void add_random_child_to_operation(OperationPtr, int);
     OperationPtr add_random_operation_to_operations(int);
     void add_random_parents_to_operation(OperationPtr, double, double, int);
@@ -37,8 +38,8 @@ private:
 
     graph_generator_options options;
     std::minstd_rand rand_gen;
-    OperationList operations;
-    std::vector<OperationList> level_ops;
+    OpVector operations;
+    std::vector<OpVector> level_ops;
     std::vector<int> level_widths;
     int num_constants;
     std::set<int> used_constants;

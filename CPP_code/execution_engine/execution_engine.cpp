@@ -636,9 +636,9 @@ int main(int argc, char **argv)
     }
     if (!options.num_bootstraps_filename.empty())
     {
-      std::ofstream bootstrap_file(options.num_bootstraps_filename);
-      bootstrap_file << num_bootstraps << std::endl;
-      bootstrap_file.close();
+      std::ofstream segments_file(options.num_bootstraps_filename);
+      segments_file << num_bootstraps << std::endl;
+      segments_file.close();
     }
   }
 

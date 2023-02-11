@@ -1,4 +1,5 @@
 #include "shared_utils.h"
+#include "program.h"
 #include "custom_ddg_format_parser.h"
 
 #include <iterator>
@@ -10,7 +11,7 @@ class BootstrapSegmentGenerator
 {
 public:
   BootstrapSegmentGenerator(int, char **);
-  bool bootstrap_files_are_current();
+  bool segments_files_are_current();
   bool is_in_forced_generation_mode();
   void generate_bootstrap_segments();
   void write_segments_to_files();
@@ -43,8 +44,8 @@ Arguments:
 
   int gained_levels;
 
-  std::vector<std::vector<OperationPtr>> bootstrap_segments;
-  OperationList operations;
+  std::vector<OpVector> bootstrap_segments;
+  OpVector operations;
 
   struct Options
   {
@@ -60,14 +61,14 @@ Arguments:
   std::string selective_output_filename;
 
   void create_raw_bootstrap_segments();
-  std::vector<std::vector<OperationPtr>> create_bootstrap_segments_helper(OperationPtr, std::vector<OperationPtr>, int);
+  std::vector<OpVector> create_bootstrap_segments_helper(OperationPtr, OpVector, int);
 
   void print_number_of_segments();
   void print_bootstrap_segments();
 
   void remove_last_operation_from_bootstrap_segments();
   void remove_redundant_bootstrap_segments();
-  bool segments_are_redundant(std::vector<OperationPtr>, std::vector<OperationPtr>);
+  bool segments_are_redundant(OpVector, OpVector);
   void write_segments_to_file(std::ofstream &);
   void convert_segments_to_standard();
 
