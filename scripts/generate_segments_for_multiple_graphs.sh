@@ -12,7 +12,11 @@ initial_levels=$4
 for i in $(seq $first_graph_num $last_graph_num)
 do
     dag_file="DAGs/random_graph$i/random_graph$i.txt"
-    output_file="DAGs/random_graph$i/${num_levels}_levels/bootstrap_segments"
+    output_dir="DAGs/random_graph$i/${num_levels}_levels"
+    
+    mkdir $output_dir
+    
+    output_file="${output_dir}/bootstrap_segments"
     
     echo ./CPP_code/bootstrap_segments_generator.out $dag_file $output_file $num_levels -i $initial_levels
     ./CPP_code/bootstrap_segments_generator.out $dag_file $output_file $num_levels -i $initial_levels

@@ -8,18 +8,13 @@ LatencyMap InputParser::parse_latency_file(const std::string &latency_filename)
 
     std::ifstream latency_file(latency_filename);
 
-    std::string line;
-    while (std::getline(latency_file, line) && line != "")
+    auto line = get_trimmed_line_from_file(latency_file);
+    while (!line.empty())
     {
         auto line_as_list = split_string_by_character(line, ',');
-
-        // if (line_as_list[0] == "")
-        // {
-        //     break;
-        // }
-
         auto type = OperationType(line_as_list[0]);
         latencies[type] = std::stoi(line_as_list[1]);
+        line = get_trimmed_line_from_file(latency_file);
     }
 
     return latencies;
@@ -34,35 +29,24 @@ std::shared_ptr<Program> InputParser::parse_dag_file_with_bootstrap_file(const s
 {
     program = std::unique_ptr<Program>(new Program());
     std::ifstream dag_file(dag_filename);
-    std::string line;
+    auto line = get_trimmed_line_from_file(dag_file);
 
-    while (std::getline(dag_file, line) && line != "~" && line != "")
+    while (!line.empty() && line != "~")
     {
         auto line_as_list = split_string_by_character(line, ',');
 
-        // if (line_as_list[0] == "")
-        // {
-        //     return;
-        // }
-
-        // if (line_as_list[0] == "~")
-        // {
-        //     phase++;
-        // }
-        // else if (phase == 0)
-        // {
         parse_constant(line_as_list);
-        // }
-        // else
-        // {
-        // parse_operation_and_its_dependences(line_as_list);
-        // }
+
+        line = get_trimmed_line_from_file(dag_file);
     }
 
-    while (std::getline(dag_file, line) && line != "")
+    line = get_trimmed_line_from_file(dag_file);
+
+    while (!line.empty())
     {
         auto line_as_list = split_string_by_character(line, ',');
         parse_operation_and_its_dependences(line_as_list);
+        line = get_trimmed_line_from_file(dag_file);
     }
 
     if (!bootstrap_filename.empty())
@@ -108,15 +92,11 @@ std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string
     std::ifstream segments_file(segments_filename);
     std::vector<BootstrapSegment> bootstrap_segments;
     std::string line;
+    line = get_trimmed_line_from_file(segments_file);
 
-    while (std::getline(segments_file, line) && line != "")
+    while (!line.empty())
     {
         auto line_as_list = split_string_by_character(line, ',');
-
-        // if (line_as_list[0] == "")
-        // {
-        //     continue;
-        // }
 
         auto segment_index = bootstrap_segments.size();
 
@@ -129,6 +109,8 @@ std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string
             op_ptr->segment_indexes.push_back(segment_index);
             bootstrap_segments.back().add(op_ptr);
         }
+
+        line = get_trimmed_line_from_file(segments_file);
     }
     return bootstrap_segments;
 }

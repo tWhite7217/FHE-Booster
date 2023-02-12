@@ -17,7 +17,7 @@ void read_command_line_args(int argc, char **argv)
 void get_info_from_input_parser()
 {
     InputParser input_parser;
-    program = input_parser.parse_dag_file(input_filename);
+    program = *input_parser.parse_dag_file(input_filename);
 
     for (auto operation : program)
     {

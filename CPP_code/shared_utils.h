@@ -22,6 +22,7 @@ enum class BootstrapMode
     SELECTIVE
 };
 
+std::string get_trimmed_line_from_file(std::ifstream &);
 void remove_chars_from_string(std::string &, std::vector<char>);
 int extract_number_from_string(std::string, size_t, size_t);
 std::vector<std::string> split_string_by_character(std::string, char);

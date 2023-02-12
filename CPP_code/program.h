@@ -54,8 +54,12 @@ public:
 private:
     OpVector operations;
     std::vector<BootstrapSegment> bootstrap_segments;
-    LatencyMap latencies;
     BootstrapMode mode;
+    LatencyMap latencies =
+        {{OperationType::ADD, 1},
+         {OperationType::SUB, 1},
+         {OperationType::MUL, 5},
+         {OperationType::BOOT, 300}};
 
     void write_bootstrapping_set_to_file(std::ofstream &);
     void write_bootstrapping_set_to_file_complete_mode(std::ofstream &);

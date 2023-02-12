@@ -15,13 +15,14 @@ public:
 
 private:
   const std::string help_info = R"(
-Usage: ./list_scheduler <dag_file>
-                        <segments_file>
-                        <output_file_1>[,<output_file_2>,...,<output_file_n>]
-                        <num_levels>
-                        [-s <int_1>[,<int_2>,...,<int_n>]]
-                        [-r <int_1>[,<int_2>,...,<int_n>]]
-                        [-u <int_1>[,<int_2>,...,<int_n>]]
+Usage: ./bootstrap_set_selector <dag_file>
+                                <segments_file>
+                                <output_file_1>[,<output_file_2>,...,<output_file_n>]
+                                <num_levels>
+                                [-l <file_1>[,<file_2>,...,<file_n>]]
+                                [-s <int_1>[,<int_2>,...,<int_n>]]
+                                [-r <int_1>[,<int_2>,...,<int_n>]]
+                                [-u <int_1>[,<int_2>,...,<int_n>]]
 
 Arguments:
   <dag_file>
@@ -33,6 +34,9 @@ Arguments:
   <num_levels>
     The number of levels between bootstraps, also called the noise
     threshold.
+  -l <file>, --latency-file <file>
+    The file describing the latencies of FHE operations on the target
+    hardware. The default values can be found in program.h.
   Weights:
     The following options apply weights to certain attributes that are
     used in choosing operations to bootstrap. All default to 0.

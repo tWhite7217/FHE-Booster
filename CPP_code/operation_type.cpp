@@ -51,8 +51,3 @@ std::string OperationType::to_string() const
 // bool operator!=(OperationType other_class) { return !operator==(other_class); };
 
 OperationType::operator Type() const { return type; }
-
-// std::ostream &operator<<(std::ostream &os, OperationType const &type)
-// {
-//     return os << type.to_string();
-// }

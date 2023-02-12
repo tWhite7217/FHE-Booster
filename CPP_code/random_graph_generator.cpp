@@ -278,7 +278,7 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
     for (auto &operation : program)
     {
         output_file << operation->id << ",";
-        output_file << operation->type;
+        output_file << operation->type.to_string();
 
         std::string dependency_string = ",";
         for (const auto &parent : operation->parent_ptrs)

@@ -72,8 +72,8 @@ random_graph_generator.out: $(BIN)/random_graph_generator.o $(BIN)/shared_utils.
 $(BIN)/txt_to_vcg.o: txt_to_vcg.cpp Makefile
 	g++ $(CPP_FLAGS) -c -o $@ txt_to_vcg.cpp
 
-txt_to_vcg.out: $(BIN)/txt_to_vcg.o $(BIN)/custom_ddg_format_parser.o $(BIN)/shared_utils.o
-	g++ $(CPP_FLAGS) -o $@ $(BIN)/txt_to_vcg.o $(BIN)/custom_ddg_format_parser.o $(BIN)/shared_utils.o
+txt_to_vcg.out: $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependencies)
 
 clean:
 	rm lex.cc LGRParserBase.h lex.yy.c *.out bin/*
