@@ -2,10 +2,10 @@
 
 DAGGenerator::DAGGenerator(std::ofstream &output_file) : output_file{output_file}
 {
-    output_file << "ADD,1" << std::endl;
-    output_file << "SUB,1" << std::endl;
-    output_file << "MUL,5" << std::endl;
-    output_file << "~" << std::endl;
+    // output_file << "ADD,1" << std::endl;
+    // output_file << "SUB,1" << std::endl;
+    // output_file << "MUL,5" << std::endl;
+    // output_file << "~" << std::endl;
 }
 
 void DAGGenerator::print_set(variable &output)

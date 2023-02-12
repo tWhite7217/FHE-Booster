@@ -88,7 +88,16 @@ void BootstrapSegmentGenerator::print_options()
 void BootstrapSegmentGenerator::generate_bootstrap_segments()
 {
     create_raw_bootstrap_segments();
-    remove_redundant_bootstrap_segments();
+    if (bootstrap_segments.size() > 0)
+    {
+        sort_segments();
+        remove_redundant_bootstrap_segments();
+    }
+    else
+    {
+        std::cout << "This program has no bootstrap segments." << std::endl;
+        std::cout << "Number of operations: " << program.size() << std::endl;
+    }
 }
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
@@ -102,41 +111,6 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
         }
         bootstrap_segments.insert(bootstrap_segments.end(), bootstrap_segments_to_add.begin(), bootstrap_segments_to_add.end());
     }
-
-    class comparator_class
-    {
-    public:
-        bool operator()(BootstrapSegment segment1, BootstrapSegment segment2)
-        {
-            if (segment1.last_operation() == segment2.last_operation())
-            {
-                return segment1.size() < segment2.size();
-            }
-            else
-            {
-                return segment1.last_operation()->id < segment2.last_operation()->id;
-            }
-        }
-    };
-
-    auto starting_point_offset = 0;
-    if (bootstrap_segments.size() > 0)
-    {
-        auto current_starting_id_to_sort = bootstrap_segments.front().first_operation();
-        for (auto i = 1; i < bootstrap_segments.size(); i++)
-        {
-            if (bootstrap_segments[i].first_operation() != current_starting_id_to_sort)
-            {
-                std::sort(bootstrap_segments.begin() + starting_point_offset, bootstrap_segments.begin() + i, comparator_class());
-                starting_point_offset = i;
-                current_starting_id_to_sort = bootstrap_segments[i].first_operation();
-            }
-        }
-    }
-    else
-    {
-        std::cout << "This program has no bootstrap segments." << std::endl;
-    }
 }
 
 std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, BootstrapSegment segment, int num_multiplications)
@@ -146,7 +120,7 @@ std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segmen
         num_multiplications++;
     }
     segment.add(operation);
-    if (num_multiplications >= gained_levels && operation->has_multiplication_child())
+    if (num_multiplications >= options.num_levels && operation->has_multiplication_child())
     {
         std::vector<BootstrapSegment> segments_to_return;
         for (auto child : operation->child_ptrs)
@@ -170,6 +144,37 @@ std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segmen
         segments_to_return.insert(segments_to_return.end(), segments_to_add.begin(), segments_to_add.end());
     }
     return segments_to_return;
+}
+
+void BootstrapSegmentGenerator::sort_segments()
+{
+    class comparator_class
+    {
+    public:
+        bool operator()(BootstrapSegment segment1, BootstrapSegment segment2)
+        {
+            if (segment1.last_operation() == segment2.last_operation())
+            {
+                return segment1.size() < segment2.size();
+            }
+            else
+            {
+                return segment1.last_operation()->id < segment2.last_operation()->id;
+            }
+        }
+    };
+
+    auto starting_point_offset = 0;
+    auto current_starting_id_to_sort = bootstrap_segments.front().first_operation();
+    for (auto i = 1; i < bootstrap_segments.size(); i++)
+    {
+        if (bootstrap_segments[i].first_operation() != current_starting_id_to_sort)
+        {
+            std::sort(bootstrap_segments.begin() + starting_point_offset, bootstrap_segments.begin() + i, comparator_class());
+            starting_point_offset = i;
+            current_starting_id_to_sort = bootstrap_segments[i].first_operation();
+        }
+    }
 }
 
 void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
@@ -285,7 +290,10 @@ void BootstrapSegmentGenerator::write_segments_to_files()
 void BootstrapSegmentGenerator::convert_segments_to_standard()
 {
     remove_last_operation_from_segments();
+    std::cout << "here1" << std::endl;
+    sort_segments();
     remove_redundant_bootstrap_segments();
+    std::cout << "here2" << std::endl;
 }
 
 void BootstrapSegmentGenerator::remove_last_operation_from_segments()

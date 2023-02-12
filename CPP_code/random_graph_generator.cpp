@@ -262,11 +262,11 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
 {
     std::ofstream output_file(output_filename);
 
-    output_file << "ADD,1" << std::endl;
-    output_file << "SUB,1" << std::endl;
-    output_file << "MUL,5" << std::endl;
+    // output_file << "ADD,1" << std::endl;
+    // output_file << "SUB,1" << std::endl;
+    // output_file << "MUL,5" << std::endl;
 
-    output_file << "~" << std::endl;
+    // output_file << "~" << std::endl;
 
     for (int i = 1; i <= num_constants; i++)
     {

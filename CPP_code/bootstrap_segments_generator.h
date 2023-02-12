@@ -18,11 +18,11 @@ public:
 
 private:
   const std::string help_info = R"(
-Usage: ./list_scheduler <dag_file> 
-                        <output_file>
-                        <num_levels>
-                        [-i <initial_levels>]
-                        [-F / --force]
+Usage: ./bootstrap_segments_generator.out <dag_file> 
+                                          <output_file>
+                                          <num_levels>
+                                          [-i <initial_levels>]
+                                          [-F / --force]
 
 Note:
   The output_file argument should not include the file extension.
@@ -41,8 +41,6 @@ Arguments:
   -F, --force
     Forces generation of bootstrap segments, even if the files
     seem current.)";
-
-  int gained_levels;
 
   Program program;
   std::vector<BootstrapSegment> bootstrap_segments;
@@ -66,6 +64,7 @@ Arguments:
   void print_number_of_segments();
   void print_bootstrap_segments();
 
+  void sort_segments();
   void remove_last_operation_from_segments();
   void remove_redundant_bootstrap_segments();
   bool segments_are_redundant(BootstrapSegment, BootstrapSegment);

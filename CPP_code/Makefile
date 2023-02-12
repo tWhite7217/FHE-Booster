@@ -1,6 +1,6 @@
 BIN = ./bin
 
-primitive_dependencies := $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/custom_ddg_format_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o
+primitive_dependencies := $(BIN)/operation_type.o $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/custom_ddg_format_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o
 
 shared_depenedencies := $(BIN)/shared_utils.o $(primitive_dependencies)
 
@@ -10,6 +10,9 @@ all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.
 
 $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ shared_utils.cpp
+
+$(BIN)/operation_type.o: operation_type.cpp operation_type.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ operation_type.cpp
 
 $(BIN)/operation.o: operation.cpp operation.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ operation.cpp
