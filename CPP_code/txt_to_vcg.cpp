@@ -5,7 +5,7 @@
 std::string input_filename;
 std::string output_filename;
 
-OpVector operations;
+Program program;
 std::set<int> constant_ids;
 
 void read_command_line_args(int argc, char **argv)
@@ -17,11 +17,11 @@ void read_command_line_args(int argc, char **argv)
 void get_info_from_input_parser()
 {
     InputParser input_parser;
-    operations = input_parser.parse_dag_file(input_filename);
+    program = input_parser.parse_dag_file(input_filename);
 
-    for (auto operation : operations)
+    for (auto operation : program)
     {
-        for (const auto &constant_id : operation->get_constant_parent_ids())
+        for (const auto &constant_id : operation->constant_parent_ids)
         {
             constant_ids.insert(constant_id);
         }
@@ -34,7 +34,7 @@ std::string get_vcg_node_color(OperationPtr operation)
     // {
     //     return "lightgreen";
     // } else
-    if (operation->get_child_ptrs().size() > 0)
+    if (operation->child_ptrs.size() > 0)
     {
         return "white";
     }
@@ -55,21 +55,21 @@ void write_graph_to_vcg_file(std::string output_filename)
         output_file << "node: {title: \"K" << constant_id << "\" label: \"SET CONST" << constant_id << "\" color: lightgreen }" << std::endl;
     }
 
-    for (auto &operation : operations)
+    for (auto &operation : program)
     {
         std::string color = get_vcg_node_color(operation);
-        output_file << "node: {title: \"" << operation->get_id() << "\" label: \"OP" << operation->get_id() << " (" << operation->get_type() << ")\" color: " << color << " }" << std::endl;
+        output_file << "node: {title: \"" << operation->id << "\" label: \"OP" << operation->id << " (" << operation->type << ")\" color: " << color << " }" << std::endl;
     }
 
-    for (auto &operation : operations)
+    for (auto &operation : program)
     {
-        for (const auto &parent : operation->get_parent_ptrs())
+        for (const auto &parent : operation->parent_ptrs)
         {
-            output_file << "edge: {sourcename: \"" << parent->get_id() << "\" targetname: \"" << operation->get_id() << "\" }" << std::endl;
+            output_file << "edge: {sourcename: \"" << parent->id << "\" targetname: \"" << operation->id << "\" }" << std::endl;
         }
-        for (const auto &constant_id : operation->get_constant_parent_ids())
+        for (const auto &constant_id : operation->constant_parent_ids)
         {
-            output_file << "edge: {sourcename: \"K" << constant_id << "\" targetname: \"" << operation->get_id() << "\" }" << std::endl;
+            output_file << "edge: {sourcename: \"K" << constant_id << "\" targetname: \"" << operation->id << "\" }" << std::endl;
         }
     }
 

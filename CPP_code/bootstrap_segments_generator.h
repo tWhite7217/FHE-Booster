@@ -44,8 +44,8 @@ Arguments:
 
   int gained_levels;
 
-  std::vector<OpVector> bootstrap_segments;
-  OpVector operations;
+  Program program;
+  std::vector<BootstrapSegment> bootstrap_segments;
 
   struct Options
   {
@@ -61,14 +61,14 @@ Arguments:
   std::string selective_output_filename;
 
   void create_raw_bootstrap_segments();
-  std::vector<OpVector> create_bootstrap_segments_helper(OperationPtr, OpVector, int);
+  std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
 
   void print_number_of_segments();
   void print_bootstrap_segments();
 
-  void remove_last_operation_from_bootstrap_segments();
+  void remove_last_operation_from_segments();
   void remove_redundant_bootstrap_segments();
-  bool segments_are_redundant(OpVector, OpVector);
+  bool segments_are_redundant(BootstrapSegment, BootstrapSegment);
   void write_segments_to_file(std::ofstream &);
   void convert_segments_to_standard();
 

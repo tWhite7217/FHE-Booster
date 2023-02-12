@@ -28,25 +28,28 @@ public:
 
     OpVector::const_iterator begin() const;
     OpVector::const_iterator end() const;
+    size_t size() const;
 
     OperationPtr get_operation_ptr_from_id(const int &);
     int get_latency_of(OperationType::Type);
-    int get_earliest_possible_end_time();
-    void update_ESTs_and_LSTs();
     int get_maximum_slack();
+    int get_maximum_num_segments();
     // void add_segment_index_info_to_operations();
     bool bootstrap_segments_are_satisfied();
     // bool bootstrap_segments_are_satisfied_for_selective_model();
     int find_unsatisfied_bootstrap_segment_index();
 
+    void add_operation(const OperationPtr &);
+
+    void update_num_segments_for_every_operation();
+    void update_ESTs_and_LSTs();
     void reset_bootstrap_set();
     void update_all_bootstrap_urgencies();
-    int update_num_segments_for_every_operation();
+
+    void remove_unnecessary_bootstrap_pairs();
 
     void write_bootstrapping_set_to_file(const std::string &);
     void write_lgr_info_to_file(const std::string &, int);
-
-    void remove_unnecessary_bootstrap_pairs();
 
 private:
     OpVector operations;

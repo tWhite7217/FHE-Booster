@@ -1,6 +1,6 @@
-#include <algorithm>
-
 #include "custom_ddg_format_parser.h"
+
+#include <algorithm>
 
 LatencyMap InputParser::parse_latency_file(const std::string &latency_filename)
 {
@@ -25,14 +25,14 @@ LatencyMap InputParser::parse_latency_file(const std::string &latency_filename)
     return latencies;
 }
 
-OpVector InputParser::parse_dag_file(const std::string &dag_filename)
+std::shared_ptr<Program> InputParser::parse_dag_file(const std::string &dag_filename)
 {
     return parse_dag_file_with_bootstrap_file(dag_filename, "");
 }
 
-OpVector InputParser::parse_dag_file_with_bootstrap_file(const std::string &dag_filename, const std::string &bootstrap_filename)
+std::shared_ptr<Program> InputParser::parse_dag_file_with_bootstrap_file(const std::string &dag_filename, const std::string &bootstrap_filename)
 {
-    operations.clear();
+    program = std::unique_ptr<Program>(new Program());
     std::ifstream dag_file(dag_filename);
     std::string line;
 
@@ -68,18 +68,18 @@ OpVector InputParser::parse_dag_file_with_bootstrap_file(const std::string &dag_
     if (!bootstrap_filename.empty())
     {
         auto lgr_parser = LGRParser(bootstrap_filename, "-");
-        lgr_parser.set_operations(operations);
+        lgr_parser.set_program(program);
         lgr_parser.lex();
     }
 
-    return operations;
+    return program;
 }
 
 void InputParser::parse_operation_and_its_dependences(const std::vector<std::string> &line)
 {
-    auto type = get_operation_type_from_string(line[1]);
-    operations.emplace_back(new Operation(type, int(operations.size()) + 1));
-    auto new_operation = operations.back();
+    auto type = OperationType(line[1]);
+    auto new_operation = OperationPtr(new Operation(type, int(program->size()) + 1));
+    program->add_operation(new_operation);
 
     for (int i = 2; i < line.size(); i++)
     {
@@ -87,13 +87,13 @@ void InputParser::parse_operation_and_its_dependences(const std::vector<std::str
         auto parent_id = std::stoi(line[i].substr(1, line[i].length() - 1));
         if (parent_is_ciphertext)
         {
-            auto parent_ptr = operations[parent_id - 1];
-            new_operation->add_parent_ptr(parent_ptr);
-            parent_ptr->add_child_ptr(new_operation);
+            auto parent_ptr = program->get_operation_ptr_from_id(parent_id);
+            new_operation->parent_ptrs.push_back(parent_ptr);
+            parent_ptr->child_ptrs.push_back(new_operation);
         }
         else
         {
-            new_operation->add_constant_parent_id(parent_id);
+            new_operation->constant_parent_ids.push_back(parent_id);
         }
     }
 }
@@ -124,9 +124,9 @@ std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string
 
         for (auto op_str : line_as_list)
         {
-            auto op_num = std::stoi(op_str);
-            auto op_ptr = operations[op_num - 1];
-            op_ptr->add_segment_index(segment_index);
+            auto op_id = std::stoi(op_str);
+            auto op_ptr = program->get_operation_ptr_from_id(op_id);
+            op_ptr->segment_indexes.push_back(segment_index);
             bootstrap_segments.back().add(op_ptr);
         }
     }

@@ -9,7 +9,7 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     selective_output_filename = options.output_filename + "_selective.txt";
 
     InputParser parser;
-    operations = parser.parse_dag_file(options.dag_filename);
+    program = *parser.parse_dag_file(options.dag_filename);
 }
 
 bool BootstrapSegmentGenerator::is_in_forced_generation_mode()
@@ -93,10 +93,10 @@ void BootstrapSegmentGenerator::generate_bootstrap_segments()
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
 {
-    for (auto operation : operations)
+    for (auto operation : program)
     {
-        std::vector<OpVector> bootstrap_segments_to_add;
-        if (operation->get_type() == OperationType::MUL)
+        std::vector<BootstrapSegment> bootstrap_segments_to_add;
+        if (operation->type == OperationType::MUL)
         {
             bootstrap_segments_to_add = create_bootstrap_segments_helper(operation, {}, 0);
         }
@@ -106,15 +106,15 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     class comparator_class
     {
     public:
-        bool operator()(OpVector segment1, OpVector segment2)
+        bool operator()(BootstrapSegment segment1, BootstrapSegment segment2)
         {
-            if (segment1.back() == segment2.back())
+            if (segment1.last_operation() == segment2.last_operation())
             {
                 return segment1.size() < segment2.size();
             }
             else
             {
-                return segment1.back()->get_id() < segment2.back()->get_id();
+                return segment1.last_operation()->id < segment2.last_operation()->id;
             }
         }
     };
@@ -122,14 +122,14 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     auto starting_point_offset = 0;
     if (bootstrap_segments.size() > 0)
     {
-        auto current_starting_id_to_sort = bootstrap_segments[0][0];
+        auto current_starting_id_to_sort = bootstrap_segments.front().first_operation();
         for (auto i = 1; i < bootstrap_segments.size(); i++)
         {
-            if (bootstrap_segments[i][0] != current_starting_id_to_sort)
+            if (bootstrap_segments[i].first_operation() != current_starting_id_to_sort)
             {
                 std::sort(bootstrap_segments.begin() + starting_point_offset, bootstrap_segments.begin() + i, comparator_class());
                 starting_point_offset = i;
-                current_starting_id_to_sort = bootstrap_segments[i][0];
+                current_starting_id_to_sort = bootstrap_segments[i].first_operation();
             }
         }
     }
@@ -139,33 +139,33 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     }
 }
 
-std::vector<OpVector> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, OpVector segment, int num_multiplications)
+std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, BootstrapSegment segment, int num_multiplications)
 {
-    if (operation->get_type() == OperationType::MUL)
+    if (operation->type == OperationType::MUL)
     {
         num_multiplications++;
     }
-    segment.push_back(operation);
+    segment.add(operation);
     if (num_multiplications >= gained_levels && operation->has_multiplication_child())
     {
-        std::vector<OpVector> segments_to_return;
-        for (auto child : operation->get_child_ptrs())
+        std::vector<BootstrapSegment> segments_to_return;
+        for (auto child : operation->child_ptrs)
         {
             auto segment_to_return = segment;
-            segment_to_return.push_back(child);
+            segment_to_return.add(child);
             segments_to_return.push_back(segment_to_return);
         }
         return segments_to_return;
     }
-    else if (operation->get_child_ptrs().size() == 0)
+    else if (operation->child_ptrs.size() == 0)
     {
         return {};
     }
 
-    std::vector<OpVector> segments_to_return;
-    for (auto child : operation->get_child_ptrs())
+    std::vector<BootstrapSegment> segments_to_return;
+    for (auto child : operation->child_ptrs)
     {
-        std::vector<OpVector> segments_to_add;
+        std::vector<BootstrapSegment> segments_to_add;
         segments_to_add = create_bootstrap_segments_helper(child, segment, num_multiplications);
         segments_to_return.insert(segments_to_return.end(), segments_to_add.begin(), segments_to_add.end());
     }
@@ -180,8 +180,8 @@ void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
     {
         auto j = i + 1;
         while (j < bootstrap_segments.size() &&
-               bootstrap_segments[i].front() == bootstrap_segments[j].front() &&
-               bootstrap_segments[i].back() == bootstrap_segments[j].back())
+               bootstrap_segments[i].first_operation() == bootstrap_segments[j].first_operation() &&
+               bootstrap_segments[i].last_operation() == bootstrap_segments[j].last_operation())
         {
             if (bootstrap_segments[i].size() <= bootstrap_segments[j].size())
             {
@@ -208,13 +208,13 @@ void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
     std::cout << "Number of redundant bootstrap segments removed: " << redundant_count << std::endl;
 }
 
-bool BootstrapSegmentGenerator::segments_are_redundant(OpVector smaller_segment, OpVector larger_segment)
+bool BootstrapSegmentGenerator::segments_are_redundant(BootstrapSegment smaller_segment, BootstrapSegment larger_segment)
 {
     auto j = 0;
     auto size_diff = larger_segment.size() - smaller_segment.size();
     for (auto i = 0; i < smaller_segment.size(); i++)
     {
-        while (smaller_segment[i] != larger_segment[j])
+        while (smaller_segment.operation_at(i) != larger_segment.operation_at(j))
         {
             j++;
             if (j - i > size_diff)
@@ -229,10 +229,10 @@ bool BootstrapSegmentGenerator::segments_are_redundant(OpVector smaller_segment,
 void BootstrapSegmentGenerator::print_number_of_segments()
 {
     std::unordered_map<OperationPtr, int> num_segments_to;
-    for (auto operation : operations)
+    for (auto operation : program)
     {
         num_segments_to[operation] = 1;
-        for (auto parent : operation->get_parent_ptrs())
+        for (auto parent : operation->parent_ptrs)
         {
             num_segments_to[operation] += num_segments_to[parent] + 1;
         }
@@ -251,7 +251,7 @@ void BootstrapSegmentGenerator::print_bootstrap_segments()
     {
         for (auto operation : segment)
         {
-            std::cout << operation->get_id() << ",";
+            std::cout << operation->id << ",";
         }
         std::cout << std::endl;
     }
@@ -263,7 +263,7 @@ void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_fil
     {
         for (auto operation : segment)
         {
-            output_file << operation->get_id() << ",";
+            output_file << operation->id << ",";
         }
         output_file << std::endl;
     }
@@ -284,15 +284,15 @@ void BootstrapSegmentGenerator::write_segments_to_files()
 
 void BootstrapSegmentGenerator::convert_segments_to_standard()
 {
-    remove_last_operation_from_bootstrap_segments();
+    remove_last_operation_from_segments();
     remove_redundant_bootstrap_segments();
 }
 
-void BootstrapSegmentGenerator::remove_last_operation_from_bootstrap_segments()
+void BootstrapSegmentGenerator::remove_last_operation_from_segments()
 {
     for (auto &segment : bootstrap_segments)
     {
-        segment.pop_back();
+        segment.remove_last_operation();
     }
 }
 

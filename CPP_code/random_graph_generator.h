@@ -4,7 +4,7 @@
 #include <numeric>
 
 #include "shared_utils.h"
-#include "operation.h"
+#include "program.h"
 
 class RandomGraphGenerator
 {
@@ -38,7 +38,8 @@ private:
 
     graph_generator_options options;
     std::minstd_rand rand_gen;
-    OpVector operations;
+
+    Program program;
     std::vector<OpVector> level_ops;
     std::vector<int> level_widths;
     int num_constants;

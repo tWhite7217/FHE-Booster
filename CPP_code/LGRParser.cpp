@@ -2,12 +2,12 @@
 
 #include "LGRParser.h"
 
-void LGRParser::set_operations(OpVector &operations) { this->operations = operations; }
+void LGRParser::set_program(const std::shared_ptr<Program> &program) { this->program = program; }
 
 OperationPtr LGRParser::get_first_operation_ptr(std::string yystring)
 {
     int operation_id = get_first_operation_id(yystring);
-    return get_operation_ptr_from_id(operations, operation_id);
+    return program->get_operation_ptr_from_id(operation_id);
 }
 
 int LGRParser::get_first_operation_id(std::string yystring)
@@ -24,7 +24,7 @@ int LGRParser::get_first_operation_id(std::string yystring)
 OperationPtr LGRParser::get_second_operation_ptr(std::string yystring)
 {
     int operation_id = get_second_operation_id(yystring);
-    return get_operation_ptr_from_id(operations, operation_id);
+    return program->get_operation_ptr_from_id(operation_id);
 }
 
 int LGRParser::get_second_operation_id(std::string yystring)

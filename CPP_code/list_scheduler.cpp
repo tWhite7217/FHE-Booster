@@ -36,7 +36,7 @@ void ListScheduler::initialize_pred_count()
 {
     for (auto operation : program)
     {
-        pred_count[operation] = operation->get_parent_ptrs().size();
+        pred_count[operation] = operation->parent_ptrs.size();
     }
 }
 
@@ -124,7 +124,7 @@ void ListScheduler::mark_cores_available(std::unordered_set<OperationPtr> &finis
 {
     for (auto &op : finished_operations)
     {
-        core_availability[op->get_core_num()] = true;
+        core_availability[op->core_num] = true;
     }
 }
 
@@ -153,23 +153,23 @@ void ListScheduler::start_ready_operations()
     {
         auto operation = *it;
         it = ready_operations.erase(it);
-        operation->set_start_time(clock_cycle);
-        running_operations[operation] = program.get_latency_of(operation->get_type());
+        operation->start_time = clock_cycle;
+        running_operations[operation] = program.get_latency_of(operation->type);
         if (create_core_assignments)
         {
             int best_core = get_best_core_for_operation(operation, available_core);
-            operation->set_core_num(best_core);
+            operation->core_num = best_core;
             core_availability[best_core] = false;
 
             auto core_schedules_index = best_core - 1;
 
-            std::string result_var = " c" + std::to_string(operation->get_id());
+            std::string result_var = " c" + std::to_string(operation->id);
 
             std::string arg1;
             std::string arg2;
 
-            auto num_var_parents = operation->get_parent_ptrs().size();
-            auto num_const_parents = operation->get_constant_parent_ids().size();
+            auto num_var_parents = operation->parent_ptrs.size();
+            auto num_const_parents = operation->constant_parent_ids.size();
 
             if (num_var_parents == 2)
             {
@@ -201,10 +201,10 @@ void ListScheduler::start_ready_operations()
 
             std::string thread = " t" + std::to_string(best_core);
 
-            core_schedules[core_schedules_index] += operation->get_type().to_string() + result_var + arg1 + arg2 + thread + "\n";
+            core_schedules[core_schedules_index] += operation->type.to_string() + result_var + arg1 + arg2 + thread + "\n";
             if (operation->is_bootstrapped())
             {
-                core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->get_id()) + " c" + std::to_string(operation->get_id()) + " t" + std::to_string(best_core) + "\n";
+                core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->id) + " c" + std::to_string(operation->id) + " t" + std::to_string(best_core) + "\n";
             }
         }
     }
@@ -212,28 +212,28 @@ void ListScheduler::start_ready_operations()
 
 std::string ListScheduler::get_constant_arg(OperationPtr operation, size_t parent_num)
 {
-    return " k" + std::to_string(operation->get_constant_parent_ids()[parent_num]);
+    return " k" + std::to_string(operation->constant_parent_ids[parent_num]);
 }
 
 std::string ListScheduler::get_variable_arg(OperationPtr operation, size_t parent_num)
 {
     std::string arg = " c";
-    auto parent = operation->get_parent_ptrs()[parent_num];
+    auto parent = operation->parent_ptrs[parent_num];
     if (operation->receives_bootstrapped_result_from(parent))
     {
         arg += "0";
     }
-    return arg + std::to_string(parent->get_id());
+    return arg + std::to_string(parent->id);
 }
 
 int ListScheduler::get_best_core_for_operation(OperationPtr operation, int fallback_core)
 {
     int best_core = fallback_core;
-    for (const auto &parent : operation->get_parent_ptrs())
+    for (const auto &parent : operation->parent_ptrs)
     {
-        if (core_is_available(parent->get_core_num()))
+        if (core_is_available(parent->core_num))
         {
-            best_core = parent->get_core_num();
+            best_core = parent->core_num;
         }
     }
     return best_core;
@@ -280,7 +280,7 @@ void ListScheduler::start_bootstrapping_necessary_operations()
         if (operation->is_bootstrapped())
         {
             bootstrapping_operations[operation] = bootstrap_latency;
-            core_availability[operation->get_core_num()] = false;
+            core_availability[operation->core_num] = false;
         }
     }
 }
@@ -300,8 +300,8 @@ void ListScheduler::start_bootstrapping_ready_operations_for_limited_model()
     while (available_core_num != -1 && !bootstrapping_queue.empty())
     {
         auto operation = *(bootstrapping_queue.begin());
-        operation->set_bootstrap_start_time(clock_cycle);
-        operation->set_core_num(available_core_num);
+        operation->bootstrap_start_time = clock_cycle;
+        operation->core_num = available_core_num;
         core_availability[available_core_num] = false;
         bootstrapping_operations[operation] = bootstrap_latency;
         bootstrapping_queue.erase(bootstrapping_queue.begin());
@@ -355,7 +355,7 @@ void ListScheduler::update_pred_count()
 {
     for (auto &op : finished_running_operations)
     {
-        for (const auto &child : op->get_child_ptrs())
+        for (const auto &child : op->child_ptrs)
         {
             if (!child->receives_bootstrapped_result_from(op) && multiset_contains_element(prioritized_unstarted_operations, child))
             {
@@ -366,7 +366,7 @@ void ListScheduler::update_pred_count()
 
     for (auto &op : finished_bootstrapping_operations)
     {
-        for (const auto &child : op->get_bootstrap_children())
+        for (const auto &child : op->bootstrap_children)
         {
             if (multiset_contains_element(prioritized_unstarted_operations, child))
             {

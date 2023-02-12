@@ -28,7 +28,8 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
     auto count = 0;
     while (!program.bootstrap_segments_are_satisfied())
     {
-        max_num_segments = program.update_num_segments_for_every_operation();
+        program.update_num_segments_for_every_operation();
+        max_num_segments = program.get_maximum_num_segments();
         if (options.slack_weight[set_index] != 0)
         {
             program.update_ESTs_and_LSTs();
@@ -59,15 +60,15 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
         }
     }
 
-    for (const auto &child : max_score_operation->get_child_ptrs())
+    for (const auto &child : max_score_operation->child_ptrs)
     {
-        max_score_operation->add_bootstrap_child(child);
+        max_score_operation->bootstrap_children.insert(child);
     }
 }
 
 double BootstrapSetSelector::get_score(const OperationPtr &operation)
 {
-    auto num_segments = operation->get_num_unsatisfied_segments();
+    auto num_segments = operation->num_unsatisfied_segments;
     if (num_segments == 0)
     {
         return 0;
@@ -78,7 +79,7 @@ double BootstrapSetSelector::get_score(const OperationPtr &operation)
 
     return std::max(options.segments_weight[set_index] * normalized_num_segments +
                         options.slack_weight[set_index] * normalized_slack +
-                        options.urgency_weight[set_index] * operation->get_bootstrap_urgency(),
+                        options.urgency_weight[set_index] * operation->bootstrap_urgency,
                     0.0);
 }
 

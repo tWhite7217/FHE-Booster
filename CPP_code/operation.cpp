@@ -2,81 +2,35 @@
 
 Operation::Operation(OperationType type, int id) : type{type}, id{id} {}
 
-OperationType Operation::get_type() const
+int Operation::get_earliest_end_time(const LatencyMap &latencies) const
 {
-    return type;
+    auto pre_bootstrap_latency = latencies.at(type);
+    auto bootstrap_latency = is_bootstrapped()
+                                 ? latencies.at(OperationType::BOOT)
+                                 : 0;
+
+    auto total_latency = pre_bootstrap_latency + bootstrap_latency;
+
+    return earliest_start_time + total_latency;
 }
 
-int Operation::get_earliest_start_time() const
-{
-    return earliest_start_time;
-}
-
-int Operation::get_slack()
+int Operation::get_slack() const
 {
     return latest_start_time - earliest_start_time;
 }
 
-int Operation::get_id()
-{
-    return id;
-}
-
-OpVector Operation::get_parent_ptrs()
-{
-    return parent_ptrs;
-}
-
-OpVector Operation::get_child_ptrs()
-{
-    return child_ptrs;
-}
-
-OpSet Operation::get_bootstrap_children()
-{
-    return bootstrap_children;
-}
-
-std::vector<int> Operation::get_constant_parent_ids()
-{
-    return constant_parent_ids;
-}
-
-double Operation::get_bootstrap_urgency()
-{
-    return bootstrap_urgency;
-}
-
-int Operation::get_num_unsatisfied_segments()
-{
-    return num_unsatisfied_segments;
-}
-
-int Operation::get_core_num()
-{
-    return core_num;
-}
-
-// int Operation::get_start_time();
-
-    void Operation::set_bootstrap_urgency(double) {
-        bootstrap_urgency = double;
-    }
-
-    void Operation::set_core_num(int);
-
-bool Operation::is_bootstrapped()
+bool Operation::is_bootstrapped() const
 {
     return !bootstrap_children.empty();
 }
 
-bool Operation::has_no_parents()
+bool Operation::has_no_parents() const
 {
     return (parent_ptrs.size() == 0) &&
            (constant_parent_ids.size() == 0);
 }
 
-bool Operation::parents_meet_urgency_criteria()
+bool Operation::parents_meet_urgency_criteria() const
 {
     for (auto parent : parent_ptrs)
     {
@@ -88,7 +42,7 @@ bool Operation::parents_meet_urgency_criteria()
     return true;
 }
 
-bool Operation::has_multiplication_child()
+bool Operation::has_multiplication_child() const
 {
     for (const auto &child : child_ptrs)
     {

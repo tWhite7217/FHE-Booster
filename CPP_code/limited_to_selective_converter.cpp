@@ -11,6 +11,7 @@ LimitedToSelectiveConverter::LimitedToSelectiveConverter(std::string dag_filenam
 
 void LimitedToSelectiveConverter::write_selective_lgr_file(std::string output_lgr_filename)
 {
+    program.remove_unnecessary_bootstrap_pairs();
     program.write_bootstrapping_set_to_file(output_lgr_filename);
 }
 
@@ -31,7 +32,6 @@ int main(int argc, char *argv[])
     auto limited_to_selective_converter =
         LimitedToSelectiveConverter(dag_filename, segments_filename, input_lgr_filename, gained_levels);
 
-    limited_to_selective_converter.remove_unnecessary_bootstrapped_results();
     limited_to_selective_converter.write_selective_lgr_file(output_lgr_filename);
 
     return 0;

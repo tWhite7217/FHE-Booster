@@ -5,10 +5,15 @@
 
 // $insert baseclass_h
 #include "LGRParserbase.h"
+#include "shared_utils.h"
+#include "program.h"
+// #include "operation.h"
+// #include "bootstrap_segment.h"
 
 #include <map>
 #include <functional>
-#include "shared_utils.h"
+
+class Program;
 
 // $insert classHead
 class LGRParser : public LGRParserBase
@@ -27,7 +32,7 @@ public:
     bool used_bootstrap_limited_model = false;
     bool used_selective_model = false;
 
-    void set_operations(OpVector &);
+    void set_program(const std::shared_ptr<Program> &);
 
 private:
     int lex_();
@@ -42,7 +47,7 @@ private:
     // be exec'ed after the rules's actions.
 
     // My private members
-    OpVector operations;
+    std::shared_ptr<Program> program;
 
     OperationPtr get_first_operation_ptr(std::string);
     OperationPtr get_second_operation_ptr(std::string);

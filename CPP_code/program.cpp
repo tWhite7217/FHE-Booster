@@ -4,7 +4,7 @@ Program::Program(const ConstructorInput &in)
 {
     InputParser input_parser;
 
-    operations = input_parser.parse_dag_file_with_bootstrap_file(in.dag_filename, in.bootstrap_filename);
+    *this = *input_parser.parse_dag_file_with_bootstrap_file(in.dag_filename, in.bootstrap_filename);
 
     if (!in.segments_filename.empty())
     {
@@ -19,6 +19,7 @@ Program::Program(const ConstructorInput &in)
 
 OpVector::const_iterator Program::begin() const { return operations.begin(); };
 OpVector::const_iterator Program::end() const { return operations.end(); };
+size_t Program::size() const { return operations.size(); };
 
 OperationPtr Program::get_operation_ptr_from_id(const int &id)
 {
@@ -34,33 +35,24 @@ int Program::get_latency_of(OperationType::Type type)
     return latencies.at(type);
 };
 
-int Program::get_earliest_possible_end_time()
-{
-    int earliest_possible_program_end_time = 0;
-    for (auto operation : operations)
-    {
-        auto latency = latencies.at(operation->get_type());
-        int operation_earliest_end_time = operation->get_earliest_start_time() + latency;
-        if (operation_earliest_end_time > earliest_possible_program_end_time)
-        {
-            earliest_possible_program_end_time = operation_earliest_end_time;
-        }
-    }
-    return earliest_possible_program_end_time;
-}
-
 void Program::update_ESTs_and_LSTs()
 {
     // auto operations_in_topological_order = get_operations_in_topological_order();
     // TGFF puts operations in topological order so we do not need to do that here
     auto operations_in_topological_order = operations;
 
+    int earliest_program_end_time = 0;
     for (auto operation : operations_in_topological_order)
     {
         operation->update_earliest_start_time(latencies);
+        auto earliest_operation_end_time = operation->get_earliest_end_time(latencies);
+        if (earliest_operation_end_time > earliest_program_end_time)
+        {
+            earliest_program_end_time = earliest_operation_end_time;
+        }
     }
 
-    int earliest_program_end_time = get_earliest_possible_end_time();
+    // int  = get_earliest_possible_end_time();
 
     auto operations_in_reverse_topological_order = operations_in_topological_order;
     std::reverse(operations_in_reverse_topological_order.begin(), operations_in_reverse_topological_order.end());
@@ -120,19 +112,24 @@ int Program::find_unsatisfied_bootstrap_segment_index()
     return -1;
 }
 
+void Program::add_operation(const OperationPtr &operation)
+{
+    operations.push_back(operation);
+}
+
 void Program::reset_bootstrap_set()
 {
     for (auto operation : operations)
     {
-        operation->clear_bootstrap_children();
+        operation->bootstrap_children.clear();
     }
 }
 
-int Program::update_num_segments_for_every_operation()
+void Program::update_num_segments_for_every_operation()
 {
     for (auto &operation : operations)
     {
-        operation->reset_num_unsatisfied_segments();
+        operation->num_unsatisfied_segments = 0;
     }
 
     for (auto segment : bootstrap_segments)
@@ -141,16 +138,19 @@ int Program::update_num_segments_for_every_operation()
         {
             for (auto &operation : segment)
             {
-                operation->increment_num_unsatisfied_segments();
+                operation->num_unsatisfied_segments++;
             }
         }
     }
+}
 
+int Program::get_maximum_num_segments()
+{
     int max = 0;
 
     for (auto &operation : operations)
     {
-        auto num_segments = operation->get_num_unsatisfied_segments();
+        auto num_segments = operation->num_unsatisfied_segments;
         if (num_segments > max)
         {
             max = num_segments;
@@ -164,7 +164,7 @@ void Program::update_all_bootstrap_urgencies()
 {
     for (const auto &operation : operations)
     {
-        operation->set_bootstrap_urgency(-1);
+        operation->bootstrap_urgency = -1;
     }
 
     auto count = 0;
@@ -176,9 +176,9 @@ void Program::update_all_bootstrap_urgencies()
             auto segment_size = segment.size();
             for (double i = 0; i < segment_size; i++)
             {
-                segment.operation_at(i)->set_bootstrap_urgency(
-                    std::max(segment.operation_at(i)->get_bootstrap_urgency(),
-                             (i + 1) / segment_size));
+                segment.operation_at(i)->bootstrap_urgency =
+                    std::max(segment.operation_at(i)->bootstrap_urgency,
+                             (i + 1) / segment_size);
             }
         }
     }
@@ -193,13 +193,13 @@ void Program::remove_unnecessary_bootstrap_pairs()
     int num_removed = 0;
     for (auto parent : operations)
     {
-        auto child_it = parent->get_bootstrap_children().begin();
-        while (child_it != parent->get_bootstrap_children().end())
+        auto child_it = parent->bootstrap_children.begin();
+        while (child_it != parent->bootstrap_children.end())
         {
             auto child = *child_it;
             if (no_segment_relies_on_bootstrap_pair(parent, child))
             {
-                child_it = parent->remove_bootstrap_child(child);
+                child_it = parent->bootstrap_children.erase(child_it);
                 num_removed++;
             }
             else
@@ -233,22 +233,22 @@ void Program::write_lgr_info_to_file(const std::string &filename, int total_late
 
     for (auto operation : operations)
     {
-        output_file << "START_TIME( OP" << operation->get_id() << ") " << operation->get_start_time() << std::endl;
+        output_file << "START_TIME( OP" << operation->id << ") " << operation->start_time << std::endl;
     }
 
     for (auto operation : operations)
     {
-        if (operation->get_core_num() > 0)
+        if (operation->core_num > 0)
         {
-            output_file << "B2C( OP" << operation->get_id() << ", C" << operation->get_core_num() << ") 1" << std::endl;
+            output_file << "B2C( OP" << operation->id << ", C" << operation->core_num << ") 1" << std::endl;
         }
     }
 
     for (auto operation : operations)
     {
-        if (operation->get_bootstrap_start_time() > 0)
+        if (operation->bootstrap_start_time > 0)
         {
-            output_file << "BOOTSTRAP_START_TIME( OP" << operation->get_id() << ") " << operation->get_bootstrap_start_time() << std::endl;
+            output_file << "BOOTSTRAP_START_TIME( OP" << operation->id << ") " << operation->bootstrap_start_time << std::endl;
         }
     }
 
@@ -284,7 +284,7 @@ void Program::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file)
     {
         if (operation->is_bootstrapped())
         {
-            file << "BOOTSTRAPPED( OP" << operation->get_id() << ") 1" << std::endl;
+            file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
         }
     }
 }
@@ -294,9 +294,9 @@ void Program::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file
 
     for (auto operation : operations)
     {
-        for (auto child : operation->get_bootstrap_children())
+        for (auto child : operation->bootstrap_children)
         {
-            file << "BOOTSTRAPPED( OP" << operation->get_id() << ", OP" << child->get_id() << ") 1" << std::endl;
+            file << "BOOTSTRAPPED( OP" << operation->id << ", OP" << child->id << ") 1" << std::endl;
         }
     }
 }
