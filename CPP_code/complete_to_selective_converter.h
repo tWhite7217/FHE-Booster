@@ -5,8 +5,8 @@
 class CompleteToSelectiveConverter
 {
 public:
-    CompleteToSelectiveConverter(std::string, std::string, std::string, int);
-    void write_selective_lgr_file(std::string);
+    CompleteToSelectiveConverter(const std::string &, const std::string &, const std::string &);
+    void write_selective_lgr_file(const std::string &);
 
 private:
     Program program;

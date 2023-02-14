@@ -1,6 +1,6 @@
 #include "complete_to_selective_converter.h"
 
-CompleteToSelectiveConverter::CompleteToSelectiveConverter(std::string dag_filename, std::string segments_filename, std::string bootstrap_filename, int gained_levels)
+CompleteToSelectiveConverter::CompleteToSelectiveConverter(const std::string &dag_filename, const std::string &segments_filename, const std::string &bootstrap_filename)
 {
     Program::ConstructorInput in;
     in.dag_filename = dag_filename;
@@ -9,7 +9,7 @@ CompleteToSelectiveConverter::CompleteToSelectiveConverter(std::string dag_filen
     program = Program(in);
 }
 
-void CompleteToSelectiveConverter::write_selective_lgr_file(std::string output_lgr_filename)
+void CompleteToSelectiveConverter::write_selective_lgr_file(const std::string &output_lgr_filename)
 {
     program.remove_unnecessary_bootstrap_pairs();
     program.write_bootstrapping_set_to_file(output_lgr_filename);
@@ -17,9 +17,9 @@ void CompleteToSelectiveConverter::write_selective_lgr_file(std::string output_l
 
 int main(int argc, char *argv[])
 {
-    if (argc != 6)
+    if (argc != 5)
     {
-        std::cout << "Usage: " << argv[0] << " <input_dag_file> <segments_file> <input_lgr_file> <output_lgr_file> <gained_levels>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_dag_file> <segments_file> <input_lgr_file> <output_lgr_file>" << std::endl;
         return 1;
     }
 
@@ -27,10 +27,9 @@ int main(int argc, char *argv[])
     std::string segments_filename = argv[2];
     std::string input_lgr_filename = argv[3];
     std::string output_lgr_filename = argv[4];
-    int gained_levels = std::atoi(argv[5]);
 
     auto complete_to_selective_converter =
-        CompleteToSelectiveConverter(dag_filename, segments_filename, input_lgr_filename, gained_levels);
+        CompleteToSelectiveConverter(dag_filename, segments_filename, input_lgr_filename);
 
     complete_to_selective_converter.write_selective_lgr_file(output_lgr_filename);
 
