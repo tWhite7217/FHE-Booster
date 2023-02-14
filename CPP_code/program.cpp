@@ -30,7 +30,7 @@ OperationPtr Program::get_operation_ptr_from_id(const int &id)
     return operations[id - 1];
 }
 
-int Program::get_latency_of(OperationType::Type type)
+int Program::get_latency_of(const OperationType::Type &type)
 {
     return latencies.at(type);
 };

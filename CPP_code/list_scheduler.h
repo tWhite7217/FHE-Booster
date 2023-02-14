@@ -22,12 +22,14 @@ public:
 
 private:
     const std::string help_info = R"(
-Usage: ./list_scheduler <dag_file>
-                        <latency_file>
-                        <output_file>
-                        [<options>]
+Usage: ./list_scheduler.out <dag_file>
+                            <output_file>
+                            [<options>]
 
 Options:
+  -l <file>, --latency-file=<file>
+    A file describing the latencies of FHE operations on the target
+    hardware. The default values can be found in program.h.
   -t <int>, --num-threads=<int>
     The number of threads on which operations may be scheduled.
     Defaults to 1.

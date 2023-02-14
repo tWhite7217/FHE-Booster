@@ -378,18 +378,17 @@ void ListScheduler::update_pred_count()
 
 void ListScheduler::parse_args(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 2)
     {
         std::cout << help_info << std::endl;
         exit(1);
     }
 
     options.dag_filename = argv[1];
-    options.latency_filename = argv[2];
-    options.output_filename = argv[3];
+    options.output_filename = argv[2];
 
     std::string options_string;
-    for (auto i = 4; i < argc; i++)
+    for (auto i = 3; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }
@@ -404,6 +403,12 @@ void ListScheduler::parse_args(int argc, char **argv)
     if (!bootstrap_arg.empty())
     {
         options.bootstrap_filename = bootstrap_arg;
+    }
+
+    auto latency_arg = get_arg(options_string, "-l", "--latency-file", help_info);
+    if (!latency_arg.empty())
+    {
+        options.latency_filename = latency_arg;
     }
 }
 

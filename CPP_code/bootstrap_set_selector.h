@@ -34,8 +34,8 @@ Arguments:
   <num_levels>
     The number of levels between bootstraps, also called the noise
     threshold.
-  -l <file>, --latency-file <file>
-    The file describing the latencies of FHE operations on the target
+  -l <file>, --latency-file=<file>
+    A file describing the latencies of FHE operations on the target
     hardware. The default values can be found in program.h.
   Weights:
     The following options apply weights to certain attributes that are

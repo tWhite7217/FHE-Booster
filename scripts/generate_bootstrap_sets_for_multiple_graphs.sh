@@ -26,15 +26,15 @@ do
     mkdir $output_file_base
     output_file_base="$output_file_base/${num_levels}_levels"
     mkdir $output_file_base
-    output_file_base="$output_file_base/bootstrapping_sets"
-    mkdir $output_file_base
 
     output_files=""
 
     for ((j = 0; j < ${#segments_weights[@]}; j++))
     do
-        output_file_main="rg${i}_s${segments_weights[j]}_r${slack_weights[j]}_u${urgency_weights[j]}"
-        output_files="${output_files}${output_file_base}/${output_file_main},"
+        heuristic_name="s${segments_weights[j]}_r${slack_weights[j]}_u${urgency_weights[j]}"
+        output_file_dir="$output_file_base/$heuristic_name"
+        mkdir $output_file_dir
+        output_files="${output_files}${output_file_dir}/complete_bootstrap_set,"
     done
 
     output_files=${output_files::-1}

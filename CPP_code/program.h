@@ -31,7 +31,7 @@ public:
     size_t size() const;
 
     OperationPtr get_operation_ptr_from_id(const int &);
-    int get_latency_of(OperationType::Type);
+    int get_latency_of(const OperationType::Type &);
     int get_maximum_slack();
     int get_maximum_num_segments();
     // void add_segment_index_info_to_operations();
