@@ -6,7 +6,7 @@ shared_depenedencies := $(BIN)/shared_utils.o $(primitive_dependencies)
 
 CPP_FLAGS = -std=c++17 -O3
 
-all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out limited_to_selective_converter.out random_graph_generator.out #ldt_generator.out
+all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out complete_to_selective_converter.out random_graph_generator.out #ldt_generator.out
 
 $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h Makefile
 	g++ $(CPP_FLAGS) -c -o $@ shared_utils.cpp
@@ -51,11 +51,11 @@ $(BIN)/list_scheduler.o: list_scheduler.cpp list_scheduler.h Makefile
 list_scheduler.out: $(BIN)/list_scheduler.o $(shared_depenedencies)
 	g++ $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(shared_depenedencies)
 
-$(BIN)/limited_to_selective_converter.o: limited_to_selective_converter.cpp limited_to_selective_converter.h Makefile
-	g++ $(CPP_FLAGS) -c -o $@ limited_to_selective_converter.cpp
+$(BIN)/complete_to_selective_converter.o: complete_to_selective_converter.cpp complete_to_selective_converter.h Makefile
+	g++ $(CPP_FLAGS) -c -o $@ complete_to_selective_converter.cpp
 
-limited_to_selective_converter.out: $(BIN)/limited_to_selective_converter.o $(shared_depenedencies)
-	g++ $(CPP_FLAGS) -o $@ $(BIN)/limited_to_selective_converter.o $(shared_depenedencies)
+complete_to_selective_converter.out: $(BIN)/complete_to_selective_converter.o $(shared_depenedencies)
+	g++ $(CPP_FLAGS) -o $@ $(BIN)/complete_to_selective_converter.o $(shared_depenedencies)
 
 # $(BIN)/ldt_generator.o: ldt_generator.cpp Makefile
 # 	g++ $(CPP_FLAGS) -c -o $@ ldt_generator.cpp
