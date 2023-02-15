@@ -49,12 +49,12 @@ private:
     // My private members
     std::shared_ptr<Program> program;
 
-    OperationPtr get_first_operation_ptr(std::string);
-    OperationPtr get_second_operation_ptr(std::string);
-    int get_first_operation_id(std::string);
-    int get_second_operation_id(std::string);
-    int get_core_num(std::string);
-    int get_time(std::string);
+    OperationPtr get_first_operation_ptr(const std::string &) const;
+    OperationPtr get_second_operation_ptr(const std::string &) const;
+    static int get_first_operation_id(const std::string &);
+    static int get_second_operation_id(const std::string &);
+    static int get_core_num(const std::string &);
+    static int get_time(const std::string &);
 };
 
 // $insert scannerConstructors

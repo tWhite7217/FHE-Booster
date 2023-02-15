@@ -46,7 +46,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     bool receives_bootstrapped_result_from(const OperationPtr &);
 
     void update_earliest_start_time(const LatencyMap &);
-    void update_latest_start_time(const LatencyMap &, const int &);
+    void update_latest_start_time(const LatencyMap &, const int);
 
 private:
     int earliest_start_time;

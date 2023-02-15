@@ -21,16 +21,16 @@ OpVector::const_iterator Program::begin() const { return operations.begin(); };
 OpVector::const_iterator Program::end() const { return operations.end(); };
 size_t Program::size() const { return operations.size(); };
 
-OperationPtr Program::get_operation_ptr_from_id(const int &id)
+OperationPtr Program::get_operation_ptr_from_id(const int id) const
 {
     if (id < 1 || id > operations.size())
     {
         throw std::runtime_error("Invalid operation id");
     }
-    return operations[id - 1];
+    return operations.at(id - 1);
 }
 
-int Program::get_latency_of(const OperationType::Type &type)
+int Program::get_latency_of(const OperationType::Type type) const
 {
     return latencies.at(type);
 };
@@ -63,7 +63,7 @@ void Program::update_ESTs_and_LSTs()
     }
 }
 
-int Program::get_maximum_slack()
+int Program::get_maximum_slack() const
 {
     int max = 0;
     for (auto &operation : operations)
@@ -90,7 +90,7 @@ int Program::get_maximum_slack()
 //     }
 // }
 
-bool Program::bootstrap_segments_are_satisfied()
+bool Program::bootstrap_segments_are_satisfied() const
 {
     return find_unsatisfied_bootstrap_segment_index() == -1;
 }
@@ -100,7 +100,7 @@ bool Program::bootstrap_segments_are_satisfied()
 //     return find_unsatisfied_bootstrap_segment_index(bootstrap_segments, bootstrap_segment_is_satisfied_for_selective_model) == -1;
 // }
 
-int Program::find_unsatisfied_bootstrap_segment_index()
+int Program::find_unsatisfied_bootstrap_segment_index() const
 {
     for (int i = 0; i < bootstrap_segments.size(); i++)
     {
@@ -144,7 +144,7 @@ void Program::update_num_segments_for_every_operation()
     }
 }
 
-int Program::get_maximum_num_segments()
+int Program::get_maximum_num_segments() const
 {
     int max = 0;
 
@@ -223,7 +223,7 @@ bool Program::no_segment_relies_on_bootstrap_pair(const OperationPtr &parent, co
     return true;
 }
 
-void Program::write_lgr_info_to_file(const std::string &filename, int total_latency)
+void Program::write_lgr_info_to_file(const std::string &filename, int total_latency) const
 {
     std::ofstream output_file(filename);
 
@@ -257,7 +257,7 @@ void Program::write_lgr_info_to_file(const std::string &filename, int total_late
     output_file.close();
 }
 
-void Program::write_bootstrapping_set_to_file(const std::string &filename)
+void Program::write_bootstrapping_set_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
 
@@ -266,7 +266,7 @@ void Program::write_bootstrapping_set_to_file(const std::string &filename)
     output_file.close();
 }
 
-void Program::write_bootstrapping_set_to_file(std::ofstream &file)
+void Program::write_bootstrapping_set_to_file(std::ofstream &file) const
 {
     if (mode == BootstrapMode::COMPLETE)
     {
@@ -278,7 +278,7 @@ void Program::write_bootstrapping_set_to_file(std::ofstream &file)
     }
 }
 
-void Program::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file)
+void Program::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file) const
 {
     for (auto operation : operations)
     {
@@ -289,7 +289,7 @@ void Program::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file)
     }
 }
 
-void Program::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file)
+void Program::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file) const
 {
 
     for (auto operation : operations)

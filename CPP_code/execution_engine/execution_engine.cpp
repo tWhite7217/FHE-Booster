@@ -135,8 +135,8 @@ void update_dependence_info(const std::string &input_index,
 int execute_schedule(ScheduleInfo sched_info,
                      ExecutionVariables &vars,
                      ContextType &context,
-                     const ExecMode &mode,
-                     const uint32_t &level_to_bootstrap)
+                     const ExecMode mode,
+                     const uint32_t level_to_bootstrap)
 {
   const bool ALAP_mode = (mode == ALAP);
   std::atomic<int> bootstrap_counter = 0;

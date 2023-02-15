@@ -63,7 +63,7 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
     max_score_operation->bootstrap_children = max_score_operation->child_ptrs;
 }
 
-double BootstrapSetSelector::get_score(const OperationPtr &operation)
+double BootstrapSetSelector::get_score(const OperationPtr &operation) const
 {
     auto num_segments = operation->num_unsatisfied_segments;
     if (num_segments == 0)
@@ -109,7 +109,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     options.urgency_weight = get_list_arg(options_string, "-u", "--urgency-weight", help_info, num_sets, 0, stoi_function);
 }
 
-void BootstrapSetSelector::print_options()
+void BootstrapSetSelector::print_options() const
 {
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
     std::cout << "segments_filename: " << options.segments_filename << std::endl;

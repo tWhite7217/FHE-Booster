@@ -30,14 +30,14 @@ public:
     OpVector::const_iterator end() const;
     size_t size() const;
 
-    OperationPtr get_operation_ptr_from_id(const int &);
-    int get_latency_of(const OperationType::Type &);
-    int get_maximum_slack();
-    int get_maximum_num_segments();
+    OperationPtr get_operation_ptr_from_id(const int) const;
+    int get_latency_of(const OperationType::Type) const;
+    int get_maximum_slack() const;
+    int get_maximum_num_segments() const;
     // void add_segment_index_info_to_operations();
-    bool bootstrap_segments_are_satisfied();
+    bool bootstrap_segments_are_satisfied() const;
     // bool bootstrap_segments_are_satisfied_for_selective_model();
-    int find_unsatisfied_bootstrap_segment_index();
+    int find_unsatisfied_bootstrap_segment_index() const;
 
     void add_operation(const OperationPtr &);
 
@@ -48,8 +48,8 @@ public:
 
     void remove_unnecessary_bootstrap_pairs();
 
-    void write_bootstrapping_set_to_file(const std::string &);
-    void write_lgr_info_to_file(const std::string &, int);
+    void write_bootstrapping_set_to_file(const std::string &) const;
+    void write_lgr_info_to_file(const std::string &, int) const;
 
 private:
     OpVector operations;
@@ -61,9 +61,9 @@ private:
          {OperationType::MUL, 5},
          {OperationType::BOOT, 300}};
 
-    void write_bootstrapping_set_to_file(std::ofstream &);
-    void write_bootstrapping_set_to_file_complete_mode(std::ofstream &);
-    void write_bootstrapping_set_to_file_selective_mode(std::ofstream &);
+    void write_bootstrapping_set_to_file(std::ofstream &) const;
+    void write_bootstrapping_set_to_file_complete_mode(std::ofstream &) const;
+    void write_bootstrapping_set_to_file_selective_mode(std::ofstream &) const;
 
     bool no_segment_relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &);
 };

@@ -1,7 +1,7 @@
 #include "operation_type.h"
 
 OperationType::OperationType(){};
-OperationType::OperationType(const Type &type) : type{type} {};
+OperationType::OperationType(const Type type) : type{type} {};
 OperationType::OperationType(const std::string &type_string)
 {
     if (type_string == "ADD")

@@ -12,12 +12,12 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     program = *parser.parse_dag_file(options.dag_filename);
 }
 
-bool BootstrapSegmentGenerator::is_in_forced_generation_mode()
+bool BootstrapSegmentGenerator::is_in_forced_generation_mode() const
 {
     return options.force_generation;
 }
 
-bool BootstrapSegmentGenerator::segments_files_are_current()
+bool BootstrapSegmentGenerator::segments_files_are_current() const
 {
     struct stat executable_file_info;
     struct stat dag_file_info;
@@ -75,7 +75,7 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
     options.force_generation = arg_exists(options_string, "-F", "--force");
 }
 
-void BootstrapSegmentGenerator::print_options()
+void BootstrapSegmentGenerator::print_options() const
 {
     std::cout << "Generator using the following options." << std::endl;
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
@@ -135,9 +135,9 @@ void BootstrapSegmentGenerator::find_operations_to_ignore()
     }
 }
 
-bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation)
+bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation) const
 {
-    return !too_far_from_fresh_ciphertext[{operation, options.initial_levels}];
+    return !too_far_from_fresh_ciphertext.at({operation, options.initial_levels});
 }
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
@@ -253,7 +253,7 @@ void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
     std::cout << "Number of redundant bootstrap segments removed: " << redundant_count << std::endl;
 }
 
-bool BootstrapSegmentGenerator::segments_are_redundant(BootstrapSegment smaller_segment, BootstrapSegment larger_segment)
+bool BootstrapSegmentGenerator::segments_are_redundant(const BootstrapSegment &smaller_segment, const BootstrapSegment &larger_segment) const
 {
     auto j = 0;
     auto size_diff = larger_segment.size() - smaller_segment.size();
@@ -271,7 +271,7 @@ bool BootstrapSegmentGenerator::segments_are_redundant(BootstrapSegment smaller_
     return true;
 }
 
-void BootstrapSegmentGenerator::print_number_of_segments()
+void BootstrapSegmentGenerator::print_number_of_segments() const
 {
     std::unordered_map<OperationPtr, int> num_segments_to;
     for (auto operation : program)
@@ -290,7 +290,7 @@ void BootstrapSegmentGenerator::print_number_of_segments()
     std::cout << result << std::endl;
 }
 
-void BootstrapSegmentGenerator::print_bootstrap_segments()
+void BootstrapSegmentGenerator::print_bootstrap_segments() const
 {
     for (auto segment : bootstrap_segments)
     {
@@ -302,7 +302,7 @@ void BootstrapSegmentGenerator::print_bootstrap_segments()
     }
 }
 
-void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file)
+void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file) const
 {
     for (auto segment : bootstrap_segments)
     {
@@ -330,10 +330,8 @@ void BootstrapSegmentGenerator::write_segments_to_files()
 void BootstrapSegmentGenerator::convert_segments_to_standard()
 {
     remove_last_operation_from_segments();
-    std::cout << "here1" << std::endl;
     sort_segments();
     remove_redundant_bootstrap_segments();
-    std::cout << "here2" << std::endl;
 }
 
 void BootstrapSegmentGenerator::remove_last_operation_from_segments()

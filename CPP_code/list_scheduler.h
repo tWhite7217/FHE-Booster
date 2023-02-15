@@ -17,8 +17,8 @@ public:
   void generate_start_times_and_solver_latency();
   void generate_core_assignments();
 
-  void write_sched_to_file(const std::string &);
-  void write_to_output_files();
+  void write_sched_to_file(const std::string &) const;
+  void write_to_output_files() const;
 
 private:
   const std::string help_info = R"(
@@ -89,16 +89,17 @@ Options:
   void start_bootstrapping_necessary_operations();
   void start_bootstrapping_ready_operations_for_unlimited_model();
   void start_bootstrapping_ready_operations_for_limited_model();
-  int get_best_core_for_operation(OperationPtr, int);
-  int get_available_core_num();
-  bool core_is_available(int);
-  bool program_is_not_finished();
-  std::string get_constant_arg(OperationPtr, size_t);
-  std::string get_variable_arg(OperationPtr, size_t);
-  void mark_cores_available(OpSet &);
+  void mark_cores_available(const OpSet &);
   void update_pred_count();
   void initialize_simulation_state();
   void update_simulation_state();
   void parse_args(int, char **);
-  void print_options();
+
+  int get_best_core_for_operation(const OperationPtr &, int) const;
+  int get_available_core_num() const;
+  bool core_is_available(int) const;
+  bool program_is_not_finished() const;
+  std::string get_constant_arg(const OperationPtr &, size_t) const;
+  std::string get_variable_arg(const OperationPtr &, size_t) const;
+  void print_options() const;
 };

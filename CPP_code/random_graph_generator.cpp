@@ -1,10 +1,5 @@
 #include "random_graph_generator.h"
 
-int random_int_between(const int &min, const int &max, std::minstd_rand &rand_gen)
-{
-    return (rand_gen() % (max - min + 1)) + min;
-}
-
 RandomGraphGenerator::RandomGraphGenerator()
 {
     auto seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -46,7 +41,7 @@ void RandomGraphGenerator::create_graph(graph_generator_options new_options)
     fix_constants();
 }
 
-std::vector<int> RandomGraphGenerator::get_random_level_widths(int num_levels)
+std::vector<int> RandomGraphGenerator::get_random_level_widths(const int num_levels)
 {
     std::vector<int> level_widths(num_levels, options.min_width);
 
@@ -68,7 +63,7 @@ std::vector<int> RandomGraphGenerator::get_random_level_widths(int num_levels)
     return level_widths;
 }
 
-std::vector<OpVector> RandomGraphGenerator::get_random_level_ops(std::vector<int> level_widths)
+std::vector<OpVector> RandomGraphGenerator::get_random_level_ops(const std::vector<int> &level_widths)
 {
     auto num_levels = level_widths.size();
     std::vector<OpVector> level_ops(num_levels);
@@ -85,7 +80,7 @@ std::vector<OpVector> RandomGraphGenerator::get_random_level_ops(std::vector<int
     return level_ops;
 }
 
-void RandomGraphGenerator::add_random_child_to_operation(OperationPtr operation, int child_level)
+void RandomGraphGenerator::add_random_child_to_operation(const OperationPtr &operation, int child_level)
 {
     OpVector operations_without_two_parents;
     for (auto op : level_ops[child_level])
@@ -120,7 +115,7 @@ OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operat
     return new_operation;
 }
 
-void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operation, double two_parent_probability, double constant_probability, int level)
+void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &operation, double two_parent_probability, double constant_probability, int level)
 {
     auto num_current_parents = operation->parent_ptrs.size();
     if (num_current_parents == 2)
@@ -223,7 +218,7 @@ void RandomGraphGenerator::add_random_parents_to_operation(OperationPtr operatio
         }
     }
 }
-bool RandomGraphGenerator::add_a_random_parent_type(std::vector<bool> &parent_at_index_is_constant, const double &constant_probability)
+bool RandomGraphGenerator::add_a_random_parent_type(std::vector<bool> &parent_at_index_is_constant, const double constant_probability)
 {
     double rand_decimal = ((double)rand_gen()) / RAND_MAX;
     bool parent_is_constant = rand_decimal < constant_probability;
@@ -245,7 +240,7 @@ void RandomGraphGenerator::fix_constants()
     for (auto operation : program)
     {
         std::vector<int> new_ids;
-        for (const auto &const_id : operation->constant_parent_ids)
+        for (const auto const_id : operation->constant_parent_ids)
         {
             new_ids.push_back(constant_remapping[const_id]);
         }
@@ -285,7 +280,7 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
         {
             dependency_string += "c" + std::to_string(parent->id) + ",";
         }
-        for (const auto &parent_id : operation->constant_parent_ids)
+        for (const auto parent_id : operation->constant_parent_ids)
         {
             dependency_string += "k" + std::to_string(parent_id) + ",";
         }
@@ -295,7 +290,7 @@ void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
     }
 }
 
-bool RandomGraphGenerator::operation_is_unique(OperationPtr operation)
+bool RandomGraphGenerator::operation_is_unique(const OperationPtr &operation) const
 {
     auto num_var_parents = operation->parent_ptrs.size();
     auto num_const_parents = operation->constant_parent_ids.size();

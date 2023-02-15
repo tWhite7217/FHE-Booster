@@ -17,11 +17,11 @@ public:
 
     size_t size() const;
 
-    OperationPtr operation_at(const size_t &) const;
+    OperationPtr operation_at(const size_t) const;
     OperationPtr first_operation() const;
     OperationPtr last_operation() const;
-    bool is_satisfied(const BootstrapMode &) const;
-    bool is_alive(const BootstrapMode &) const;
+    bool is_satisfied(const BootstrapMode) const;
+    bool is_alive(const BootstrapMode) const;
     bool relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &) const;
 
 private:

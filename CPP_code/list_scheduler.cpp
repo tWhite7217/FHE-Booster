@@ -120,15 +120,15 @@ void ListScheduler::update_simulation_state()
     update_ready_operations();
 }
 
-void ListScheduler::mark_cores_available(OpSet &finished_operations)
+void ListScheduler::mark_cores_available(const OpSet &finished_operations)
 {
-    for (auto &op : finished_operations)
+    for (const auto &op : finished_operations)
     {
         core_availability[op->core_num] = true;
     }
 }
 
-bool ListScheduler::program_is_not_finished()
+bool ListScheduler::program_is_not_finished() const
 {
     return !prioritized_unstarted_operations.empty() ||
            !ready_operations.empty() ||
@@ -210,12 +210,12 @@ void ListScheduler::start_ready_operations()
     }
 }
 
-std::string ListScheduler::get_constant_arg(OperationPtr operation, size_t parent_num)
+std::string ListScheduler::get_constant_arg(const OperationPtr &operation, size_t parent_num) const
 {
     return " k" + std::to_string(operation->constant_parent_ids[parent_num]);
 }
 
-std::string ListScheduler::get_variable_arg(OperationPtr operation, size_t parent_num)
+std::string ListScheduler::get_variable_arg(const OperationPtr &operation, size_t parent_num) const
 {
     std::string arg = " c";
     auto parent = operation->parent_ptrs[parent_num];
@@ -226,7 +226,7 @@ std::string ListScheduler::get_variable_arg(OperationPtr operation, size_t paren
     return arg + std::to_string(parent->id);
 }
 
-int ListScheduler::get_best_core_for_operation(OperationPtr operation, int fallback_core)
+int ListScheduler::get_best_core_for_operation(const OperationPtr &operation, int fallback_core) const
 {
     int best_core = fallback_core;
     for (const auto &parent : operation->parent_ptrs)
@@ -309,9 +309,9 @@ void ListScheduler::start_bootstrapping_ready_operations_for_limited_model()
     }
 }
 
-int ListScheduler::get_available_core_num()
+int ListScheduler::get_available_core_num() const
 {
-    for (auto &[core_num, available] : core_availability)
+    for (const auto &[core_num, available] : core_availability)
     {
         if (available)
         {
@@ -321,12 +321,12 @@ int ListScheduler::get_available_core_num()
     return -1;
 }
 
-bool ListScheduler::core_is_available(int core_num)
+bool ListScheduler::core_is_available(int core_num) const
 {
-    return core_availability[core_num];
+    return core_availability.at(core_num);
 }
 
-void ListScheduler::write_sched_to_file(const std::string &filename)
+void ListScheduler::write_sched_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
 
@@ -412,7 +412,7 @@ void ListScheduler::parse_args(int argc, char **argv)
     }
 }
 
-void ListScheduler::print_options()
+void ListScheduler::print_options() const
 {
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
     std::cout << "latency_filename: " << options.latency_filename << std::endl;
@@ -421,7 +421,7 @@ void ListScheduler::print_options()
     std::cout << "num_threads: " << options.num_threads << std::endl;
 }
 
-void ListScheduler::write_to_output_files()
+void ListScheduler::write_to_output_files() const
 {
     program.write_lgr_info_to_file(options.output_filename + ".lgr", solver_latency);
     write_sched_to_file(options.output_filename + ".sched");

@@ -11,8 +11,8 @@ class BootstrapSegmentGenerator
 {
 public:
   BootstrapSegmentGenerator(int, char **);
-  bool segments_files_are_current();
-  bool is_in_forced_generation_mode();
+  bool segments_files_are_current() const;
+  bool is_in_forced_generation_mode() const;
   void generate_bootstrap_segments();
   void write_segments_to_files();
 
@@ -69,21 +69,21 @@ Arguments:
   std::map<std::pair<OperationPtr, int>, bool> too_far_from_fresh_ciphertext;
 
   void find_operations_to_ignore();
-  bool is_ignorable(const OperationPtr &);
+  bool is_ignorable(const OperationPtr &) const;
 
   void create_raw_bootstrap_segments();
   std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
 
-  void print_number_of_segments();
-  void print_bootstrap_segments();
+  void print_number_of_segments() const;
+  void print_bootstrap_segments() const;
 
   void sort_segments();
   void remove_last_operation_from_segments();
   void remove_redundant_bootstrap_segments();
-  bool segments_are_redundant(BootstrapSegment, BootstrapSegment);
-  void write_segments_to_file(std::ofstream &);
+  bool segments_are_redundant(const BootstrapSegment &, const BootstrapSegment &) const;
+  void write_segments_to_file(std::ofstream &) const;
   void convert_segments_to_standard();
 
   void parse_args(int, char **);
-  void print_options();
+  void print_options() const;
 };

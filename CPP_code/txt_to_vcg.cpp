@@ -21,7 +21,7 @@ void get_info_from_input_parser()
 
     for (auto operation : program)
     {
-        for (const auto &constant_id : operation->constant_parent_ids)
+        for (const auto constant_id : operation->constant_parent_ids)
         {
             constant_ids.insert(constant_id);
         }
@@ -67,7 +67,7 @@ void write_graph_to_vcg_file(std::string output_filename)
         {
             output_file << "edge: {sourcename: \"" << parent->id << "\" targetname: \"" << operation->id << "\" }" << std::endl;
         }
-        for (const auto &constant_id : operation->constant_parent_ids)
+        for (const auto constant_id : operation->constant_parent_ids)
         {
             output_file << "edge: {sourcename: \"K" << constant_id << "\" targetname: \"" << operation->id << "\" }" << std::endl;
         }

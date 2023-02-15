@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-LatencyMap InputParser::parse_latency_file(const std::string &latency_filename)
+LatencyMap InputParser::parse_latency_file(const std::string &latency_filename) const
 {
     LatencyMap latencies;
 
@@ -82,12 +82,12 @@ void InputParser::parse_operation_and_its_dependences(const std::vector<std::str
     }
 }
 
-void InputParser::parse_constant(std::vector<std::string> line)
+void InputParser::parse_constant(const std::vector<std::string> &line)
 {
     // operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
 }
 
-std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string &segments_filename)
+std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string &segments_filename) const
 {
     std::ifstream segments_file(segments_filename);
     std::vector<BootstrapSegment> bootstrap_segments;

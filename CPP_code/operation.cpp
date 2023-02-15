@@ -78,7 +78,7 @@ void Operation::update_earliest_start_time(const LatencyMap &latencies)
     }
 }
 
-void Operation::update_latest_start_time(const LatencyMap &latencies, const int &earliest_possible_program_end_time)
+void Operation::update_latest_start_time(const LatencyMap &latencies, const int earliest_possible_program_end_time)
 {
     latest_start_time = std::numeric_limits<decltype(latest_start_time)>::max();
 

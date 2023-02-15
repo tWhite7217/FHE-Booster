@@ -18,7 +18,7 @@ size_t BootstrapSegment::size() const
     return segment.size();
 }
 
-OperationPtr BootstrapSegment::operation_at(const size_t &i) const
+OperationPtr BootstrapSegment::operation_at(const size_t i) const
 {
     return segment.at(i);
 }
@@ -26,7 +26,7 @@ OperationPtr BootstrapSegment::operation_at(const size_t &i) const
 OperationPtr BootstrapSegment::first_operation() const { return segment.front(); }
 OperationPtr BootstrapSegment::last_operation() const { return segment.back(); }
 
-bool BootstrapSegment::is_satisfied(const BootstrapMode &mode) const
+bool BootstrapSegment::is_satisfied(const BootstrapMode mode) const
 {
     if (mode == BootstrapMode::SELECTIVE)
     {
@@ -63,7 +63,7 @@ bool BootstrapSegment::is_satisfied_in_selective_mode() const
     return false;
 }
 
-bool BootstrapSegment::is_alive(const BootstrapMode &mode) const
+bool BootstrapSegment::is_alive(const BootstrapMode mode) const
 {
     auto first_operation = segment.front();
     return !is_satisfied(mode) &&

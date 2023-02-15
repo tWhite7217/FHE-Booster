@@ -27,13 +27,13 @@ public:
     void write_graph_to_txt_file(std::string);
 
 private:
-    std::vector<int> get_random_level_widths(int);
-    std::vector<OpVector> get_random_level_ops(std::vector<int> level_widths);
-    void add_random_child_to_operation(OperationPtr, int);
-    OperationPtr add_random_operation_to_operations(int);
-    void add_random_parents_to_operation(OperationPtr, double, double, int);
-    bool add_a_random_parent_type(std::vector<bool> &, const double &);
-    bool operation_is_unique(OperationPtr);
+    std::vector<int> get_random_level_widths(const int);
+    std::vector<OpVector> get_random_level_ops(const std::vector<int> &level_widths);
+    void add_random_child_to_operation(const OperationPtr &, const int);
+    OperationPtr add_random_operation_to_operations(const int);
+    void add_random_parents_to_operation(const OperationPtr &, const double, const double, const int);
+    bool add_a_random_parent_type(std::vector<bool> &, const double);
+    bool operation_is_unique(const OperationPtr &) const;
     void fix_constants();
 
     graph_generator_options options;

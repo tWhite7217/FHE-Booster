@@ -18,7 +18,7 @@ public:
     static const size_t num_types_except_bootstrap = BOOT;
 
     OperationType();
-    OperationType(const Type &);
+    OperationType(const Type);
     OperationType(const std::string &);
 
     std::string to_string() const;
