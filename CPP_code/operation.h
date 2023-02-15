@@ -39,7 +39,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     int get_slack() const;
 
     bool is_bootstrapped() const;
-    bool has_no_parents() const;
+    bool has_no_parent_operations() const;
     bool parents_meet_urgency_criteria() const;
     bool has_multiplication_child() const;
     // bool bootstraps_on_the_same_core_as(const OperationPtr &);

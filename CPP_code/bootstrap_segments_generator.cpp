@@ -87,6 +87,10 @@ void BootstrapSegmentGenerator::print_options()
 
 void BootstrapSegmentGenerator::generate_bootstrap_segments()
 {
+    if (options.initial_levels > 0)
+    {
+        find_operations_to_ignore();
+    }
     create_raw_bootstrap_segments();
     if (bootstrap_segments.size() > 0)
     {
@@ -96,16 +100,87 @@ void BootstrapSegmentGenerator::generate_bootstrap_segments()
     else
     {
         std::cout << "This program has no bootstrap segments." << std::endl;
-        std::cout << "Number of operations: " << program.size() << std::endl;
+        exit(0);
     }
 }
+
+void BootstrapSegmentGenerator::find_operations_to_ignore()
+{
+    auto &tffc = too_far_from_fresh_ciphertext;
+    for (const auto op : program)
+    {
+        tffc[{op, -1}] = true;
+    }
+
+    for (int i = 0; i <= options.initial_levels; i++)
+    {
+        for (const auto &op : program)
+        {
+            int remaining_levels = i - (op->type == OperationType::MUL ? 1 : 0);
+
+            if (op->has_no_parent_operations())
+            {
+                tffc[{op, i}] = (remaining_levels < 0);
+            }
+            else
+            {
+                bool too_far = false;
+                for (const auto &p : op->parent_ptrs)
+                {
+                    too_far = too_far || tffc[{p, remaining_levels}];
+                }
+                tffc[{op, i}] = too_far;
+            }
+        }
+    }
+
+    // for (const auto &op : program)
+    // {
+    //     if (is_ignorable(operation))
+    //     {
+    //         operaitons_to_ignore.insert(operation);
+    //     }
+    // }
+}
+
+bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation)
+{
+    return !too_far_from_fresh_ciphertext[{operation, options.initial_levels}];
+    // return !too_long_path_from_op_to_beginning_exists(operation, options.initial_levels);
+}
+
+// bool BootstrapSegmentGenerator::too_long_path_from_op_to_beginning_exists(const OperationPtr &operation, int remaining_levels)
+// {
+//     if (operation->type == OperationType::MUL)
+//     {
+//         remaining_levels--;
+//     }
+
+//     if (remaining_levels < 0)
+//     {
+//         return true;
+//     }
+//     else if (operation->has_no_parent_operations())
+//     {
+//         return false;
+//     }
+
+//     for (const auto &parent : operation->parent_ptrs)
+//     {
+//         if (too_long_path_from_op_to_beginning_exists(parent, remaining_levels))
+//         {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
 {
     for (auto operation : program)
     {
         std::vector<BootstrapSegment> bootstrap_segments_to_add;
-        if (operation->type == OperationType::MUL)
+        if (operation->type == OperationType::MUL && !is_ignorable(operation))
         {
             bootstrap_segments_to_add = create_bootstrap_segments_helper(operation, {}, 0);
         }

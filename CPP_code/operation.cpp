@@ -24,10 +24,9 @@ bool Operation::is_bootstrapped() const
     return !bootstrap_children.empty();
 }
 
-bool Operation::has_no_parents() const
+bool Operation::has_no_parent_operations() const
 {
-    return (parent_ptrs.size() == 0) &&
-           (constant_parent_ids.size() == 0);
+    return (parent_ptrs.size() == 0);
 }
 
 bool Operation::parents_meet_urgency_criteria() const

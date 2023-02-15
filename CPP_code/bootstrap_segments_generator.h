@@ -58,6 +58,21 @@ Arguments:
   std::string standard_output_filename;
   std::string selective_output_filename;
 
+  struct IdCmp
+  {
+    bool operator()(const OperationPtr &a, const OperationPtr &b) const
+    {
+      return a->id < b->id;
+    }
+  };
+
+  std::map<std::pair<OperationPtr, int>, bool> too_far_from_fresh_ciphertext;
+  // std::unordered_set<OperationPtr> operations_to_ignore;
+
+  void find_operations_to_ignore();
+  bool is_ignorable(const OperationPtr &);
+  // bool too_long_path_from_op_to_beginning_exists(const OperationPtr &, int);
+
   void create_raw_bootstrap_segments();
   std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
 
