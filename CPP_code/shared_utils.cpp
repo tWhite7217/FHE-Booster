@@ -1,12 +1,12 @@
 #include "shared_utils.h"
 
-void ltrim(std::string &s)
+void utl::ltrim(std::string &s)
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch)
                                     { return !std::isspace(ch); }));
 }
 
-void rtrim(std::string &s)
+void utl::rtrim(std::string &s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
                          { return !std::isspace(ch); })
@@ -14,13 +14,13 @@ void rtrim(std::string &s)
             s.end());
 }
 
-void trim(std::string &s)
+void utl::trim(std::string &s)
 {
     rtrim(s);
     ltrim(s);
 }
 
-std::string get_trimmed_line_from_file(std::ifstream &file)
+std::string utl::get_trimmed_line_from_file(std::ifstream &file)
 {
     std::string line;
     std::getline(file, line);
@@ -28,7 +28,7 @@ std::string get_trimmed_line_from_file(std::ifstream &file)
     return line;
 }
 
-void remove_chars_from_string(std::string &str, std::vector<char> chars_to_remove)
+void utl::remove_chars_from_string(std::string &str, const std::vector<char> &chars_to_remove)
 {
     for (unsigned int i = 0; i < chars_to_remove.size(); i++)
     {
@@ -36,7 +36,7 @@ void remove_chars_from_string(std::string &str, std::vector<char> chars_to_remov
     }
 }
 
-int extract_number_from_string(std::string str, size_t start_index, size_t end_index)
+int utl::extract_number_from_string(const std::string &str, size_t start_index, size_t end_index)
 {
     auto num_digits = end_index - start_index;
     std::string num_as_string = str.substr(start_index, num_digits);
@@ -44,7 +44,7 @@ int extract_number_from_string(std::string str, size_t start_index, size_t end_i
     return num;
 }
 
-std::vector<std::string> split_string_by_character(std::string str, char separator)
+std::vector<std::string> utl::split_string_by_character(const std::string &str, char separator)
 {
     std::vector<std::string> str_as_list;
     std::stringstream ss(str);
@@ -56,14 +56,14 @@ std::vector<std::string> split_string_by_character(std::string str, char separat
     return str_as_list;
 }
 
-bool arg_exists(const std::string &options_string, const std::string &short_form, const std::string &long_form)
+bool utl::arg_exists(const std::string &options_string, const std::string &short_form, const std::string &long_form)
 {
     bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;
     bool long_form_exists = options_string.find(" " + long_form + " ") != std::string::npos;
     return short_form_exists || long_form_exists;
 }
 
-std::string get_arg(const std::string &options_string, const std::string &short_form, const std::string &long_form, const std::string &help_info)
+std::string utl::get_arg(const std::string &options_string, const std::string &short_form, const std::string &long_form, const std::string &help_info)
 {
     auto short_pos = options_string.find(short_form);
     auto long_pos = options_string.find(long_form);
@@ -95,7 +95,7 @@ std::string get_arg(const std::string &options_string, const std::string &short_
     return options_string.substr(start_pos, end_pos);
 }
 
-bool bool_arg_converter(const std::string &arg_val)
+bool utl::bool_arg_converter(const std::string &arg_val)
 {
     if (arg_val == "y")
     {
@@ -109,8 +109,13 @@ bool bool_arg_converter(const std::string &arg_val)
     throw;
 }
 
-void print_size_mismatch_error(const size_t &expected_size, const size_t &actual_size, const std::string &short_form, const std::string &long_form)
+void utl::print_size_mismatch_error(const size_t expected_size, const size_t actual_size, const std::string &short_form, const std::string &long_form)
 {
     std::cout << "Command line argument " << short_form << "/" << long_form << " has " << actual_size << "elements, but was expected to have " << expected_size << " elements." << std::endl;
     exit(1);
+}
+
+int utl::random_int_between(const int min, const int max, std::minstd_rand &rand_gen)
+{
+    return (rand_gen() % (max - min + 1)) + min;
 }

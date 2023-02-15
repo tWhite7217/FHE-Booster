@@ -141,7 +141,7 @@ OpSet ListScheduler::handle_started_operations(std::map<OperationPtr, int> &star
 {
     decrement_cycles_left(started_operations);
     auto finished_operations = get_finished_operations(started_operations);
-    remove_key_subset_from_map(started_operations, finished_operations);
+    utl::remove_key_subset_from_map(started_operations, finished_operations);
     return finished_operations;
 }
 
@@ -357,7 +357,7 @@ void ListScheduler::update_pred_count()
     {
         for (const auto &child : op->child_ptrs)
         {
-            if (!child->receives_bootstrapped_result_from(op) && multiset_contains_element(prioritized_unstarted_operations, child))
+            if (!child->receives_bootstrapped_result_from(op) && utl::multiset_contains_element(prioritized_unstarted_operations, child))
             {
                 pred_count[child]--;
             }
@@ -368,7 +368,7 @@ void ListScheduler::update_pred_count()
     {
         for (const auto &child : op->bootstrap_children)
         {
-            if (multiset_contains_element(prioritized_unstarted_operations, child))
+            if (utl::multiset_contains_element(prioritized_unstarted_operations, child))
             {
                 pred_count[child]--;
             }
@@ -393,19 +393,19 @@ void ListScheduler::parse_args(int argc, char **argv)
         options_string += std::string(argv[i]) + " ";
     }
 
-    auto num_threads_string = get_arg(options_string, "-t", "--num-threads", help_info);
+    auto num_threads_string = utl::get_arg(options_string, "-t", "--num-threads", help_info);
     if (!num_threads_string.empty())
     {
         options.num_threads = std::stoi(num_threads_string);
     }
 
-    auto bootstrap_arg = get_arg(options_string, "-i", "--input-lgr", help_info);
+    auto bootstrap_arg = utl::get_arg(options_string, "-i", "--input-lgr", help_info);
     if (!bootstrap_arg.empty())
     {
         options.bootstrap_filename = bootstrap_arg;
     }
 
-    auto latency_arg = get_arg(options_string, "-l", "--latency-file", help_info);
+    auto latency_arg = utl::get_arg(options_string, "-l", "--latency-file", help_info);
     if (!latency_arg.empty())
     {
         options.latency_filename = latency_arg;

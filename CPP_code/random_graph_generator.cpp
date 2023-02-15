@@ -10,13 +10,13 @@ void RandomGraphGenerator::create_graph(graph_generator_options new_options)
 {
     options = new_options;
 
-    int num_levels = random_int_between(options.min_levels, options.max_levels, rand_gen);
+    int num_levels = utl::random_int_between(options.min_levels, options.max_levels, rand_gen);
 
     level_widths = get_random_level_widths(num_levels);
 
     auto min_constants = level_widths[0] / 2 + 1;
 
-    num_constants = random_int_between(min_constants, options.max_constants, rand_gen);
+    num_constants = utl::random_int_between(min_constants, options.max_constants, rand_gen);
 
     level_ops = get_random_level_ops(level_widths);
 
@@ -47,7 +47,7 @@ std::vector<int> RandomGraphGenerator::get_random_level_widths(const int num_lev
 
     while (std::reduce(level_widths.begin(), level_widths.end()) < options.min_operations)
     {
-        auto random_level = random_int_between(0, num_levels - 1, rand_gen);
+        auto random_level = utl::random_int_between(0, num_levels - 1, rand_gen);
         if (level_widths[random_level] < options.max_width)
         {
             level_widths[random_level]++;
@@ -90,7 +90,7 @@ void RandomGraphGenerator::add_random_child_to_operation(const OperationPtr &ope
             operations_without_two_parents.push_back(op);
         }
     }
-    int random_index = random_int_between(0, operations_without_two_parents.size() - 1, rand_gen);
+    int random_index = utl::random_int_between(0, operations_without_two_parents.size() - 1, rand_gen);
     operations_without_two_parents[random_index]->parent_ptrs.push_back(operation);
 }
 
@@ -167,13 +167,13 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
             bool parent_is_constant = parent_at_index_is_constant[i];
             if (parent_is_constant)
             {
-                parent_id = random_int_between(1, num_constants, rand_gen);
+                parent_id = utl::random_int_between(1, num_constants, rand_gen);
             }
             else if (i == 0 && num_current_parents == 0)
             {
                 auto min_id = level_ops[level - 1].front()->id;
                 auto max_id = level_ops[level - 1].back()->id;
-                parent_id = random_int_between(min_id, max_id, rand_gen);
+                parent_id = utl::random_int_between(min_id, max_id, rand_gen);
             }
             else
             {
@@ -182,7 +182,7 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
                 {
                     break;
                 }
-                parent_id = random_int_between(1, max_id, rand_gen);
+                parent_id = utl::random_int_between(1, max_id, rand_gen);
             }
             if (should_not_compare_indices || (parent_id != prev_parent_id))
             {

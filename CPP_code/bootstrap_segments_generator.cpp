@@ -66,13 +66,13 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
         options_string += std::string(argv[i]) + " ";
     }
 
-    auto initial_levels_string = get_arg(options_string, "-i", "--initial_levels", help_info);
+    auto initial_levels_string = utl::get_arg(options_string, "-i", "--initial_levels", help_info);
     if (!initial_levels_string.empty())
     {
         options.initial_levels = std::stoi(initial_levels_string);
     }
 
-    options.force_generation = arg_exists(options_string, "-F", "--force");
+    options.force_generation = utl::arg_exists(options_string, "-F", "--force");
 }
 
 void BootstrapSegmentGenerator::print_options() const

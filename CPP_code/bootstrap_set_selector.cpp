@@ -90,7 +90,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
 
     options.dag_filename = argv[1];
     options.segments_filename = argv[2];
-    options.output_filenames = split_string_by_character(argv[3], ',');
+    options.output_filenames = utl::split_string_by_character(argv[3], ',');
     num_sets = options.output_filenames.size();
 
     options.num_levels = std::stoi(argv[4]);
@@ -104,9 +104,9 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
         options_string += std::string(argv[i]) + " ";
     }
 
-    options.segments_weight = get_list_arg(options_string, "-s", "--segments-weight", help_info, num_sets, 0, stoi_function);
-    options.slack_weight = get_list_arg(options_string, "-r", "--slack-weight", help_info, num_sets, 0, stoi_function);
-    options.urgency_weight = get_list_arg(options_string, "-u", "--urgency-weight", help_info, num_sets, 0, stoi_function);
+    options.segments_weight = utl::get_list_arg(options_string, "-s", "--segments-weight", help_info, num_sets, 0, stoi_function);
+    options.slack_weight = utl::get_list_arg(options_string, "-r", "--slack-weight", help_info, num_sets, 0, stoi_function);
+    options.urgency_weight = utl::get_list_arg(options_string, "-u", "--urgency-weight", help_info, num_sets, 0, stoi_function);
 }
 
 void BootstrapSetSelector::print_options() const

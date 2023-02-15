@@ -54,7 +54,7 @@ private:
     static int get_first_operation_id(const std::string &);
     static int get_second_operation_id(const std::string &);
     static int get_core_num(const std::string &);
-    static int get_time(const std::string &);
+    static int get_time(std::string);
 };
 
 // $insert scannerConstructors

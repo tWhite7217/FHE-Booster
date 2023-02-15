@@ -421,19 +421,19 @@ CommandLineOptions parse_args(int argc, char **argv)
     options_string += std::string(argv[i]) + " ";
   }
 
-  auto num_levels_string = get_arg(options_string, "-l", "--num-levels", help_info);
+  auto num_levels_string = utl::get_arg(options_string, "-l", "--num-levels", help_info);
   if (!num_levels_string.empty())
   {
     options.num_levels = stoi(num_levels_string);
   }
 
-  auto rand_thresh_string = get_arg(options_string, "-r", "--rand-thresh", help_info);
+  auto rand_thresh_string = utl::get_arg(options_string, "-r", "--rand-thresh", help_info);
   if (!rand_thresh_string.empty())
   {
     options.rand_thresh = stod(rand_thresh_string);
   }
 
-  options.mode_string = get_arg(options_string, "-m", "--mode", help_info);
+  options.mode_string = utl::get_arg(options_string, "-m", "--mode", help_info);
   if (options.mode_string.empty())
   {
     options.mode_string = "BOOSTER";
@@ -456,23 +456,23 @@ CommandLineOptions parse_args(int argc, char **argv)
     throw std::invalid_argument(options.mode_string + "is not a valid execution mode");
   }
 
-  if (arg_exists(options_string, "-v", "--verify"))
+  if (utl::arg_exists(options_string, "-v", "--verify"))
   {
     options.verify_results = true;
   }
 
-  if (arg_exists(options_string, "-b", "--bootstrap-inputs"))
+  if (utl::arg_exists(options_string, "-b", "--bootstrap-inputs"))
   {
     options.bootstrap_inputs = true;
   }
 
-  auto output_suffix = get_arg(options_string, "-o", "--output-suffix", help_info);
+  auto output_suffix = utl::get_arg(options_string, "-o", "--output-suffix", help_info);
   if (!output_suffix.empty())
   {
     options.eval_time_filename = sched_filename + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
   }
 
-  if (arg_exists(options_string, "-s", "--save-num-bootstraps"))
+  if (utl::arg_exists(options_string, "-s", "--save-num-bootstraps"))
   {
     options.num_bootstraps_filename = sched_filename + "_num_bootstraps_" + options.mode_string + ".txt";
   }
