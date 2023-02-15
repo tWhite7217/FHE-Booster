@@ -7,14 +7,14 @@
 #include <memory>
 #include <string>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <iostream>
 
 class Operation;
 
 using OperationPtr = std::shared_ptr<Operation>;
 using OpVector = std::vector<OperationPtr>;
-using OpSet = std::set<OperationPtr>;
+using OpSet = std::unordered_set<OperationPtr>;
 
 using LatencyMap = std::map<OperationType::Type, int>;
 
@@ -26,7 +26,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     int id;
     OpVector parent_ptrs;
     std::vector<int> constant_parent_ids;
-    OpVector child_ptrs;
+    OpSet child_ptrs;
     OpSet bootstrap_children;
     int start_time;
     int bootstrap_start_time = 0;

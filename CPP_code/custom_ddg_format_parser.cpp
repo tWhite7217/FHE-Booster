@@ -73,7 +73,7 @@ void InputParser::parse_operation_and_its_dependences(const std::vector<std::str
         {
             auto parent_ptr = program->get_operation_ptr_from_id(parent_id);
             new_operation->parent_ptrs.push_back(parent_ptr);
-            parent_ptr->child_ptrs.push_back(new_operation);
+            parent_ptr->child_ptrs.insert(new_operation);
         }
         else
         {

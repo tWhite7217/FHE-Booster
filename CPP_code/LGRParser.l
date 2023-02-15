@@ -4,7 +4,7 @@
 
 "BOOTSTRAPPED( OP"[0-9]+")"[ \t]+"1" {
     auto operation = get_first_operation_ptr(matched());
-    operation->bootstrap_children.insert(operation->child_ptrs.begin(), operation->child_ptrs.end());
+    operation->bootstrap_children = operation->child_ptrs;
 }
 
 "BOOTSTRAPPED( OP"[0-9]+", OP"[0-9]+")"[ \t]+"1" {

@@ -60,10 +60,7 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
         }
     }
 
-    for (const auto &child : max_score_operation->child_ptrs)
-    {
-        max_score_operation->bootstrap_children.insert(child);
-    }
+    max_score_operation->bootstrap_children = max_score_operation->child_ptrs;
 }
 
 double BootstrapSetSelector::get_score(const OperationPtr &operation)
