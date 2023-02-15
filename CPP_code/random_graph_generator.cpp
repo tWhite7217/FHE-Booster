@@ -300,8 +300,8 @@ bool RandomGraphGenerator::operation_is_unique(OperationPtr operation)
     auto num_var_parents = operation->parent_ptrs.size();
     auto num_const_parents = operation->constant_parent_ids.size();
 
-    std::unordered_set<OperationPtr> var_parents_set;
-    std::unordered_set<OperationPtr> other_var_parents_set;
+    OpSet var_parents_set;
+    OpSet other_var_parents_set;
     std::unordered_set<int> const_parents_set;
     std::unordered_set<int> other_const_parents_set;
 

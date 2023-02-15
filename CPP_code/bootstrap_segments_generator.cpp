@@ -133,47 +133,12 @@ void BootstrapSegmentGenerator::find_operations_to_ignore()
             }
         }
     }
-
-    // for (const auto &op : program)
-    // {
-    //     if (is_ignorable(operation))
-    //     {
-    //         operaitons_to_ignore.insert(operation);
-    //     }
-    // }
 }
 
 bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation)
 {
     return !too_far_from_fresh_ciphertext[{operation, options.initial_levels}];
-    // return !too_long_path_from_op_to_beginning_exists(operation, options.initial_levels);
 }
-
-// bool BootstrapSegmentGenerator::too_long_path_from_op_to_beginning_exists(const OperationPtr &operation, int remaining_levels)
-// {
-//     if (operation->type == OperationType::MUL)
-//     {
-//         remaining_levels--;
-//     }
-
-//     if (remaining_levels < 0)
-//     {
-//         return true;
-//     }
-//     else if (operation->has_no_parent_operations())
-//     {
-//         return false;
-//     }
-
-//     for (const auto &parent : operation->parent_ptrs)
-//     {
-//         if (too_long_path_from_op_to_beginning_exists(parent, remaining_levels))
-//         {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
 {

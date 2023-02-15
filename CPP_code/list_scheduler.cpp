@@ -120,7 +120,7 @@ void ListScheduler::update_simulation_state()
     update_ready_operations();
 }
 
-void ListScheduler::mark_cores_available(std::unordered_set<OperationPtr> &finished_operations)
+void ListScheduler::mark_cores_available(OpSet &finished_operations)
 {
     for (auto &op : finished_operations)
     {
@@ -137,7 +137,7 @@ bool ListScheduler::program_is_not_finished()
            !bootstrapping_operations.empty();
 }
 
-std::unordered_set<OperationPtr> ListScheduler::handle_started_operations(std::map<OperationPtr, int> &started_operations)
+OpSet ListScheduler::handle_started_operations(std::map<OperationPtr, int> &started_operations)
 {
     decrement_cycles_left(started_operations);
     auto finished_operations = get_finished_operations(started_operations);
@@ -247,9 +247,9 @@ void ListScheduler::decrement_cycles_left(std::map<OperationPtr, int> &started_o
     }
 }
 
-std::unordered_set<OperationPtr> ListScheduler::get_finished_operations(std::map<OperationPtr, int> &started_operations)
+OpSet ListScheduler::get_finished_operations(std::map<OperationPtr, int> &started_operations)
 {
-    std::unordered_set<OperationPtr> finished_operations;
+    OpSet finished_operations;
 
     for (auto &[operation, time_left] : started_operations)
     {
