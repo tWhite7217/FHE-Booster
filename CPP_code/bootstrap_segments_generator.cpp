@@ -5,8 +5,6 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     parse_args(argc, argv);
     print_options();
 
-    // standard_output_filename = options.output_filename + ".txt";
-    // selective_output_filename = options.output_filename + "_selective.txt";
     standard_output_filename = options.output_filename + ".dat";
     selective_output_filename = options.output_filename + "_selective.dat";
 
@@ -69,6 +67,8 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
         options_string += std::string(argv[i]) + " ";
     }
 
+    options.write_text_files = !utl::arg_exists(options_string, "-n", "--no-text-files");
+
     auto initial_levels_string = utl::get_arg(options_string, "-i", "--initial_levels", help_info);
     if (!initial_levels_string.empty())
     {
@@ -84,6 +84,7 @@ void BootstrapSegmentGenerator::print_options() const
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
     std::cout << "output_filename: " << options.output_filename << std::endl;
     std::cout << "num_levels: " << options.num_levels << std::endl;
+    std::cout << "write_text_files: " << (options.write_text_files ? "yes" : "no") << std::endl;
     std::cout << "initial_levels: " << options.initial_levels << std::endl;
     std::cout << "force_generation: " << (options.force_generation ? "yes" : "no") << std::endl;
 }
@@ -312,20 +313,51 @@ void BootstrapSegmentGenerator::print_bootstrap_segments() const
     }
 }
 
-// void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file) const
-// {
-//     for (auto segment : bootstrap_segments)
-//     {
-//         for (auto operation : segment)
-//         {
-//             output_file << operation->id << ",";
-//         }
-//         output_file << std::endl;
-//     }
-// }
-
-void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file) const
+void BootstrapSegmentGenerator::write_segments_to_files()
 {
+    write_standard_files();
+
+    convert_segments_to_selective();
+
+    write_selective_files();
+}
+
+void BootstrapSegmentGenerator::write_standard_files()
+{
+    std::function<void()> write_standard_func = [this]()
+    { write_segments_to_file(standard_output_filename); };
+
+    utl::perform_func_and_print_execution_time(write_standard_func, "writing standard file");
+
+    if (options.write_text_files)
+    {
+        std::function<void()> write_standard_text_func = [this]()
+        { write_segments_to_text_file(options.output_filename + ".txt"); };
+
+        utl::perform_func_and_print_execution_time(write_standard_text_func, "writing standard text file");
+    }
+}
+
+void BootstrapSegmentGenerator::write_selective_files()
+{
+    std::function<void()> write_selective_func = [this]()
+    { write_segments_to_file(selective_output_filename); };
+
+    utl::perform_func_and_print_execution_time(write_selective_func, "writing selective file");
+
+    if (options.write_text_files)
+    {
+        std::function<void()> write_selective_text_func = [this]()
+        { write_segments_to_text_file(options.output_filename + "_selective.txt"); };
+
+        utl::perform_func_and_print_execution_time(write_selective_text_func, "writing selective text file");
+    }
+}
+
+void BootstrapSegmentGenerator::write_segments_to_file(const std::string &output_filename) const
+{
+    std::ofstream output_file(output_filename);
+
     size_t num_segments = bootstrap_segments.size();
     output_file.write((char *)(&num_segments), sizeof(size_t));
     std::vector<int> ids;
@@ -343,29 +375,27 @@ void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_fil
     }
 
     output_file.write((char *)(&ids[0]), sizeof(int) * total_num_ids);
+    output_file.close();
 }
 
-void BootstrapSegmentGenerator::write_segments_to_files()
+void BootstrapSegmentGenerator::write_segments_to_text_file(const std::string &output_filename) const
 {
-    std::function<void()> write_standard_func = [this]()
+    std::ostringstream out_string_stream;
+
+    for (const auto &segment : bootstrap_segments)
     {
-        std::ofstream standard_file(standard_output_filename);
-        write_segments_to_file(standard_file);
-        standard_file.close();
-    };
+        for (const auto &operation : segment)
+        {
+            out_string_stream << operation->id << ",";
+        }
+        out_string_stream << "\n";
+    }
 
-    utl::perform_func_and_print_execution_time(write_standard_func, "writing standard file");
+    auto out_string = out_string_stream.str();
 
-    convert_segments_to_selective();
-
-    std::function<void()> write_selective_func = [this]()
-    {
-        std::ofstream selective_file(selective_output_filename);
-        write_segments_to_file(selective_file);
-        selective_file.close();
-    };
-
-    utl::perform_func_and_print_execution_time(write_selective_func, "writing selective file");
+    std::ofstream output_file(output_filename);
+    output_file.write(out_string.c_str(), out_string.size());
+    output_file.close();
 }
 
 void BootstrapSegmentGenerator::convert_segments_to_selective()

@@ -34,12 +34,16 @@ Arguments:
   <num_levels>
     The number of levels between bootstraps, also called the noise
     threshold.
+  -n, --no-text-files
+    Disables the creation of human-readable text files that are,
+    by default, created in addition to the binary files.
   -i <int>, --initial_levels=<int>
     The number of levels to ignore before generating bootstrap
     segments. Defaults to 0.
   -F, --force
     Forces generation of bootstrap segments, even if the files
-    seem current.)";
+    seem current. Can be useful to update or create text files
+    even when other files are up to date.)";
 
   Program program;
   std::vector<BootstrapSegment> bootstrap_segments;
@@ -50,6 +54,7 @@ Arguments:
     std::string output_filename;
     int num_levels;
     int initial_levels = 0;
+    bool write_text_files;
     bool force_generation;
   } options;
 
@@ -80,7 +85,11 @@ Arguments:
   void remove_last_operation_from_segments();
   void remove_redundant_segments();
   bool segments_are_redundant(const BootstrapSegment &, const BootstrapSegment &) const;
-  void write_segments_to_file(std::ofstream &) const;
+
+  void write_standard_files();
+  void write_selective_files();
+  void write_segments_to_file(const std::string &) const;
+  void write_segments_to_text_file(const std::string &) const;
 
   // void convert_segments_to_standard();
   void convert_segments_to_selective();
