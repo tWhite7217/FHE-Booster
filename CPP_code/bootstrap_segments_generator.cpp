@@ -89,13 +89,22 @@ void BootstrapSegmentGenerator::generate_bootstrap_segments()
 {
     if (options.initial_levels > 0)
     {
-        find_operations_to_ignore();
+        std::function<void()> find_ignorable_func = [this]()
+        { find_operations_to_ignore(); };
+
+        utl::perform_func_and_print_execution_time(find_ignorable_func, "finding ignorable operations");
     }
-    create_raw_bootstrap_segments();
+
+    std::function<void()> create_segs_func = [this]()
+    { create_raw_bootstrap_segments(); };
+
+    utl::perform_func_and_print_execution_time(create_segs_func, "creating segments");
+
     if (bootstrap_segments.size() > 0)
     {
-        sort_segments();
-        remove_redundant_bootstrap_segments();
+        sort_segments_and_report_time();
+
+        remove_redundant_segments_and_report_time();
     }
     else
     {
@@ -162,13 +171,7 @@ std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segmen
     segment.add(operation);
     if (num_multiplications >= options.num_levels && operation->has_multiplication_child())
     {
-        std::vector<BootstrapSegment> segments_to_return;
-        for (auto child : operation->child_ptrs)
-        {
-            auto segment_to_return = segment;
-            segment_to_return.add(child);
-            segments_to_return.push_back(segment_to_return);
-        }
+        std::vector<BootstrapSegment> segments_to_return = {segment};
         return segments_to_return;
     }
     else if (operation->child_ptrs.size() == 0)
@@ -215,11 +218,20 @@ void BootstrapSegmentGenerator::sort_segments()
             current_starting_id_to_sort = bootstrap_segments[i].first_operation();
         }
     }
+
+    std::sort(bootstrap_segments.begin() + starting_point_offset, bootstrap_segments.end(), comparator_class());
 }
 
-void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
+void BootstrapSegmentGenerator::sort_segments_and_report_time()
 {
-    auto duplicate_count = 0;
+    std::function<void()> sort_func = [this]()
+    { sort_segments(); };
+
+    utl::perform_func_and_print_execution_time(sort_func, "sorting operations");
+}
+
+void BootstrapSegmentGenerator::remove_redundant_segments()
+{
     auto redundant_count = 0;
     for (auto i = 0; i < bootstrap_segments.size(); i++)
     {
@@ -228,29 +240,27 @@ void BootstrapSegmentGenerator::remove_redundant_bootstrap_segments()
                bootstrap_segments[i].first_operation() == bootstrap_segments[j].first_operation() &&
                bootstrap_segments[i].last_operation() == bootstrap_segments[j].last_operation())
         {
-            if (bootstrap_segments[i].size() <= bootstrap_segments[j].size())
+            if (bootstrap_segments[i].size() < bootstrap_segments[j].size() &&
+                segments_are_redundant(bootstrap_segments[i], bootstrap_segments[j]))
             {
-                if (segments_are_redundant(bootstrap_segments[i], bootstrap_segments[j]))
-                {
-                    bootstrap_segments.erase(bootstrap_segments.begin() + j);
-                    if (bootstrap_segments[i].size() == bootstrap_segments[j].size())
-                    {
-                        duplicate_count++;
-                    }
-                    else
-                    {
-                        redundant_count++;
-                    }
-                }
-                else
-                {
-                    j++;
-                }
+                bootstrap_segments.erase(bootstrap_segments.begin() + j);
+                redundant_count++;
+            }
+            else
+            {
+                j++;
             }
         }
     }
-    std::cout << "Number of duplicate bootstrap segments removed: " << duplicate_count << std::endl;
     std::cout << "Number of redundant bootstrap segments removed: " << redundant_count << std::endl;
+}
+
+void BootstrapSegmentGenerator::remove_redundant_segments_and_report_time()
+{
+    std::function<void()> redundant_func = [this]()
+    { remove_redundant_segments(); };
+
+    utl::perform_func_and_print_execution_time(redundant_func, "removing redundant operations");
 }
 
 bool BootstrapSegmentGenerator::segments_are_redundant(const BootstrapSegment &smaller_segment, const BootstrapSegment &larger_segment) const
@@ -316,22 +326,39 @@ void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_fil
 
 void BootstrapSegmentGenerator::write_segments_to_files()
 {
-    std::ofstream selective_file(selective_output_filename);
-    write_segments_to_file(selective_file);
-    selective_file.close();
+    std::function<void()> write_standard_func = [this]()
+    {
+        std::ofstream standard_file(standard_output_filename);
+        write_segments_to_file(standard_file);
+        standard_file.close();
+    };
 
-    convert_segments_to_standard();
+    utl::perform_func_and_print_execution_time(write_standard_func, "writing standard file");
 
-    std::ofstream standard_file(standard_output_filename);
-    write_segments_to_file(standard_file);
-    standard_file.close();
+    convert_segments_to_selective();
+
+    std::function<void()> write_selective_func = [this]()
+    {
+        std::ofstream selective_file(selective_output_filename);
+        write_segments_to_file(selective_file);
+        selective_file.close();
+    };
+
+    utl::perform_func_and_print_execution_time(write_selective_func, "writing selective file");
 }
 
-void BootstrapSegmentGenerator::convert_segments_to_standard()
+void BootstrapSegmentGenerator::convert_segments_to_selective()
 {
-    remove_last_operation_from_segments();
-    sort_segments();
-    remove_redundant_bootstrap_segments();
+    std::vector<BootstrapSegment> new_segments;
+    for (const auto &segment : bootstrap_segments)
+    {
+        for (const auto &child : segment.last_operation()->child_ptrs)
+        {
+            new_segments.push_back(segment);
+            new_segments.back().add(child);
+        }
+    }
+    bootstrap_segments = new_segments;
 }
 
 void BootstrapSegmentGenerator::remove_last_operation_from_segments()

@@ -93,13 +93,13 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     options.output_filenames = utl::split_string_by_character(argv[3], ',');
     num_sets = options.output_filenames.size();
 
-    options.num_levels = std::stoi(argv[4]);
+    // options.num_levels = std::stoi(argv[4]);
 
     const std::function<int(std::string)> stoi_function = [](std::string str)
     { return std::stoi(str); };
 
     std::string options_string;
-    for (auto i = 5; i < argc; i++)
+    for (auto i = 4; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }
@@ -114,7 +114,7 @@ void BootstrapSetSelector::print_options() const
     std::cout << "dag_filename: " << options.dag_filename << std::endl;
     std::cout << "segments_filename: " << options.segments_filename << std::endl;
     std::cout << "output_filename: " << options.output_filenames[set_index] << std::endl;
-    std::cout << "num_levels: " << options.num_levels << std::endl;
+    // std::cout << "num_levels: " << options.num_levels << std::endl;
     std::cout << "segments_weight: " << options.segments_weight[set_index] << std::endl;
     std::cout << "slack_weight: " << options.slack_weight[set_index] << std::endl;
     std::cout << "urgency_weight: " << options.urgency_weight[set_index] << std::endl;

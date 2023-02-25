@@ -39,7 +39,7 @@ do
 
     output_files=${output_files::-1}
 
-    echo ./CPP_code/bootstrap_set_selector.out $dag_file $segments_file $output_files $levels -s $segments_weight -r $slack_weight -u $urgency_weight
-    ./CPP_code/bootstrap_set_selector.out $dag_file $segments_file $output_files $levels -s $segments_weight -r $slack_weight -u $urgency_weight
+    echo ./CPP_code/bootstrap_set_selector.out $dag_file $segments_file $output_files -s $segments_weight -r $slack_weight -u $urgency_weight
+    ./CPP_code/bootstrap_set_selector.out $dag_file $segments_file $output_files -s $segments_weight -r $slack_weight -u $urgency_weight
 
 done

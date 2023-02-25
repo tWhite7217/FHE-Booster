@@ -79,10 +79,14 @@ Arguments:
 
   void sort_segments();
   void remove_last_operation_from_segments();
-  void remove_redundant_bootstrap_segments();
+  void remove_redundant_segments();
   bool segments_are_redundant(const BootstrapSegment &, const BootstrapSegment &) const;
   void write_segments_to_file(std::ofstream &) const;
-  void convert_segments_to_standard();
+  // void convert_segments_to_standard();
+  void convert_segments_to_selective();
+
+  void sort_segments_and_report_time();
+  void remove_redundant_segments_and_report_time();
 
   void parse_args(int, char **);
   void print_options() const;

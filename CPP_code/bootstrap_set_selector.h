@@ -7,6 +7,10 @@
 #include <unordered_set>
 #include <numeric>
 
+// <num_levels>
+//   The number of levels between bootstraps, also called the noise
+//   threshold.
+
 class BootstrapSetSelector
 {
 public:
@@ -31,9 +35,6 @@ Arguments:
     The text file listing the bootstrap segments of the program.
   <output_file>
     The path to the file where the bootstrap set should be saved.
-  <num_levels>
-    The number of levels between bootstraps, also called the noise
-    threshold.
   -l <file>, --latency-file=<file>
     A file describing the latencies of FHE operations on the target
     hardware. The default values can be found in program.h.
