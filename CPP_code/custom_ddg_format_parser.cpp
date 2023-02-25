@@ -89,28 +89,41 @@ void InputParser::parse_constant(const std::vector<std::string> &line)
 
 std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string &segments_filename) const
 {
-    std::ifstream segments_file(segments_filename);
-    std::vector<BootstrapSegment> bootstrap_segments;
-    std::string line;
-    line = utl::get_trimmed_line_from_file(segments_file);
+    std::ifstream segments_file(segments_filename, std::ios::binary);
 
-    while (!line.empty())
+    size_t num_segments;
+    segments_file.read((char *)(&num_segments), sizeof(size_t));
+    size_t total_num_ids = 0;
+
+    std::vector<size_t> segment_sizes(num_segments);
+    for (size_t i = 0; i < num_segments; i++)
     {
-        auto line_as_list = utl::split_string_by_character(line, ',');
-
-        auto segment_index = bootstrap_segments.size();
-
-        bootstrap_segments.emplace_back();
-
-        for (auto op_str : line_as_list)
-        {
-            auto op_id = std::stoi(op_str);
-            auto op_ptr = program->get_operation_ptr_from_id(op_id);
-            op_ptr->segment_indexes.push_back(segment_index);
-            bootstrap_segments.back().add(op_ptr);
-        }
-
-        line = utl::get_trimmed_line_from_file(segments_file);
+        size_t segment_length;
+        segments_file.read((char *)(&segment_length), sizeof(size_t));
+        segment_sizes[i] = segment_length;
+        total_num_ids += segment_length;
     }
-    return bootstrap_segments;
+
+    std::vector<int> ids(total_num_ids);
+    segments_file.read((char *)(&ids[0]), sizeof(int) * total_num_ids);
+
+    return get_segments_from_id_vector(ids, segment_sizes);
+}
+
+std::vector<BootstrapSegment> InputParser::get_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes) const
+{
+    std::vector<BootstrapSegment> segments;
+    int i = 0;
+    for (const auto &seg_size : segment_sizes)
+    {
+        segments.emplace_back();
+        auto &seg = segments.back();
+        for (int j = 0; j < seg_size; j++)
+        {
+            seg.add(program->get_operation_ptr_from_id(ids[i]));
+            i++;
+        }
+    }
+
+    return segments;
 }

@@ -20,7 +20,8 @@ echo ${heuristic_names[1]}
 for i in $(seq $first_graph_num $last_graph_num)
 do
     dag_file="DAGs/random_graph$i/random_graph$i.txt"
-    segments_file="DAGs/random_graph$i/$levels/bootstrap_segments.txt"
+    # segments_file="DAGs/random_graph$i/$levels/bootstrap_segments.txt"
+    segments_file="DAGs/random_graph$i/$levels/bootstrap_segments.dat"
 
     output_file_base="results/random_graph$i"
     mkdir $output_file_base

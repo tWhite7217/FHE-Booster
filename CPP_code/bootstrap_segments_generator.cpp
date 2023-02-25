@@ -5,8 +5,10 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     parse_args(argc, argv);
     print_options();
 
-    standard_output_filename = options.output_filename + ".txt";
-    selective_output_filename = options.output_filename + "_selective.txt";
+    // standard_output_filename = options.output_filename + ".txt";
+    // selective_output_filename = options.output_filename + "_selective.txt";
+    standard_output_filename = options.output_filename + ".dat";
+    selective_output_filename = options.output_filename + "_selective.dat";
 
     InputParser parser;
     program = *parser.parse_dag_file(options.dag_filename);
@@ -87,13 +89,10 @@ void BootstrapSegmentGenerator::print_options() const
 
 void BootstrapSegmentGenerator::generate_bootstrap_segments()
 {
-    if (options.initial_levels > 0)
-    {
-        std::function<void()> find_ignorable_func = [this]()
-        { find_operations_to_ignore(); };
+    std::function<void()> find_ignorable_func = [this]()
+    { find_operations_to_ignore(); };
 
-        utl::perform_func_and_print_execution_time(find_ignorable_func, "finding ignorable operations");
-    }
+    utl::perform_func_and_print_execution_time(find_ignorable_func, "finding ignorable operations");
 
     std::function<void()> create_segs_func = [this]()
     { create_raw_bootstrap_segments(); };
@@ -312,16 +311,37 @@ void BootstrapSegmentGenerator::print_bootstrap_segments() const
     }
 }
 
+// void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file) const
+// {
+//     for (auto segment : bootstrap_segments)
+//     {
+//         for (auto operation : segment)
+//         {
+//             output_file << operation->id << ",";
+//         }
+//         output_file << std::endl;
+//     }
+// }
+
 void BootstrapSegmentGenerator::write_segments_to_file(std::ofstream &output_file) const
 {
-    for (auto segment : bootstrap_segments)
+    size_t num_segments = bootstrap_segments.size();
+    output_file.write((char *)(&num_segments), sizeof(size_t));
+    std::vector<int> ids;
+
+    size_t total_num_ids = 0;
+    for (const auto &segment : bootstrap_segments)
     {
-        for (auto operation : segment)
+        size_t segment_size = segment.size();
+        output_file.write((char *)(&segment_size), sizeof(size_t));
+        total_num_ids += segment_size;
+        for (const auto &operation : segment)
         {
-            output_file << operation->id << ",";
+            ids.push_back(operation->id);
         }
-        output_file << std::endl;
     }
+
+    output_file.write((char *)(&ids[0]), sizeof(int) * total_num_ids);
 }
 
 void BootstrapSegmentGenerator::write_segments_to_files()

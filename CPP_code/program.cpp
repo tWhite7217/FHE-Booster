@@ -8,7 +8,12 @@ Program::Program(const ConstructorInput &in)
 
     if (!in.segments_filename.empty())
     {
-        bootstrap_segments = input_parser.parse_segments_file(in.segments_filename);
+        std::function<std::vector<BootstrapSegment>()> parse_segs_func = [input_parser, in]()
+        { return input_parser.parse_segments_file(in.segments_filename); };
+        bootstrap_segments =
+            utl::perform_func_and_print_execution_time(
+                parse_segs_func, "parsing segments file");
+        // bootstrap_segments = input_parser.parse_segments_file(in.segments_filename);
     }
 
     if (!in.latency_filename.empty())
