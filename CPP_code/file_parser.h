@@ -13,7 +13,7 @@
 
 class Program;
 
-class InputParser
+class FileParser
 {
 public:
     LatencyMap parse_latency_file(const std::string &) const;

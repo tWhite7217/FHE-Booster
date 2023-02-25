@@ -2,7 +2,7 @@
 
 Program::Program(const ConstructorInput &in)
 {
-    InputParser input_parser;
+    FileParser input_parser;
 
     *this = *input_parser.parse_dag_file_with_bootstrap_file(in.dag_filename, in.bootstrap_filename);
 

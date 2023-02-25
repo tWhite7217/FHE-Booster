@@ -1,8 +1,8 @@
-#include "custom_ddg_format_parser.h"
+#include "file_parser.h"
 
 #include <algorithm>
 
-LatencyMap InputParser::parse_latency_file(const std::string &latency_filename) const
+LatencyMap FileParser::parse_latency_file(const std::string &latency_filename) const
 {
     LatencyMap latencies;
 
@@ -20,12 +20,12 @@ LatencyMap InputParser::parse_latency_file(const std::string &latency_filename) 
     return latencies;
 }
 
-std::shared_ptr<Program> InputParser::parse_dag_file(const std::string &dag_filename)
+std::shared_ptr<Program> FileParser::parse_dag_file(const std::string &dag_filename)
 {
     return parse_dag_file_with_bootstrap_file(dag_filename, "");
 }
 
-std::shared_ptr<Program> InputParser::parse_dag_file_with_bootstrap_file(const std::string &dag_filename, const std::string &bootstrap_filename)
+std::shared_ptr<Program> FileParser::parse_dag_file_with_bootstrap_file(const std::string &dag_filename, const std::string &bootstrap_filename)
 {
     program = std::unique_ptr<Program>(new Program());
     std::ifstream dag_file(dag_filename);
@@ -59,7 +59,7 @@ std::shared_ptr<Program> InputParser::parse_dag_file_with_bootstrap_file(const s
     return program;
 }
 
-void InputParser::parse_operation_and_its_dependences(const std::vector<std::string> &line)
+void FileParser::parse_operation_and_its_dependences(const std::vector<std::string> &line)
 {
     auto type = OperationType(line[1]);
     auto new_operation = OperationPtr(new Operation(type, int(program->size()) + 1));
@@ -82,12 +82,12 @@ void InputParser::parse_operation_and_its_dependences(const std::vector<std::str
     }
 }
 
-void InputParser::parse_constant(const std::vector<std::string> &line)
+void FileParser::parse_constant(const std::vector<std::string> &line)
 {
     // operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
 }
 
-std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string &segments_filename) const
+std::vector<BootstrapSegment> FileParser::parse_segments_file(const std::string &segments_filename) const
 {
     std::ifstream segments_file(segments_filename, std::ios::binary);
 
@@ -110,7 +110,7 @@ std::vector<BootstrapSegment> InputParser::parse_segments_file(const std::string
     return get_segments_from_id_vector(ids, segment_sizes);
 }
 
-std::vector<BootstrapSegment> InputParser::get_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes) const
+std::vector<BootstrapSegment> FileParser::get_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes) const
 {
     std::vector<BootstrapSegment> segments;
     int i = 0;

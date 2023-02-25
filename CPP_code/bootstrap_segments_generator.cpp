@@ -10,8 +10,9 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     standard_output_filename = options.output_filename + ".dat";
     selective_output_filename = options.output_filename + "_selective.dat";
 
-    InputParser parser;
-    program = *parser.parse_dag_file(options.dag_filename);
+    Program::ConstructorInput in;
+    in.dag_filename = options.dag_filename;
+    program = Program(in);
 }
 
 bool BootstrapSegmentGenerator::is_in_forced_generation_mode() const

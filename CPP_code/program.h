@@ -3,7 +3,7 @@
 
 #include "bootstrap_segment.h"
 #include "shared_utils.h"
-#include "custom_ddg_format_parser.h"
+#include "file_parser.h"
 
 #include <fstream>
 #include <stdexcept>

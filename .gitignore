@@ -23,3 +23,4 @@ CPP_code/execution_engine/build/
 *.png
 *.ipynb_checkpoints/
 *.t2
+lgrp.cc

@@ -1,5 +1,3 @@
-#include "../CPP_code/custom_ddg_format_parser.h"
-
 #include <functional>
 
 std::string input_filename;
@@ -16,8 +14,9 @@ void read_command_line_args(int argc, char **argv)
 
 void get_info_from_input_parser()
 {
-    InputParser input_parser;
-    program = *input_parser.parse_dag_file(input_filename);
+    Program::ConstructorInput in;
+    in.dag_filename = input_filename;
+    program = Program(in);
 
     for (auto operation : program)
     {
