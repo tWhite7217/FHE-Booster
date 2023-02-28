@@ -2,7 +2,7 @@ CXX = g++-10
 
 BIN = ./bin
 
-primitive_dependencies := $(BIN)/operation_type.o $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/file_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o
+primitive_dependencies := $(BIN)/operation_type.o $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/file_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o $(BIN)/file_writer.o
 
 shared_depenedencies := $(BIN)/shared_utils.o $(primitive_dependencies)
 
@@ -29,6 +29,9 @@ $(BIN)/program.o: program.cpp program.h $(o_dependencies)
 
 $(BIN)/file_parser.o: file_parser.cpp file_parser.h $(o_dependencies)
 	$(CXX) $(CPP_FLAGS) -c -o $@ file_parser.cpp
+
+$(BIN)/file_writer.o: file_writer.cpp file_writer.h $(o_dependencies)
+	$(CXX) $(CPP_FLAGS) -c -o $@ file_writer.cpp
 
 lgrp.cc: LGRParser.l
 	flexc++ LGRParser.l -l lgrp.cc

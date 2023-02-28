@@ -12,7 +12,7 @@ CompleteToSelectiveConverter::CompleteToSelectiveConverter(const std::string &da
 void CompleteToSelectiveConverter::write_selective_lgr_file(const std::string &output_lgr_filename)
 {
     program.remove_unnecessary_bootstrap_pairs();
-    program.write_bootstrapping_set_to_file(output_lgr_filename);
+    program.file_writer->write_bootstrapping_set_to_file(output_lgr_filename);
 }
 
 int main(int argc, char *argv[])

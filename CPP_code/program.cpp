@@ -18,6 +18,8 @@ Program::Program(const ConstructorInput &in)
     {
         file_parser.parse_latency_file(in.latency_filename);
     }
+
+    file_writer = std::unique_ptr<FileWriter>(new FileWriter(std::ref(*this)));
 }
 
 OpVector::const_iterator Program::begin() const { return operations.begin(); };
@@ -54,8 +56,6 @@ void Program::update_ESTs_and_LSTs()
             earliest_program_end_time = earliest_operation_end_time;
         }
     }
-
-    // int  = get_earliest_possible_end_time();
 
     auto operations_in_reverse_topological_order = operations_in_topological_order;
     std::reverse(operations_in_reverse_topological_order.begin(), operations_in_reverse_topological_order.end());
@@ -97,11 +97,6 @@ bool Program::bootstrap_segments_are_satisfied() const
 {
     return find_unsatisfied_bootstrap_segment_index() == -1;
 }
-
-// bool bootstrap_segments_are_satisfied_for_selective_model(std::vector<OpVector> &bootstrap_segments)
-// {
-//     return find_unsatisfied_bootstrap_segment_index(bootstrap_segments, bootstrap_segment_is_satisfied_for_selective_model) == -1;
-// }
 
 int Program::find_unsatisfied_bootstrap_segment_index() const
 {
@@ -224,183 +219,4 @@ bool Program::no_segment_relies_on_bootstrap_pair(const OperationPtr &parent, co
         }
     }
     return true;
-}
-
-void Program::write_lgr_info_to_file(const std::string &filename, int total_latency) const
-{
-    std::ofstream output_file(filename);
-
-    output_file << "Objective value: " << total_latency << ".0" << std::endl;
-
-    write_bootstrapping_set_to_file(output_file);
-
-    for (auto operation : operations)
-    {
-        output_file << "START_TIME( OP" << operation->id << ") " << operation->start_time << std::endl;
-    }
-
-    for (auto operation : operations)
-    {
-        if (operation->core_num > 0)
-        {
-            output_file << "B2C( OP" << operation->id << ", C" << operation->core_num << ") 1" << std::endl;
-        }
-    }
-
-    for (auto operation : operations)
-    {
-        if (operation->bootstrap_start_time > 0)
-        {
-            output_file << "BOOTSTRAP_START_TIME( OP" << operation->id << ") " << operation->bootstrap_start_time << std::endl;
-        }
-    }
-
-    output_file << "FINISH_TIME( OP0) " << total_latency << std::endl;
-
-    output_file.close();
-}
-
-void Program::write_bootstrapping_set_to_file(const std::string &filename) const
-{
-    std::ofstream output_file(filename);
-
-    write_bootstrapping_set_to_file(output_file);
-
-    output_file.close();
-}
-
-void Program::write_bootstrapping_set_to_file(std::ofstream &file) const
-{
-    if (mode == BootstrapMode::COMPLETE)
-    {
-        write_bootstrapping_set_to_file_complete_mode(file);
-    }
-    else
-    {
-        write_bootstrapping_set_to_file_selective_mode(file);
-    }
-}
-
-void Program::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file) const
-{
-    for (auto operation : operations)
-    {
-        if (operation->is_bootstrapped())
-        {
-            file << "BOOTSTRAPPED( OP" << operation->id << ") 1" << std::endl;
-        }
-    }
-}
-
-void Program::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file) const
-{
-
-    for (auto operation : operations)
-    {
-        for (auto child : operation->bootstrap_children)
-        {
-            file << "BOOTSTRAPPED( OP" << operation->id << ", OP" << child->id << ") 1" << std::endl;
-        }
-    }
-}
-
-void Program::write_ldt_info_to_file(const std::string &filename) const
-{
-    std::ofstream output_file(filename);
-
-    std::vector<std::function<void(std::ofstream &)>> write_functions = {
-        [this](std::ofstream &file)
-        { write_operation_list_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_operation_types_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_operation_dependencies_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_bootstrapping_constraints_to_ldt_file(file); }};
-
-    for (auto write_data_func : write_functions)
-    {
-        write_data_func(output_file);
-        write_data_separator_to_ldt_file(output_file);
-    }
-
-    output_file.close();
-}
-
-void Program::write_operation_list_to_ldt_file(std::ofstream &file) const
-{
-    for (auto operation : operations)
-    {
-        file << "OP" << operation->id << std::endl;
-    }
-}
-
-void Program::write_operation_types_to_ldt_file(std::ofstream &file) const
-{
-    for (auto operation : operations)
-    {
-        auto operation_type_num = operation->type;
-        for (size_t i = 0; i < OperationType::num_types_except_bootstrap; i++)
-        {
-            if (i == operation_type_num)
-            {
-                file << "1 ";
-            }
-            else
-            {
-                file << "0 ";
-            }
-        }
-        file << std::endl;
-    }
-}
-
-void Program::write_operation_dependencies_to_ldt_file(std::ofstream &file) const
-{
-    for (auto operation : operations)
-    {
-        for (const auto &parent : operation->parent_ptrs)
-        {
-            file << "OP" << parent->id << " OP" << operation->id << std::endl;
-        }
-    }
-}
-
-void Program::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) const
-{
-    for (const auto &segment : bootstrap_segments)
-    {
-        std::string constraint_string;
-        if (mode == BootstrapMode::SELECTIVE)
-        {
-            for (size_t i = 0; i < segment.size() - 1; i++)
-            {
-                if ((i > 0) && (i % 10 == 0))
-                {
-                    constraint_string += "\n";
-                }
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(segment.operation_at(i)->id) + ", " + std::to_string(segment.operation_at(i + 1)->id) + ") + ";
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < segment.size(); i++)
-            {
-                if ((i > 0) && (i % 20 == 0))
-                {
-                    constraint_string += "\n";
-                }
-                constraint_string += "BOOTSTRAPPED(" + std::to_string(segment.operation_at(i)->id) + ") + ";
-            }
-        }
-        constraint_string.pop_back();
-        constraint_string.pop_back();
-        constraint_string += ">= 1;";
-        file << constraint_string << std::endl;
-    }
-}
-
-void Program::write_data_separator_to_ldt_file(std::ofstream &file) const
-{
-    file << "~" << std::endl;
 }

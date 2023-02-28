@@ -19,5 +19,5 @@ int main(int argc, char *argv[])
 
     auto program = Program(in);
 
-    program.write_ldt_info_to_file(output_filename);
+    program.file_writer->write_ldt_info_to_file(output_filename);
 }
