@@ -3,13 +3,14 @@
 
 #include "bootstrap_segment.h"
 #include "shared_utils.h"
-#include "file_parser.h"
 
 #include <fstream>
 #include <stdexcept>
 
 class Program
 {
+    class FileParser;
+
 public:
     struct ConstructorInput
     {
@@ -74,5 +75,7 @@ private:
 
     bool no_segment_relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &);
 };
+
+#include "file_parser.h"
 
 #endif

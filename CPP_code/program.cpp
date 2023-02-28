@@ -2,23 +2,21 @@
 
 Program::Program(const ConstructorInput &in)
 {
-    FileParser input_parser;
+    FileParser file_parser(std::ref(*this));
 
-    *this = *input_parser.parse_dag_file_with_bootstrap_file(in.dag_filename, in.bootstrap_filename);
+    file_parser.parse_dag_file_with_bootstrap_file(in.dag_filename, in.bootstrap_filename);
 
     if (!in.segments_filename.empty())
     {
-        std::function<std::vector<BootstrapSegment>()> parse_segs_func = [input_parser, in]()
-        { return input_parser.parse_segments_file(in.segments_filename); };
-        bootstrap_segments =
-            utl::perform_func_and_print_execution_time(
-                parse_segs_func, "parsing segments file");
-        // bootstrap_segments = input_parser.parse_segments_file(in.segments_filename);
+        std::function<void()> parse_segs_func = [file_parser, in]()
+        { file_parser.parse_segments_file(in.segments_filename); };
+        utl::perform_func_and_print_execution_time(
+            parse_segs_func, "parsing segments file");
     }
 
     if (!in.latency_filename.empty())
     {
-        latencies = input_parser.parse_latency_file(in.latency_filename);
+        file_parser.parse_latency_file(in.latency_filename);
     }
 }
 

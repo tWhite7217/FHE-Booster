@@ -7,24 +7,24 @@
 #include <string>
 #include <map>
 
-#include "LGRParser.h"
-#include "shared_utils.h"
 #include "program.h"
+#include "LGRParser.h"
 
-class Program;
-
-class FileParser
+class Program::FileParser
 {
+    friend class Program;
+
 public:
-    LatencyMap parse_latency_file(const std::string &) const;
-    std::shared_ptr<Program> parse_dag_file(const std::string &);
-    std::shared_ptr<Program> parse_dag_file_with_bootstrap_file(const std::string &, const std::string &);
-    std::vector<BootstrapSegment> parse_segments_file(const std::string &) const;
+    FileParser(const std::reference_wrapper<Program>);
+    void parse_latency_file(const std::string &) const;
+    void parse_dag_file(const std::string &);
+    void parse_dag_file_with_bootstrap_file(const std::string &, const std::string &);
+    void parse_segments_file(const std::string &) const;
 
 private:
-    std::shared_ptr<Program> program;
+    std::reference_wrapper<Program> program_ref;
 
     void parse_operation_and_its_dependences(const std::vector<std::string> &);
     void parse_constant(const std::vector<std::string> &);
-    std::vector<BootstrapSegment> get_segments_from_id_vector(const std::vector<int> &, const std::vector<size_t> &) const;
+    void generate_segments_from_id_vector(const std::vector<int> &, const std::vector<size_t> &) const;
 };

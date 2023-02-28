@@ -19,10 +19,12 @@ class Program;
 class LGRParser : public LGRParserBase
 {
 public:
-    explicit LGRParser(std::istream &in = std::cin,
-                       std::ostream &out = std::cout);
+    // explicit LGRParser(const std::reference_wrapper<Program> &program_ref,
+    //                    std::istream &in = std::cin,
+    //                    std::ostream &out = std::cout);
 
-    LGRParser(std::string const &infile, std::string const &outfile);
+    LGRParser(const std::string &infile, const std::string &outfile,
+              const std::reference_wrapper<Program> program_ref);
 
     // $insert lexFunctionDecl
     int lex();
@@ -31,8 +33,6 @@ public:
     int max_finish_time = 0;
     bool used_bootstrap_limited_model = false;
     bool used_selective_model = false;
-
-    void set_program(const std::shared_ptr<Program> &);
 
 private:
     int lex_();
@@ -47,7 +47,7 @@ private:
     // be exec'ed after the rules's actions.
 
     // My private members
-    std::shared_ptr<Program> program;
+    std::reference_wrapper<Program> program_ref;
 
     OperationPtr get_first_operation_ptr(const std::string &) const;
     OperationPtr get_second_operation_ptr(const std::string &) const;
@@ -58,13 +58,13 @@ private:
 };
 
 // $insert scannerConstructors
-inline LGRParser::LGRParser(std::istream &in, std::ostream &out)
-    : LGRParserBase(in, out)
-{
-}
+// inline LGRParser::LGRParser(const std::reference_wrapper<Program> &program_ref, std::istream &in, std::ostream &out)
+//     : LGRParserBase(in, out), program_ref{program_ref}
+// {
+// }
 
-inline LGRParser::LGRParser(std::string const &infile, std::string const &outfile)
-    : LGRParserBase(infile, outfile)
+inline LGRParser::LGRParser(const std::string &infile, const std::string &outfile, const std::reference_wrapper<Program> program_ref)
+    : LGRParserBase(infile, outfile), program_ref{program_ref}
 {
 }
 
