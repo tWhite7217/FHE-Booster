@@ -8,7 +8,7 @@ Program::Program(const ConstructorInput &in)
 
     if (!in.segments_filename.empty())
     {
-        std::function<void()> parse_segs_func = [file_parser, in]()
+        std::function<void()> parse_segs_func = [&file_parser, in]()
         { file_parser.parse_segments_file(in.segments_filename); };
         utl::perform_func_and_print_execution_time(
             parse_segs_func, "parsing segments file");

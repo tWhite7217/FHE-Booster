@@ -3,6 +3,61 @@
 Program::FileWriter::FileWriter(const std::reference_wrapper<const Program> program_ref)
     : program_ref{program_ref} {}
 
+void Program::FileWriter::write_segments_to_file(const std::string &output_filename) const
+{
+    std::ofstream output_file(output_filename);
+    write_segments_to_file(output_file);
+    output_file.close();
+}
+
+void Program::FileWriter::write_segments_to_file(std::ofstream &file) const
+{
+    const auto &bootstrap_segments = program_ref.get().bootstrap_segments;
+    size_t num_segments = bootstrap_segments.size();
+    file.write((char *)(&num_segments), sizeof(size_t));
+    std::vector<int> ids;
+
+    size_t total_num_ids = 0;
+    for (const auto &segment : bootstrap_segments)
+    {
+        size_t segment_size = segment.size();
+        file.write((char *)(&segment_size), sizeof(size_t));
+        total_num_ids += segment_size;
+        for (const auto &operation : segment)
+        {
+            ids.push_back(operation->id);
+        }
+    }
+
+    file.write((char *)(&ids[0]), sizeof(int) * total_num_ids);
+}
+
+void Program::FileWriter::write_segments_to_text_file(const std::string &output_filename) const
+{
+    std::ofstream output_file(output_filename);
+    write_segments_to_text_file(output_file);
+    output_file.close();
+}
+
+void Program::FileWriter::write_segments_to_text_file(std::ofstream &file) const
+{
+    std::ostringstream out_string_stream;
+
+    const auto &bootstrap_segments = program_ref.get().bootstrap_segments;
+    for (const auto &segment : bootstrap_segments)
+    {
+        for (const auto &operation : segment)
+        {
+            out_string_stream << operation->id << ",";
+        }
+        out_string_stream << "\n";
+    }
+
+    auto out_string = out_string_stream.str();
+
+    file.write(out_string.c_str(), out_string.size());
+}
+
 void Program::FileWriter::write_ldt_info_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
@@ -108,9 +163,7 @@ void Program::FileWriter::write_data_separator_to_ldt_file(std::ofstream &file) 
 void Program::FileWriter::write_lgr_info_to_file(const std::string &filename, int total_latency) const
 {
     std::ofstream output_file(filename);
-
     write_lgr_info_to_file(output_file, total_latency);
-
     output_file.close();
 }
 
@@ -148,9 +201,7 @@ void Program::FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_
 void Program::FileWriter::write_bootstrapping_set_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
-
     write_bootstrapping_set_to_file(output_file);
-
     output_file.close();
 }
 
