@@ -42,7 +42,7 @@ else()
 endif()
 
 ### ADD YOUR EXECUTABLE(s) HERE
-add_executable( execution_engine execution_engine.cpp parser.cpp ../shared_utils.cpp engine_operation.cpp)
+add_executable( execution_engine execution_engine.cpp schedule_parser.cpp ../shared_utils.cpp engine_operation.cpp)
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )

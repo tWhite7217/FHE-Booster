@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include "omp.h"
 
-#include "parser.hpp"
+#include "schedule_parser.hpp"
 #include "openfhe.h"
 
 class ExecutionEngine
