@@ -5,7 +5,7 @@
 Program::FileParser::FileParser(const std::reference_wrapper<Program> program_ref)
     : program_ref{program_ref} {}
 
-void Program::FileParser::parse_latency_file(const std::string &latency_filename) const
+void Program::FileParser::parse_latency_file(const std::string &latency_filename)
 {
     std::ifstream latency_file(latency_filename);
 
@@ -84,7 +84,7 @@ void Program::FileParser::parse_constant(const std::vector<std::string> &line)
     // operations.emplace_back(new Operation{type, int(operations.size()) + 1, parent_ptrs});
 }
 
-void Program::FileParser::parse_segments_file(const std::string &segments_filename) const
+void Program::FileParser::parse_segments_file(const std::string &segments_filename)
 {
     std::ifstream segments_file(segments_filename, std::ios::binary);
 
@@ -104,10 +104,12 @@ void Program::FileParser::parse_segments_file(const std::string &segments_filena
     std::vector<int> ids(total_num_ids);
     segments_file.read((char *)(&ids[0]), sizeof(int) * total_num_ids);
 
-    return generate_segments_from_id_vector(ids, segment_sizes);
+    generate_segments_from_id_vector(ids, segment_sizes);
+
+    add_segment_index_info_to_operations();
 }
 
-void Program::FileParser::generate_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes) const
+void Program::FileParser::generate_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes)
 {
     int i = 0;
     auto &program = program_ref.get();
@@ -120,5 +122,18 @@ void Program::FileParser::generate_segments_from_id_vector(const std::vector<int
             seg.add(program.get_operation_ptr_from_id(ids[i]));
             i++;
         }
+    }
+}
+
+void Program::FileParser::add_segment_index_info_to_operations()
+{
+    auto segment_index = 0;
+    for (const auto &segment : program_ref.get().bootstrap_segments)
+    {
+        for (auto &operation : segment)
+        {
+            operation->segment_indexes.push_back(segment_index);
+        }
+        segment_index++;
     }
 }

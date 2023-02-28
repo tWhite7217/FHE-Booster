@@ -35,7 +35,6 @@ public:
     int get_latency_of(const OperationType::Type) const;
     int get_maximum_slack() const;
     int get_maximum_num_segments() const;
-    // void add_segment_index_info_to_operations();
     bool bootstrap_segments_are_satisfied() const;
     int find_unsatisfied_bootstrap_segment_index() const;
 

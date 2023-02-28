@@ -80,19 +80,6 @@ int Program::get_maximum_slack() const
     return max;
 }
 
-// void Program::add_segment_index_info_to_operations()
-// {
-//     auto segment_index = 0;
-//     for (const auto &segment : bootstrap_segments)
-//     {
-//         for (auto &operation : segment)
-//         {
-//             operation->segment_indexes.push_back(segment_index);
-//         }
-//         segment_index++;
-//     }
-// }
-
 bool Program::bootstrap_segments_are_satisfied() const
 {
     return find_unsatisfied_bootstrap_segment_index() == -1;
