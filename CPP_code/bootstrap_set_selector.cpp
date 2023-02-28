@@ -99,7 +99,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     { return std::stoi(str); };
 
     std::string options_string;
-    for (auto i = 4; i < argc; i++)
+    for (int i = 4; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }

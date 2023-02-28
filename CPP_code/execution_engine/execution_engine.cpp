@@ -1,373 +1,188 @@
-#include "map"
-#include <cstdlib>
-#include "omp.h"
-#include <ctime>
-#include <ratio>
-#include <chrono>
-#include <mutex>
-#include <memory>
-#include <unordered_set>
-#include <atomic>
-#include <stdexcept>
+#include "execution_engine.hpp"
 
-#include "../shared_utils.h"
-#include "parser.hpp"
-#include "openfhe.h"
-
-const std::string help_info =
-    R"(
-Usage: ./execution_engine <sched_file> [<options>]" << std::endl;
-  
-<sched_file> should not include the \".sched\" extension.
-
-Options:
-  -l <int>, --num-levels=<int>
-    The number of levels between bootstraps, also called the noise threshold. Defaults to 9.
-  -r <float>, --rand-thresh=<float>
-    The maximum value of randomly generated inputs. Defaults to 1.0.
-  -m <mode>, --mode=<mode>
-    The execution mode. There are three possible options, of which BOOSTER is the default.
-      BOOSTER: Standard execution mode, with all operation types supported.
-      PLAINTEXT: Performs the schedule in the plaintext domain, printing output values at the end.
-      ALAP: BOOT operations not allowed. Bootstrapping is performed dynamically, as late as possible.
-  -v, --verify
-    Decrypts the results from the encrypted domain, and compares to expected values. Ignored if mode=PLAINTEXT.
-  -b, --bootstrap-inputs
-    Bootstraps the initial ciphertext inputs before performing the schedule.
-  -o <string>, --output-suffix=<string>
-    A file named \"<sched_file>_eval_time_<string>.txt\" stores the evaluation time of the schedule.
-  -s, --save-num-bootstraps
-    A file named \"<sched_file>_num_bootstraps.txt\" stores the number of the bootstraps performed executing the schedule.)";
-
-namespace lbc = lbcrypto;
-using ContextType = lbc::CryptoContext<lbc::DCRTPoly>;
-using Ctxt = lbc::Ciphertext<lbc::DCRTPoly>;
-using Ptxt = lbc::Plaintext;
-
-struct ExecutionVariables
+ExecutionEngine::ExecutionEngine(int argc, char **argv)
 {
-  std::map<std::string, Ctxt> e_regs;
-  std::map<std::string, Ptxt> p_regs;
-  std::map<std::string, double> v_regs;
-  std::map<std::string, std::shared_ptr<std::mutex>> reg_locks;
-  std::map<std::string, std::shared_ptr<std::mutex>> dep_locks;
-};
-
-void print_schedule(std::vector<std::queue<std::shared_ptr<Node>>> schedule)
-{
-  for (uint64_t i = 0; i < schedule.size(); i++)
+  if (argc < 2)
   {
-    if (schedule[i].empty())
+    std::cout << help_info << std::endl;
+    exit(0);
+  }
+  else
+  {
+    try
     {
-      continue;
+      parse_args(argc, argv);
+      print_options();
     }
-    std::cout << "=== Nodes for Worker " << i << " ===" << std::endl;
-    while (!schedule[i].empty())
+    catch (...)
     {
-      schedule[i].front()->print_node();
-      schedule[i].pop();
+      std::cout << help_info << std::endl;
+      exit(-1);
     }
   }
-  return;
 }
 
-bool isCtxt(const std::string &input_index)
+void ExecutionEngine::execute()
 {
-  return input_index.find('p') == std::string::npos;
-}
+  parse_schedule();
 
-std::pair<std::string, std::string> get_input_indices(const std::queue<std::shared_ptr<Node>> &core_schedule)
-{
-  std::vector<std::string> inputs = core_schedule.front()->get_inputs();
-  switch (core_schedule.front()->get_op())
+  generate_data_structures();
+
+  if (options.mode == PLAINTEXT || options.verify_results)
   {
-  case CMUL:
-  case CADD:
-  case CSUB:
-    return isCtxt(inputs[0]) ? std::pair(inputs[0], inputs[1]) : std::pair(inputs[1], inputs[0]);
-    break;
-  case EMUL:
-  case EADD:
-  case ESUB:
-    return std::pair(inputs[0], inputs[1]);
-    break;
-  case EINV:
-  case BOOT:
-    return std::pair(inputs[0], "");
-    break;
-  default:
-    std::cout << "Invalid Instruction! Exiting..." << std::endl;
-    exit(-1);
+    execute_in_plaintext();
+  }
+
+  if (options.mode == PLAINTEXT)
+  {
+    print_test_info();
+  }
+  else
+  {
+    setup_crypto_context();
+
+    prepare_inputs();
+
+    execute_in_ciphertext();
+
+    if (options.verify_results)
+    {
+      verify_results();
+    }
+
+    write_execution_info_to_files();
   }
 }
 
-void handle_input_mutex(std::map<std::string, std::shared_ptr<std::mutex>> &reg_locks, const std::string &input_index)
+void ExecutionEngine::parse_schedule()
 {
-  if (reg_locks.count(input_index))
+  std::function<void()> parser_func = [this]()
   {
-    reg_locks[input_index]->lock();
-    reg_locks[input_index]->unlock();
+    ScheduleParser parser;
+    sched_info = parser.parse(options);
+  };
+  utl::perform_func_and_print_execution_time(parser_func, "Parsing schedule");
+
+  omp_set_num_threads(sched_info.circuit.size());
+}
+
+void ExecutionEngine::generate_data_structures()
+{
+  std::function<void()> struct_funcs = [this]()
+  {
+    generate_random_inputs();
+    generate_reg_locks();
+    generate_dependence_locks();
+  };
+  utl::perform_func_and_print_execution_time(struct_funcs, "Generating random inputs and mutexes");
+}
+
+void ExecutionEngine::generate_random_inputs()
+{
+  for (const auto &input : sched_info.initial_inputs)
+  {
+    // validation_regs[key] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX / options.rand_thresh);
+    validation_regs[input.key] = options.rand_thresh;
   }
 }
 
-void update_dependence_info(const std::string &input_index,
-                            const std::string &output_index,
-                            ScheduleInfo &sched_info,
-                            ExecutionVariables &vars)
+void ExecutionEngine::generate_reg_locks()
 {
-  vars.dep_locks[input_index]->lock();
-  sched_info.dependent_outputs[input_index].erase(output_index);
-  if (sched_info.dependent_outputs[input_index].empty())
-  {
-    if (isCtxt(input_index))
-    {
-      vars.e_regs.erase(input_index);
-      vars.reg_locks.erase(input_index);
-    }
-    else
-    {
-      vars.p_regs.erase(input_index);
-    }
-  }
-  vars.dep_locks[input_index]->unlock();
-}
-
-int execute_schedule(ScheduleInfo sched_info,
-                     ExecutionVariables &vars,
-                     ContextType &context,
-                     const ExecMode mode,
-                     const uint32_t level_to_bootstrap)
-{
-  const bool ALAP_mode = (mode == ALAP);
-  std::atomic<int> bootstrap_counter = 0;
-  auto &enc_regs = vars.e_regs;
-  auto &ptxt_regs = vars.p_regs;
-  auto &reg_locks = vars.reg_locks;
-#pragma omp parallel for
+  reg_locks.clear();
   for (uint64_t i = 0; i < sched_info.circuit.size(); i++)
   {
-    auto &core_schedule = sched_info.circuit[i];
-    while (!core_schedule.empty())
+    for (const auto &operation : sched_info.circuit[i])
     {
-      auto output_index = core_schedule.front()->get_output();
-      auto input_indices = get_input_indices(core_schedule);
-      auto input_index1 = input_indices.first;
-      auto input_index2 = input_indices.second;
-      handle_input_mutex(reg_locks, input_index1);
-      handle_input_mutex(reg_locks, input_index2);
-      switch (core_schedule.front()->get_op())
-      {
-      case CMUL:
-        enc_regs[output_index] =
-            context->EvalMult(enc_regs[input_index1], ptxt_regs[input_index2]);
-        context->ModReduceInPlace(enc_regs[output_index]);
-        break;
-      case EMUL:
-        enc_regs[output_index] =
-            context->EvalMult(enc_regs[input_index1], enc_regs[input_index2]);
-        context->ModReduceInPlace(enc_regs[output_index]);
-        break;
-      case CADD:
-        enc_regs[output_index] =
-            context->EvalAdd(enc_regs[input_index1], ptxt_regs[input_index2]);
-        break;
-      case EADD:
-        enc_regs[output_index] =
-            context->EvalAdd(enc_regs[input_index1], enc_regs[input_index2]);
-        break;
-      case CSUB:
-        enc_regs[output_index] =
-            context->EvalSub(enc_regs[input_index1], ptxt_regs[input_index2]);
-        if (isCtxt(input_index2))
-        {
-          enc_regs[output_index] = context->EvalNegate(enc_regs[output_index]);
-        }
-        break;
-      case ESUB:
-        enc_regs[output_index] =
-            context->EvalSub(enc_regs[input_index1], enc_regs[input_index2]);
-        break;
-      case EINV:
-        enc_regs[output_index] = context->EvalNegate(enc_regs[input_index1]);
-        break;
-      case BOOT:
-        enc_regs[output_index] = context->EvalBootstrap(enc_regs[input_index1]);
-        bootstrap_counter++;
-        break;
-      default:
-        std::cout << "Invalid Instruction! Exiting..." << std::endl;
-        exit(-1);
-      }
-      if (ALAP_mode &&
-          sched_info.bootstrap_candidates.count(output_index) &&
-          enc_regs[output_index]->GetLevel() >= level_to_bootstrap)
-      {
-        enc_regs[output_index] = context->EvalBootstrap(enc_regs[output_index]);
-        bootstrap_counter++;
-      }
-
-      reg_locks[output_index]->unlock();
-
-      update_dependence_info(input_index1, output_index, sched_info, vars);
-      if (input_index2 != "")
-      {
-        update_dependence_info(input_index2, output_index, sched_info, vars);
-      }
-
-      // std::cout << output_index << " level: " << enc_regs[output_index]->GetLevel() << std::endl;
-      core_schedule.pop();
+      auto output_key = operation->get_output();
+      reg_locks.emplace(output_key, new std::mutex);
+      reg_locks[output_key]->lock();
     }
   }
-  return bootstrap_counter;
 }
 
-void execute_validation_schedule(ScheduleInfo sched_info,
-                                 ExecutionVariables &vars)
+void ExecutionEngine::generate_dependence_locks()
 {
-  auto &validation_regs = vars.v_regs;
-  auto &reg_locks = vars.reg_locks;
-#pragma omp parallel for
-  for (uint64_t i = 0; i < sched_info.circuit.size(); i++)
+  dependence_locks.clear();
+  for (const auto &[input_key, _] : sched_info.dependent_outputs)
   {
-    auto &core_schedule = sched_info.circuit[i];
-    while (!core_schedule.empty())
+    dependence_locks.emplace(input_key, new std::mutex);
+  }
+}
+
+void ExecutionEngine::execute_in_plaintext()
+{
+  std::function<void()> ptxt_func = [this]()
+  {
+    execute_validation_schedule();
+    lock_all_mutexes();
+  };
+  utl::perform_func_and_print_execution_time(ptxt_func, "Executing in plaintext");
+}
+
+void ExecutionEngine::execute_validation_schedule()
+{
+#pragma omp parallel for
+  for (size_t i = 0; i < sched_info.circuit.size(); i++)
+  {
+    for (const auto &operation : sched_info.circuit[i])
     {
-      auto output_index = core_schedule.front()->get_output();
-      auto inputs = core_schedule.front()->get_inputs();
-      auto input_index1 = inputs[0];
-      std::string input_index2 = "";
+      auto output_key = operation->get_output();
+      auto inputs = operation->get_inputs();
+      auto input_key1 = inputs[0].key;
+      std::string input_key2;
+      handle_input_mutex(input_key1);
       if (inputs.size() == 2)
       {
-        input_index2 = inputs[1];
-        handle_input_mutex(reg_locks, input_index2);
+        input_key2 = inputs[1].key;
+        handle_input_mutex(input_key2);
       }
-      handle_input_mutex(reg_locks, input_index1);
-      switch (core_schedule.front()->get_op())
+      switch (operation->get_op_type())
       {
-      case CMUL:
-      case EMUL:
-        validation_regs[output_index] =
-            validation_regs[input_index1] * validation_regs[input_index2];
+      case CP_MUL:
+      case CC_MUL:
+        validation_regs[output_key] =
+            validation_regs[input_key1] * validation_regs[input_key2];
         break;
-      case CADD:
-      case EADD:
-        validation_regs[output_index] =
-            validation_regs[input_index1] + validation_regs[input_index2];
+      case CP_ADD:
+      case CC_ADD:
+        validation_regs[output_key] =
+            validation_regs[input_key1] + validation_regs[input_key2];
         break;
-      case CSUB:
-      case ESUB:
-        validation_regs[output_index] =
-            validation_regs[input_index1] - validation_regs[input_index2];
+      case CP_SUB:
+      case CC_SUB:
+        validation_regs[output_key] =
+            validation_regs[input_key1] - validation_regs[input_key2];
         break;
-      case EINV:
-        validation_regs[output_index] = -validation_regs[input_index1];
+      case PC_SUB:
+        validation_regs[output_key] =
+            validation_regs[input_key2] - validation_regs[input_key1];
+        break;
+      case INV:
+        validation_regs[output_key] = -validation_regs[input_key1];
         break;
       case BOOT:
-        validation_regs[output_index] = validation_regs[input_index1];
+        validation_regs[output_key] = validation_regs[input_key1];
         break;
       default:
         std::cout << "Invalid Instruction! Exiting..." << std::endl;
         exit(-1);
       }
-      reg_locks[output_index]->unlock();
-      core_schedule.pop();
+      reg_locks[output_key]->unlock();
     }
   }
   return;
 }
 
-double get_percent_error(double experimental, double expected)
+void ExecutionEngine::handle_input_mutex(const std::string &input_key)
 {
-  if (expected == 0)
+  if (reg_locks.count(input_key))
   {
-    return 999;
-    // return std::abs(experimental) < 0.000000001;
-  }
-  return std::abs(experimental - expected) / expected * 100;
-}
-
-void validate_results(const ExecutionVariables &vars,
-                      lbc::PrivateKey<lbc::DCRTPoly> &private_key,
-                      ContextType &context)
-{
-  const auto &enc_regs = vars.e_regs;
-  const auto &validation_regs = vars.v_regs;
-  for (const auto &[key, ctxt] : enc_regs)
-  {
-    Ptxt tmp_ptxt;
-    context->Decrypt(private_key, ctxt, &tmp_ptxt);
-    auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
-
-    auto percent_error = get_percent_error(decrypted_val, validation_regs.at(key));
-    if (percent_error > 0.5)
-    {
-      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs.at(key) << ", error: " << percent_error << "%" << std::endl;
-    }
+    reg_locks[input_key]->lock();
+    reg_locks[input_key]->unlock();
   }
 }
 
-void generate_random_inputs(const ScheduleInfo &sched_info,
-                            ExecutionVariables &vars,
-                            double rand_thresh)
-{
-  auto &validation_regs = vars.v_regs;
-  for (const auto &key : sched_info.initial_inputs)
-  {
-    // validation_regs[key] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX / rand_thresh);
-    validation_regs[key] = rand_thresh;
-  }
-}
-
-void encrypt_inputs(ExecutionVariables &vars,
-                    lbc::PublicKey<lbc::DCRTPoly> &pub_key,
-                    ContextType &context)
-{
-  for (const auto &[key, value] : vars.v_regs)
-  {
-    std::vector<double> tmp_vec;
-    tmp_vec.push_back(value);
-    auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
-
-    if (isCtxt(key))
-    {
-      auto tmp = context->Encrypt(pub_key, tmp_ptxt);
-      vars.e_regs[key] = tmp;
-    }
-    else
-    {
-      vars.p_regs[key] = tmp_ptxt;
-    }
-  }
-}
-
-std::map<std::string, std::shared_ptr<std::mutex>> get_reg_locks(ScheduleInfo sched_info)
-{
-  std::map<std::string, std::shared_ptr<std::mutex>> reg_locks;
-  for (uint64_t i = 0; i < sched_info.circuit.size(); i++)
-  {
-    auto &core_schedule = sched_info.circuit[i];
-    while (!core_schedule.empty())
-    {
-      auto output_index = core_schedule.front()->get_output();
-      reg_locks.emplace(output_index, new std::mutex);
-      reg_locks[output_index]->lock();
-      core_schedule.pop();
-    }
-  }
-  return reg_locks;
-}
-
-std::map<std::string, std::shared_ptr<std::mutex>> get_dep_locks(const ScheduleInfo &sched_info)
-{
-  std::map<std::string, std::shared_ptr<std::mutex>> dependence_locks;
-  for (const auto &[input_index, _] : sched_info.dependent_outputs)
-  {
-    dependence_locks.emplace(input_index, new std::mutex);
-  }
-  return dependence_locks;
-}
-
-void lock_all_mutexes(std::map<std::string, std::shared_ptr<std::mutex>> &reg_locks)
+void ExecutionEngine::lock_all_mutexes()
 {
   for (auto &[key, mutex] : reg_locks)
   {
@@ -375,20 +190,7 @@ void lock_all_mutexes(std::map<std::string, std::shared_ptr<std::mutex>> &reg_lo
   }
 }
 
-void bootstrap_initial_inputs(std::map<std::string, Ctxt> &enc_regs,
-                              ContextType &context)
-{
-#pragma omp parallel for
-  for (int i = 0; i < enc_regs.size(); i++)
-  {
-    auto it = enc_regs.begin();
-    advance(it, i);
-    auto &[_, ctxt] = *it;
-    ctxt = context->EvalBootstrap(ctxt);
-  }
-}
-
-void print_test_info(const std::map<std::string, double> &validation_regs)
+void ExecutionEngine::print_test_info() const
 {
   int good_count = 0;
   int bad_count = 0;
@@ -408,10 +210,281 @@ void print_test_info(const std::map<std::string, double> &validation_regs)
   std::cout << "bad values: " << bad_count << std::endl;
 }
 
-CommandLineOptions parse_args(int argc, char **argv)
+void ExecutionEngine::setup_crypto_context()
 {
-  CommandLineOptions options;
+  std::function<void()> crypto_func = [this]()
+  {
+    lbcrypto::CCParams<lbcrypto::CryptoContextCKKSRNS> parameters;
+    SecretKeyDist secretKeyDist = UNIFORM_TERNARY;
+    parameters.SetSecretKeyDist(secretKeyDist);
+    // parameters.SetSecurityLevel(HEStd_128_classic);
+    parameters.SetSecurityLevel(lbcrypto::HEStd_NotSet);
+    parameters.SetRingDim(1 << 12);
 
+#if NATIVEINT == 128
+    ScalingTechnique rescaleTech = FIXEDAUTO;
+    usint dcrtBits = 78;
+    usint firstMod = 89;
+#else
+    ScalingTechnique rescaleTech = FLEXIBLEAUTO;
+    usint dcrtBits = 59;
+    usint firstMod = 60;
+#endif
+
+    parameters.SetScalingModSize(dcrtBits);
+    parameters.SetScalingTechnique(rescaleTech);
+    parameters.SetFirstModSize(firstMod);
+
+    std::vector<uint32_t> levelBudget = {4, 4};
+    uint32_t approxBootstrapDepth = 8;
+
+    auto ctxt_level_after_bootstrap = lbcrypto::FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
+    // std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
+    level_to_bootstrap = ctxt_level_after_bootstrap + options.num_levels;
+    unsigned int depth = level_to_bootstrap + 2;
+    parameters.SetMultiplicativeDepth(depth);
+
+    context = GenCryptoContext(parameters);
+
+    context->Enable(PKE);
+    context->Enable(KEYSWITCH);
+    context->Enable(LEVELEDSHE);
+    context->Enable(ADVANCEDSHE);
+    context->Enable(FHE);
+
+    unsigned int ringDim = context->GetRingDimension();
+    unsigned int numSlots = ringDim / 2;
+
+    context->EvalBootstrapSetup(levelBudget);
+
+    key_pair = context->KeyGen();
+    context->EvalMultKeyGen(key_pair.secretKey);
+    context->EvalBootstrapKeyGen(key_pair.secretKey, numSlots);
+  };
+  utl::perform_func_and_print_execution_time(crypto_func, "Setting up crypto context");
+}
+
+void ExecutionEngine::prepare_inputs()
+{
+  std::function<void()> encrypt_func = [this]()
+  { encrypt_inputs(); };
+  utl::perform_func_and_print_execution_time(encrypt_func, "Encrypting inputs");
+
+  std::string num_inputs = std::to_string(sched_info.initial_inputs.size());
+
+  if (options.bootstrap_inputs)
+  {
+    std::function<void()> boot_func = [this]()
+    { bootstrap_initial_inputs(); };
+    utl::perform_func_and_print_execution_time(boot_func, "Bootstrapping " + num_inputs + " inputs");
+  }
+}
+
+void ExecutionEngine::encrypt_inputs()
+{
+  for (const auto &input : sched_info.initial_inputs)
+  {
+    auto value = validation_regs[input.key];
+    std::vector<double> tmp_vec;
+    tmp_vec.push_back(value);
+    auto tmp_ptxt = context->MakeCKKSPackedPlaintext(tmp_vec);
+
+    if (input.is_ctxt)
+    {
+      auto tmp = context->Encrypt(key_pair.publicKey, tmp_ptxt);
+      ctxt_regs[input.key] = tmp;
+    }
+    else
+    {
+      ptxt_regs[input.key] = tmp_ptxt;
+    }
+  }
+}
+
+void ExecutionEngine::bootstrap_initial_inputs()
+{
+#pragma omp parallel for
+  for (int i = 0; i < ctxt_regs.size(); i++)
+  {
+    auto it = ctxt_regs.begin();
+    advance(it, i);
+    auto &[_, ctxt] = *it;
+    ctxt = context->EvalBootstrap(ctxt);
+    /* The below code can be commented in for testing
+    with ciphertexts at the noise threshold */
+    // for (int i = 0; i < options.num_levels; i++)
+    // {
+    //   ctxt = context->EvalMult(ctxt, ctxt);
+    // }
+  }
+}
+
+void ExecutionEngine::execute_in_ciphertext()
+{
+  std::function<int()> exec_func = [this]()
+  { return execute_schedule(); };
+  num_bootstraps = utl::perform_func_and_print_execution_time(
+      exec_func, "Executing in ciphertext", &execution_time);
+  std::cout << "Number of bootstrap operations: " << num_bootstraps << "." << std::endl;
+}
+
+int ExecutionEngine::execute_schedule()
+{
+  const bool ALAP_mode = (mode == ALAP);
+  std::atomic<int> bootstrap_counter = 0;
+#pragma omp parallel for
+  for (size_t i = 0; i < sched_info.circuit.size(); i++)
+  {
+    for (const auto &operation : sched_info.circuit[i])
+    {
+      auto output_key = operation->get_output();
+      // auto input_indices = get_input_indices(operation);
+      // auto input_key1 = input_indices.first;
+      // auto input_key2 = input_indices.second;
+      auto inputs = operation->get_inputs();
+      handle_input_mutex(inputs[0].key);
+      handle_input_mutex(inputs[1].key);
+      switch (operation->get_op_type())
+      {
+      case CP_MUL:
+        ctxt_regs[output_key] =
+            context->EvalMult(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+        context->ModReduceInPlace(ctxt_regs[output_key]);
+        break;
+      case CC_MUL:
+        ctxt_regs[output_key] =
+            context->EvalMult(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
+        context->ModReduceInPlace(ctxt_regs[output_key]);
+        break;
+      case CP_ADD:
+        ctxt_regs[output_key] =
+            context->EvalAdd(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+        break;
+      case CC_ADD:
+        ctxt_regs[output_key] =
+            context->EvalAdd(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
+        break;
+      case CP_SUB:
+        ctxt_regs[output_key] =
+            context->EvalSub(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+        break;
+      case PC_SUB:
+        ctxt_regs[output_key] =
+            context->EvalSub(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+        ctxt_regs[output_key] = context->EvalNegate(ctxt_regs[output_key]);
+      case CC_SUB:
+        ctxt_regs[output_key] =
+            context->EvalSub(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
+        break;
+      case INV:
+        ctxt_regs[output_key] = context->EvalNegate(ctxt_regs[inputs[0].key]);
+        break;
+      case BOOT:
+        ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[inputs[0].key]);
+        bootstrap_counter++;
+        break;
+      default:
+        std::cout << "Invalid Instruction! Exiting..." << std::endl;
+        exit(-1);
+      }
+      if (ALAP_mode &&
+          sched_info.bootstrap_candidates.count(output_key) &&
+          ctxt_regs[output_key]->GetLevel() >= level_to_bootstrap)
+      {
+        ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[output_key]);
+        bootstrap_counter++;
+      }
+
+      reg_locks[output_key]->unlock();
+
+      update_dependence_info(inputs[0], output_key);
+      if (inputs[1].key != "")
+      {
+        update_dependence_info(inputs[1], output_key);
+      }
+
+      // std::cout << output_key << " level: " << ctxt_regs[output_key]->GetLevel() << std::endl;
+    }
+  }
+  return bootstrap_counter;
+}
+
+void ExecutionEngine::update_dependence_info(const EngineOpInput &input, const std::string &output_key)
+{
+  const auto &input_key = input.key;
+  dependence_locks[input_key]->lock();
+  sched_info.dependent_outputs[input_key].erase(output_key);
+  if (sched_info.dependent_outputs[input_key].empty())
+  {
+    if (input.is_ctxt)
+    {
+      ctxt_regs.erase(input_key);
+      reg_locks.erase(input_key);
+    }
+    else
+    {
+      ptxt_regs.erase(input_key);
+    }
+  }
+  dependence_locks[input_key]->unlock();
+}
+
+void ExecutionEngine::verify_results()
+{
+  std::function<void()> validate_func = [this]()
+  { validate_results(); };
+  utl::perform_func_and_print_execution_time(
+      validate_func, "Comparing ctxt results against ptxt results");
+}
+
+void ExecutionEngine::validate_results() const
+{
+  for (const auto &[key, ctxt] : ctxt_regs)
+  {
+    Ptxt tmp_ptxt;
+    context->Decrypt(key_pair.secretKey, ctxt, &tmp_ptxt);
+    auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
+
+    auto percent_error = utl::get_percent_error(decrypted_val, validation_regs.at(key));
+    if (percent_error > 0.5)
+    {
+      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs.at(key) << ", error: " << percent_error << "%" << std::endl;
+    }
+  }
+}
+
+void ExecutionEngine::write_execution_info_to_files()
+{
+  if (!options.eval_time_filename.empty())
+  {
+    std::ofstream time_file(options.eval_time_filename);
+    time_file << execution_time << std::endl;
+    time_file.close();
+  }
+  if (!options.num_bootstraps_filename.empty())
+  {
+    std::ofstream segments_file(options.num_bootstraps_filename);
+    segments_file << num_bootstraps << std::endl;
+    segments_file.close();
+  }
+}
+
+void ExecutionEngine::print_schedule() const
+{
+  int i = 0;
+  for (const auto &core_schedule : sched_info.circuit)
+  {
+    std::cout << "=== Nodes for Worker " << i << " ===" << std::endl;
+    for (const auto &operation : core_schedule)
+    {
+      operation->print();
+    }
+    i++;
+  }
+}
+
+void ExecutionEngine::parse_args(int argc, char **argv)
+{
   std::string sched_filename = argv[1];
   options.input_filename = sched_filename + ".sched";
 
@@ -476,11 +549,9 @@ CommandLineOptions parse_args(int argc, char **argv)
   {
     options.num_bootstraps_filename = sched_filename + "_num_bootstraps_" + options.mode_string + ".txt";
   }
-
-  return options;
 }
 
-void print_options(CommandLineOptions options)
+void ExecutionEngine::print_options() const
 {
   std::cout << "FHE-Runner using the following options." << std::endl;
   std::cout << "num_levels: " << options.num_levels << std::endl;
@@ -495,152 +566,10 @@ void print_options(CommandLineOptions options)
 
 int main(int argc, char **argv)
 {
-  CommandLineOptions options;
-  if (argc < 2)
-  {
-    std::cout << help_info << std::endl;
-    exit(0);
-  }
-  else
-  {
-    try
-    {
-      options = parse_args(argc, argv);
-      print_options(options);
-    }
-    catch (...)
-    {
-      std::cout << help_info << std::endl;
-      exit(-1);
-    }
-  }
-
-  std::cout << "Parsing schedule..." << std::endl;
-  auto sched_info = parse_schedule(options);
-  std::cout << "Done." << std::endl;
-
-  omp_set_num_threads(sched_info.circuit.size());
-
-  ExecutionVariables vars;
   srand(time(NULL));
-  std::cout << "Generating random inputs..." << std::endl;
-  generate_random_inputs(sched_info, vars, options.rand_thresh);
-  std::cout << "Done." << std::endl;
 
-  std::cout << "Generating mutexes..." << std::endl;
-  vars.reg_locks = get_reg_locks(sched_info);
-  vars.dep_locks = get_dep_locks(sched_info);
-  std::cout << "Done." << std::endl;
-
-  if (options.mode == PLAINTEXT || options.verify_results)
-  {
-    std::cout << "Executing in plaintext..." << std::endl;
-    execute_validation_schedule(sched_info, vars);
-    std::cout << "Done." << std::endl;
-    lock_all_mutexes(vars.reg_locks);
-  }
-
-  if (options.mode == PLAINTEXT)
-  {
-    print_test_info(vars.v_regs);
-  }
-  else
-  {
-    std::cout << "Setting up crypto context..." << std::endl;
-    lbc::CCParams<lbc::CryptoContextCKKSRNS> parameters;
-    SecretKeyDist secretKeyDist = UNIFORM_TERNARY;
-    parameters.SetSecretKeyDist(secretKeyDist);
-    // parameters.SetSecurityLevel(HEStd_128_classic);
-    parameters.SetSecurityLevel(lbc::HEStd_NotSet);
-    parameters.SetRingDim(1 << 12);
-
-#if NATIVEINT == 128
-    ScalingTechnique rescaleTech = FIXEDAUTO;
-    usint dcrtBits = 78;
-    usint firstMod = 89;
-#else
-    ScalingTechnique rescaleTech = FLEXIBLEAUTO;
-    usint dcrtBits = 59;
-    usint firstMod = 60;
-#endif
-
-    parameters.SetScalingModSize(dcrtBits);
-    parameters.SetScalingTechnique(rescaleTech);
-    parameters.SetFirstModSize(firstMod);
-
-    std::vector<uint32_t> levelBudget = {4, 4};
-    uint32_t approxBootstrapDepth = 8;
-
-    auto ctxt_level_after_bootstrap = lbc::FHECKKSRNS::GetBootstrapDepth(approxBootstrapDepth, levelBudget, secretKeyDist);
-    // std::cout << "ctxt_level_after_bootstrap: " << ctxt_level_after_bootstrap << std::endl;
-    uint32_t level_to_bootstrap = ctxt_level_after_bootstrap + options.num_levels;
-    usint depth = level_to_bootstrap + 2;
-    parameters.SetMultiplicativeDepth(depth);
-
-    ContextType cryptoContext = GenCryptoContext(parameters);
-
-    cryptoContext->Enable(PKE);
-    cryptoContext->Enable(KEYSWITCH);
-    cryptoContext->Enable(LEVELEDSHE);
-    cryptoContext->Enable(ADVANCEDSHE);
-    cryptoContext->Enable(FHE);
-
-    usint ringDim = cryptoContext->GetRingDimension();
-    usint numSlots = ringDim / 2;
-
-    cryptoContext->EvalBootstrapSetup(levelBudget);
-
-    auto keyPair = cryptoContext->KeyGen();
-    cryptoContext->EvalMultKeyGen(keyPair.secretKey);
-    cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
-    std::cout << "Done." << std::endl;
-
-    std::cout << "Encrypting inputs..." << std::endl;
-    encrypt_inputs(vars, keyPair.publicKey, cryptoContext);
-    std::cout << "Done." << std::endl;
-
-    using hrc = std::chrono::high_resolution_clock;
-    using TimeSpanType = std::chrono::duration<double>;
-    if (options.bootstrap_inputs)
-    {
-      std::cout << "Bootstrapping " << sched_info.initial_inputs.size() << " inputs..." << std::endl;
-      auto t1 = hrc::now();
-      bootstrap_initial_inputs(vars.e_regs, cryptoContext);
-      auto t2 = hrc::now();
-      std::cout << "Done." << std::endl;
-      auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
-      std::cout << "Bootstrapping Time: " << time_span.count() << " seconds." << std::endl;
-    }
-
-    std::cout << "Executing in ciphertext..." << std::endl;
-    auto t1 = hrc::now();
-    int num_bootstraps = execute_schedule(sched_info, vars, cryptoContext, options.mode, level_to_bootstrap);
-    auto t2 = hrc::now();
-    std::cout << "Done." << std::endl;
-    auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
-    std::cout << "Eval Time: " << time_span.count() << " seconds." << std::endl;
-    std::cout << "Number of bootstrap operations: " << num_bootstraps << "." << std::endl;
-
-    if (options.verify_results)
-    {
-      std::cout << "Comparing ctxt results against ptxt results..." << std::endl;
-      validate_results(vars, keyPair.secretKey, cryptoContext);
-      std::cout << "Done." << std::endl;
-    }
-
-    if (!options.eval_time_filename.empty())
-    {
-      std::ofstream time_file(options.eval_time_filename);
-      time_file << time_span.count() << std::endl;
-      time_file.close();
-    }
-    if (!options.num_bootstraps_filename.empty())
-    {
-      std::ofstream segments_file(options.num_bootstraps_filename);
-      segments_file << num_bootstraps << std::endl;
-      segments_file.close();
-    }
-  }
+  auto engine = ExecutionEngine(argc, argv);
+  engine.execute();
 
   return 0;
 }

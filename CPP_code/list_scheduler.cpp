@@ -18,7 +18,7 @@ ListScheduler::ListScheduler(int argc, char **argv)
     if (num_threads > 0)
     {
         core_schedules.assign(num_threads, "");
-        for (auto i = 1; i <= options.num_threads; i++)
+        for (int i = 1; i <= options.num_threads; i++)
         {
             core_availability[i] = true;
         }
@@ -148,8 +148,8 @@ OpSet ListScheduler::handle_started_operations(std::map<OperationPtr, int> &star
 void ListScheduler::start_ready_operations()
 {
     auto it = ready_operations.begin();
-    int available_core;
-    while (it != ready_operations.end() && (!create_core_assignments || (available_core = get_available_core_num()) != -1))
+    int available_core = get_available_core_num();
+    while (it != ready_operations.end() && (!create_core_assignments || available_core != -1))
     {
         auto operation = *it;
         it = ready_operations.erase(it);
@@ -206,6 +206,7 @@ void ListScheduler::start_ready_operations()
             {
                 core_schedules[core_schedules_index] += "BOOT c0" + std::to_string(operation->id) + " c" + std::to_string(operation->id) + " t" + std::to_string(best_core) + "\n";
             }
+            available_core = get_available_core_num();
         }
     }
 }

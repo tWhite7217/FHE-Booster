@@ -62,7 +62,7 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
     options.num_levels = std::stoi(argv[3]);
 
     std::string options_string;
-    for (auto i = 4; i < argc; i++)
+    for (int i = 4; i < argc; i++)
     {
         options_string += std::string(argv[i]) + " ";
     }
@@ -210,7 +210,7 @@ void BootstrapSegmentGenerator::sort_segments()
 
     auto starting_point_offset = 0;
     auto current_starting_id_to_sort = bootstrap_segments.front().first_operation();
-    for (auto i = 1; i < bootstrap_segments.size(); i++)
+    for (size_t i = 1; i < bootstrap_segments.size(); i++)
     {
         if (bootstrap_segments[i].first_operation() != current_starting_id_to_sort)
         {
@@ -234,7 +234,7 @@ void BootstrapSegmentGenerator::sort_segments_and_report_time()
 void BootstrapSegmentGenerator::remove_redundant_segments()
 {
     auto redundant_count = 0;
-    for (auto i = 0; i < bootstrap_segments.size(); i++)
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
     {
         auto j = i + 1;
         while (j < bootstrap_segments.size() &&
@@ -268,7 +268,7 @@ bool BootstrapSegmentGenerator::segments_are_redundant(const BootstrapSegment &s
 {
     auto j = 0;
     auto size_diff = larger_segment.size() - smaller_segment.size();
-    for (auto i = 0; i < smaller_segment.size(); i++)
+    for (size_t i = 0; i < smaller_segment.size(); i++)
     {
         while (smaller_segment.operation_at(i) != larger_segment.operation_at(j))
         {

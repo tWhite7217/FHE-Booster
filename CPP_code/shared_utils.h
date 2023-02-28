@@ -40,6 +40,7 @@ namespace utl
     int random_int_between(const int, const int, std::minstd_rand &);
     std::ofstream open_ofstream_with_buffer(const std::string &);
     std::ifstream open_ifstream_with_buffer(const std::string &);
+    double get_percent_error(const double, const double);
 
     template <typename T>
     bool vector_contains_element(const std::vector<T> &vector, const T &element)
@@ -151,7 +152,7 @@ namespace utl
             {
                 print_size_mismatch_error(expected_size, string_list.size(), short_form, long_form);
             }
-            for (auto i = 0; i < expected_size; i++)
+            for (size_t i = 0; i < expected_size; i++)
             {
                 list[i] = string_converter(string_list[i]);
             }
@@ -194,7 +195,7 @@ namespace utl
         std::function<T()> func;
 
     public:
-        CallWrapper(std::function<T()> func) : func{func} {}
+        CallWrapper(const std::function<T()> &func) : func{func} {}
 
         void call_without_return()
         {
@@ -214,7 +215,7 @@ namespace utl
         std::function<void()> func;
 
     public:
-        CallWrapper(std::function<void()> func) : func{func} {}
+        CallWrapper(const std::function<void()> &func) : func{func} {}
 
         void call_without_return()
         {
@@ -225,25 +226,37 @@ namespace utl
     };
 
     template <typename T>
-    T perform_func_and_print_execution_time(std::function<T()> func, const std::string &func_name)
+    T perform_func_and_print_execution_time(const std::function<T()> &func, const std::string &task_preamble, double *execution_time_ptr)
     {
         auto func_wrapper = utl::CallWrapper(func);
 
         using hrc = std::chrono::high_resolution_clock;
         using TimeSpanType = std::chrono::duration<double>;
 
+        std::cout << task_preamble << "..." << std::endl;
         auto t1 = hrc::now();
         func_wrapper.call_without_return();
         auto t2 = hrc::now();
         auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
-        std::cout << "Execution time of " << func_name << ": " << time_span.count() << " seconds." << std::endl;
+        auto execution_time = time_span.count();
+        if (execution_time_ptr != nullptr)
+        {
+            *execution_time_ptr = execution_time;
+        }
+        std::cout << "Execution time: " << execution_time << " seconds." << std::endl;
         return func_wrapper.return_and_destroy();
     }
 
-    template <class C, typename T>
-    T perform_func_and_print_execution_time(std::function<T()> func, const char *func_name)
+    template <typename T>
+    T perform_func_and_print_execution_time(std::function<T()> func, const std::string &task_preamble)
     {
-        perform_func_and_print_execution_time(func, std::string(func_name));
+        return perform_func_and_print_execution_time(func, task_preamble, nullptr);
+    }
+
+    template <typename T>
+    T perform_func_and_print_execution_time(std::function<T()> func, const char *task_preamble)
+    {
+        return perform_func_and_print_execution_time(func, std::string(task_preamble));
     }
 }
 

@@ -119,3 +119,13 @@ int utl::random_int_between(const int min, const int max, std::minstd_rand &rand
 {
     return (rand_gen() % (max - min + 1)) + min;
 }
+
+double utl::get_percent_error(const double experimental, const double expected)
+{
+    if (expected == 0)
+    {
+        return 999;
+        // return std::abs(experimental) < 0.000000001;
+    }
+    return std::abs(experimental - expected) / expected * 100;
+}

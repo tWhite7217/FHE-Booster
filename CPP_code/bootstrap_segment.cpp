@@ -51,7 +51,7 @@ bool BootstrapSegment::is_satisfied_in_complete_mode() const
 
 bool BootstrapSegment::is_satisfied_in_selective_mode() const
 {
-    for (auto i = 0; i < segment.size() - 1; i++)
+    for (size_t i = 0; i < segment.size() - 1; i++)
     {
         auto parent = segment[i];
         auto child = segment[i + 1];
@@ -72,7 +72,7 @@ bool BootstrapSegment::is_alive(const BootstrapMode mode) const
 
 bool BootstrapSegment::relies_on_bootstrap_pair(const OperationPtr &parent, const OperationPtr &child) const
 {
-    for (auto i = 0; i < segment.size() - 1; i++)
+    for (size_t i = 0; i < segment.size() - 1; i++)
     {
         auto other_parent = segment[i];
         auto other_child = segment[i + 1];

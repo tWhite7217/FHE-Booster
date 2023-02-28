@@ -65,7 +65,7 @@ void FileParser::parse_operation_and_its_dependences(const std::vector<std::stri
     auto new_operation = OperationPtr(new Operation(type, int(program->size()) + 1));
     program->add_operation(new_operation);
 
-    for (int i = 2; i < line.size(); i++)
+    for (size_t i = 2; i < line.size(); i++)
     {
         auto parent_is_ciphertext = (line[i][0] == 'c');
         auto parent_id = std::stoi(line[i].substr(1, line[i].length() - 1));
@@ -118,7 +118,7 @@ std::vector<BootstrapSegment> FileParser::get_segments_from_id_vector(const std:
     {
         segments.emplace_back();
         auto &seg = segments.back();
-        for (int j = 0; j < seg_size; j++)
+        for (size_t j = 0; j < seg_size; j++)
         {
             seg.add(program->get_operation_ptr_from_id(ids[i]));
             i++;

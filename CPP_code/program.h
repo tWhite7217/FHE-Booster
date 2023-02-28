@@ -30,7 +30,7 @@ public:
     OpVector::const_iterator end() const;
     size_t size() const;
 
-    OperationPtr get_operation_ptr_from_id(const int) const;
+    OperationPtr get_operation_ptr_from_id(const size_t) const;
     int get_latency_of(const OperationType::Type) const;
     int get_maximum_slack() const;
     int get_maximum_num_segments() const;

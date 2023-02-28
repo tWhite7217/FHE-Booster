@@ -68,7 +68,7 @@ std::vector<OpVector> RandomGraphGenerator::get_random_level_ops(const std::vect
     auto num_levels = level_widths.size();
     std::vector<OpVector> level_ops(num_levels);
     int i = 0;
-    for (int j = 0; j < num_levels; j++)
+    for (size_t j = 0; j < num_levels; j++)
     {
         for (int k = 0; k < level_widths[j]; k++)
         {
@@ -150,7 +150,7 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
             }
         }
 
-        int i = 0;
+        size_t i = 0;
         int prev_parent_id = -1;
         if (num_current_parents == 1)
         {

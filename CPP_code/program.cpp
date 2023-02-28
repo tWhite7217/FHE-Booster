@@ -26,7 +26,7 @@ OpVector::const_iterator Program::begin() const { return operations.begin(); };
 OpVector::const_iterator Program::end() const { return operations.end(); };
 size_t Program::size() const { return operations.size(); };
 
-OperationPtr Program::get_operation_ptr_from_id(const int id) const
+OperationPtr Program::get_operation_ptr_from_id(const size_t id) const
 {
     if (id < 1 || id > operations.size())
     {
@@ -107,7 +107,7 @@ bool Program::bootstrap_segments_are_satisfied() const
 
 int Program::find_unsatisfied_bootstrap_segment_index() const
 {
-    for (int i = 0; i < bootstrap_segments.size(); i++)
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
     {
         if (!bootstrap_segments[i].is_satisfied(mode))
         {
@@ -342,7 +342,7 @@ void Program::write_operation_types_to_ldt_file(std::ofstream &file) const
     for (auto operation : operations)
     {
         auto operation_type_num = operation->type;
-        for (auto i = 0; i < OperationType::num_types_except_bootstrap; i++)
+        for (size_t i = 0; i < OperationType::num_types_except_bootstrap; i++)
         {
             if (i == operation_type_num)
             {
@@ -375,7 +375,7 @@ void Program::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) c
         std::string constraint_string;
         if (mode == BootstrapMode::SELECTIVE)
         {
-            for (auto i = 0; i < segment.size() - 1; i++)
+            for (size_t i = 0; i < segment.size() - 1; i++)
             {
                 if ((i > 0) && (i % 10 == 0))
                 {
@@ -386,7 +386,7 @@ void Program::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) c
         }
         else
         {
-            for (auto i = 0; i < segment.size(); i++)
+            for (size_t i = 0; i < segment.size(); i++)
             {
                 if ((i > 0) && (i % 20 == 0))
                 {
