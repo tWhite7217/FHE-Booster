@@ -22,7 +22,7 @@ private:
   Program program;
   std::vector<BootstrapSegment> bootstrap_segments;
 
-  std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> back_segs;
+  std::unordered_map<int, std::unordered_map<OperationPtr, std::vector<BootstrapSegment>>> back_segs;
   // std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> segs;
 
   struct Options

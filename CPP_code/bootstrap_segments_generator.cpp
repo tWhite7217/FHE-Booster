@@ -156,7 +156,7 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
         {
             auto seg = BootstrapSegment();
             seg.add(op);
-            back_segs[{op, 1}].push_back(seg);
+            back_segs[1][op].push_back(seg);
         }
         else
         {
@@ -170,30 +170,33 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
         {
             get_segs_from_children(op, i);
         }
+        back_segs.erase(i - 1);
     }
 
     for (const auto &op : program)
     {
         if (op->type == OperationType::MUL && !is_ignorable(op))
         {
-            auto &op_segs = back_segs[{op, options.num_levels}];
+            auto &op_segs = back_segs[options.num_levels][op];
             for (auto &seg : op_segs)
             {
                 std::reverse(seg.begin(), seg.end());
             }
-            bootstrap_segments.insert(bootstrap_segments.end(), op_segs.begin(), op_segs.end());
+            bootstrap_segments.insert(bootstrap_segments.end(), std::make_move_iterator(op_segs.begin()), std::make_move_iterator(op_segs.end()));
         }
     }
+
+    back_segs.clear();
 }
 
 void BootstrapSegmentGenerator::get_segs_from_children(const OperationPtr &op, const int i)
 {
-    auto &op_segs = back_segs[{op, i}];
+    auto &op_segs = back_segs[i][op];
     // int remaining_levels = i - (op->type == OperationType::MUL ? 1 : 0);
     for (const auto &child : op->child_ptrs)
     {
         int remaining_levels = i - (child->type == OperationType::MUL ? 1 : 0);
-        const auto &child_segs = back_segs[{child, remaining_levels}];
+        const auto &child_segs = back_segs[remaining_levels][child];
         op_segs.insert(op_segs.end(), child_segs.begin(), child_segs.end());
     }
 
