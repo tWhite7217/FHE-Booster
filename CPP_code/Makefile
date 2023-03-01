@@ -10,7 +10,7 @@ o_dependencies := lgrp.cc Makefile
 
 CPP_FLAGS = -std=c++20 -O3 -Werror -Wextra
 
-all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out complete_to_selective_converter.out random_graph_generator.out #ldt_generator.out
+all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out complete_to_selective_converter.out random_graph_generator.out ldt_generator.out
 
 $(BIN)/shared_utils.o: shared_utils.cpp shared_utils.h $(o_dependencies)
 	$(CXX) $(CPP_FLAGS) -c -o $@ shared_utils.cpp
@@ -66,11 +66,11 @@ $(BIN)/complete_to_selective_converter.o: complete_to_selective_converter.cpp $(
 complete_to_selective_converter.out: $(BIN)/complete_to_selective_converter.o $(shared_depenedencies)
 	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/complete_to_selective_converter.o $(shared_depenedencies)
 
-# $(BIN)/ldt_generator.o: ldt_generator.cpp $(o_dependencies)
-# 	$(CXX) $(CPP_FLAGS) -c -o $@ ldt_generator.cpp
+$(BIN)/ldt_generator.o: ldt_generator.cpp $(o_dependencies)
+	$(CXX) $(CPP_FLAGS) -c -o $@ ldt_generator.cpp
 
-# ldt_generator.out: $(BIN)/ldt_generator.o $(shared_depenedencies)
-# 	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/ldt_generator.o $(shared_depenedencies)
+ldt_generator.out: $(BIN)/ldt_generator.o $(shared_depenedencies)
+	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/ldt_generator.o $(shared_depenedencies)
 
 $(BIN)/random_graph_generator.o: random_graph_generator.cpp random_graph_generator.h $(o_dependencies)
 	$(CXX) $(CPP_FLAGS) -c -o $@ random_graph_generator.cpp

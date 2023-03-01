@@ -62,34 +62,43 @@ void FileWriter::write_ldt_info_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
 
-    std::vector<std::function<void(std::ofstream &)>> write_functions = {
-        [this](std::ofstream &file)
-        { write_operation_list_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_operation_types_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_operation_dependencies_to_ldt_file(file); },
-        [this](std::ofstream &file)
-        { write_bootstrapping_constraints_to_ldt_file(file); }};
-
-    for (auto write_data_func : write_functions)
-    {
-        write_data_func(output_file);
-        write_data_separator_to_ldt_file(output_file);
-    }
+    write_ldt_info_to_file(output_file);
 
     output_file.close();
 }
 
-void FileWriter::write_operation_list_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_ldt_info_to_file(std::ofstream &file) const
+{
+    std::ostringstream string_stream;
+    std::vector<std::function<void(std::ostringstream &)>> write_functions = {
+        [this](std::ostringstream &stream)
+        { write_operation_list_to_ldt_string_stream(stream); },
+        [this](std::ostringstream &stream)
+        { write_operation_types_to_ldt_string_stream(stream); },
+        [this](std::ostringstream &stream)
+        { write_operation_dependencies_to_ldt_string_stream(stream); },
+        [this](std::ostringstream &stream)
+        { write_bootstrapping_constraints_to_ldt_string_stream(stream); }};
+
+    for (auto write_data_func : write_functions)
+    {
+        write_data_func(string_stream);
+        write_data_separator_to_ldt_string_stream(string_stream);
+    }
+
+    auto ldt_string = string_stream.str();
+    file.write(ldt_string.c_str(), ldt_string.size());
+}
+
+void FileWriter::write_operation_list_to_ldt_string_stream(std::ostringstream &stream) const
 {
     for (auto operation : program_ref.get())
     {
-        file << "OP" << operation->id << std::endl;
+        stream << "OP" << operation->id << std::endl;
     }
 }
 
-void FileWriter::write_operation_types_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_operation_types_to_ldt_string_stream(std::ostringstream &stream) const
 {
     for (auto operation : program_ref.get())
     {
@@ -98,29 +107,29 @@ void FileWriter::write_operation_types_to_ldt_file(std::ofstream &file) const
         {
             if (i == operation_type_num)
             {
-                file << "1 ";
+                stream << "1 ";
             }
             else
             {
-                file << "0 ";
+                stream << "0 ";
             }
         }
-        file << std::endl;
+        stream << std::endl;
     }
 }
 
-void FileWriter::write_operation_dependencies_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_operation_dependencies_to_ldt_string_stream(std::ostringstream &stream) const
 {
     for (auto operation : program_ref.get())
     {
         for (const auto &parent : operation->parent_ptrs)
         {
-            file << "OP" << parent->id << " OP" << operation->id << std::endl;
+            stream << "OP" << parent->id << " OP" << operation->id << std::endl;
         }
     }
 }
 
-void FileWriter::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_bootstrapping_constraints_to_ldt_string_stream(std::ostringstream &stream) const
 {
     const auto &program = program_ref.get();
     for (const auto &segment : program.bootstrap_segments)
@@ -151,13 +160,13 @@ void FileWriter::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file
         constraint_string.pop_back();
         constraint_string.pop_back();
         constraint_string += ">= 1;";
-        file << constraint_string << std::endl;
+        stream << constraint_string << std::endl;
     }
 }
 
-void FileWriter::write_data_separator_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_data_separator_to_ldt_string_stream(std::ostringstream &stream) const
 {
-    file << "~" << std::endl;
+    stream << "~" << std::endl;
 }
 
 void FileWriter::write_lgr_info_to_file(const std::string &filename, int total_latency) const
