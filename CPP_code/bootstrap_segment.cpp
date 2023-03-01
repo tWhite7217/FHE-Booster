@@ -1,5 +1,8 @@
 #include "bootstrap_segment.h"
 
+OpVector::iterator BootstrapSegment::begin() { return segment.begin(); }
+OpVector::iterator BootstrapSegment::end() { return segment.end(); }
+
 OpVector::const_iterator BootstrapSegment::begin() const { return segment.begin(); }
 OpVector::const_iterator BootstrapSegment::end() const { return segment.end(); }
 

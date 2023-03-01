@@ -149,42 +149,58 @@ bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation) cons
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
 {
-    for (auto operation : program)
+    std::ranges::reverse_view reverse_program{program};
+    for (const auto &op : reverse_program)
     {
-        std::vector<BootstrapSegment> bootstrap_segments_to_add;
-        if (operation->type == OperationType::MUL && !is_ignorable(operation))
+        if (op->has_multiplication_child())
         {
-            bootstrap_segments_to_add = create_bootstrap_segments_helper(operation, {}, 0);
+            auto seg = BootstrapSegment();
+            seg.add(op);
+            back_segs[{op, 1}].push_back(seg);
         }
-        bootstrap_segments.insert(bootstrap_segments.end(), bootstrap_segments_to_add.begin(), bootstrap_segments_to_add.end());
+        else
+        {
+            get_segs_from_children(op, 1);
+        }
+    }
+
+    for (int i = 2; i <= options.num_levels; i++)
+    {
+        for (const auto &op : reverse_program)
+        {
+            get_segs_from_children(op, i);
+        }
+    }
+
+    for (const auto &op : program)
+    {
+        if (op->type == OperationType::MUL && !is_ignorable(op))
+        {
+            auto &op_segs = back_segs[{op, options.num_levels}];
+            for (auto &seg : op_segs)
+            {
+                std::reverse(seg.begin(), seg.end());
+            }
+            bootstrap_segments.insert(bootstrap_segments.end(), op_segs.begin(), op_segs.end());
+        }
     }
 }
 
-std::vector<BootstrapSegment> BootstrapSegmentGenerator::create_bootstrap_segments_helper(OperationPtr operation, BootstrapSegment segment, int num_multiplications)
+void BootstrapSegmentGenerator::get_segs_from_children(const OperationPtr &op, const int i)
 {
-    if (operation->type == OperationType::MUL)
+    auto &op_segs = back_segs[{op, i}];
+    // int remaining_levels = i - (op->type == OperationType::MUL ? 1 : 0);
+    for (const auto &child : op->child_ptrs)
     {
-        num_multiplications++;
-    }
-    segment.add(operation);
-    if (num_multiplications >= options.num_levels && operation->has_multiplication_child())
-    {
-        std::vector<BootstrapSegment> segments_to_return = {segment};
-        return segments_to_return;
-    }
-    else if (operation->child_ptrs.size() == 0)
-    {
-        return {};
+        int remaining_levels = i - (child->type == OperationType::MUL ? 1 : 0);
+        const auto &child_segs = back_segs[{child, remaining_levels}];
+        op_segs.insert(op_segs.end(), child_segs.begin(), child_segs.end());
     }
 
-    std::vector<BootstrapSegment> segments_to_return;
-    for (auto child : operation->child_ptrs)
+    for (auto &seg : op_segs)
     {
-        std::vector<BootstrapSegment> segments_to_add;
-        segments_to_add = create_bootstrap_segments_helper(child, segment, num_multiplications);
-        segments_to_return.insert(segments_to_return.end(), segments_to_add.begin(), segments_to_add.end());
+        seg.add(op);
     }
-    return segments_to_return;
 }
 
 void BootstrapSegmentGenerator::sort_segments()

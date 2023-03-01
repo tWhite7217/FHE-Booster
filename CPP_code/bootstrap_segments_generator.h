@@ -22,6 +22,9 @@ private:
   Program program;
   std::vector<BootstrapSegment> bootstrap_segments;
 
+  std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> back_segs;
+  // std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> segs;
+
   struct Options
   {
     std::string executable_filename;
@@ -47,7 +50,8 @@ private:
   bool is_ignorable(const OperationPtr &) const;
 
   void create_raw_bootstrap_segments();
-  std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
+  void get_segs_from_children(const OperationPtr &op, const int i);
+  // std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
 
   void print_number_of_segments() const;
   void print_bootstrap_segments() const;

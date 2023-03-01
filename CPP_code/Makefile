@@ -2,11 +2,11 @@ CXX = g++-10
 
 BIN = ./bin
 
-primitive_dependencies := $(BIN)/operation_type.o $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/file_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o $(BIN)/file_writer.o
+primitive_dependencies = $(BIN)/operation_type.o $(BIN)/operation.o $(BIN)/bootstrap_segment.o $(BIN)/program.o $(BIN)/file_parser.o $(BIN)/lex.o $(BIN)/LGRParser.o $(BIN)/file_writer.o
 
-shared_depenedencies := $(BIN)/shared_utils.o $(primitive_dependencies)
+shared_depenedencies = $(BIN)/shared_utils.o $(primitive_dependencies)
 
-o_dependencies := lgrp.cc Makefile
+o_dependencies = lgrp.cc Makefile
 
 CPP_FLAGS = -std=c++20 -O3 -Werror -Wextra
 
@@ -36,7 +36,7 @@ $(BIN)/file_writer.o: file_writer.cpp file_writer.h $(o_dependencies)
 lgrp.cc: LGRParser.l
 	flexc++ LGRParser.l -l lgrp.cc
 
-$(BIN)/lex.o: lgrp.cc $(o_dependencies)
+$(BIN)/lex.o: $(o_dependencies)
 	$(CXX) $(CPP_FLAGS) -c -o $@ lgrp.cc
 
 $(BIN)/LGRParser.o: LGRParser.cpp LGRParser.h $(o_dependencies)
@@ -85,4 +85,4 @@ txt_to_vcg.out: $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependenci
 	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependencies)
 
 clean:
-	rm lex.cc LGRParserBase.h lex.yy.c *.out bin/*
+	rm lex.cc lgrp.cc LGRParserBase.h lex.yy.c *.out bin/*

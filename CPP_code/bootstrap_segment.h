@@ -7,8 +7,8 @@
 class BootstrapSegment
 {
 public:
-    // OpVector::iterator begin();
-    // OpVector::iterator end();
+    OpVector::iterator begin();
+    OpVector::iterator end();
     OpVector::const_iterator begin() const;
     OpVector::const_iterator end() const;
 
