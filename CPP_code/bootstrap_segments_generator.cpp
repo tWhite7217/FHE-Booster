@@ -91,12 +91,12 @@ void BootstrapSegmentGenerator::generate_bootstrap_segments()
     std::function<void()> find_ignorable_func = [this]()
     { find_operations_to_ignore(); };
 
-    utl::perform_func_and_print_execution_time(find_ignorable_func, "finding ignorable operations");
+    utl::perform_func_and_print_execution_time(find_ignorable_func, "Finding ignorable operations");
 
     std::function<void()> create_segs_func = [this]()
     { create_raw_bootstrap_segments(); };
 
-    utl::perform_func_and_print_execution_time(create_segs_func, "creating segments");
+    utl::perform_func_and_print_execution_time(create_segs_func, "Creating segments");
 
     if (bootstrap_segments.size() > 0)
     {
@@ -225,7 +225,7 @@ void BootstrapSegmentGenerator::sort_segments_and_report_time()
     std::function<void()> sort_func = [this]()
     { sort_segments(); };
 
-    utl::perform_func_and_print_execution_time(sort_func, "sorting operations");
+    utl::perform_func_and_print_execution_time(sort_func, "Sorting segments");
 }
 
 void BootstrapSegmentGenerator::remove_redundant_segments()
@@ -258,7 +258,7 @@ void BootstrapSegmentGenerator::remove_redundant_segments_and_report_time()
     std::function<void()> redundant_func = [this]()
     { remove_redundant_segments(); };
 
-    utl::perform_func_and_print_execution_time(redundant_func, "removing redundant operations");
+    utl::perform_func_and_print_execution_time(redundant_func, "Removing redundant segments");
 }
 
 bool BootstrapSegmentGenerator::segments_are_redundant(const BootstrapSegment &smaller_segment, const BootstrapSegment &larger_segment) const
@@ -328,14 +328,14 @@ void BootstrapSegmentGenerator::write_files(const std::string &suffix)
     std::function<void()> write_binary_func = [file_writer, filename_without_extension]()
     { file_writer.write_segments_to_file(filename_without_extension + ".dat"); };
 
-    utl::perform_func_and_print_execution_time(write_binary_func, "writing " + suffix + " file");
+    utl::perform_func_and_print_execution_time(write_binary_func, "Writing " + suffix + " file");
 
     if (options.write_text_files)
     {
         std::function<void()> write_text_func = [file_writer, filename_without_extension]()
         { file_writer.write_segments_to_text_file(filename_without_extension + ".txt"); };
 
-        utl::perform_func_and_print_execution_time(write_text_func, "writing selective text file");
+        utl::perform_func_and_print_execution_time(write_text_func, "Writing " + suffix + " text file");
     }
 }
 

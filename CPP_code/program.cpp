@@ -11,7 +11,7 @@ Program::Program(const ConstructorInput &in)
         std::function<void()> parse_segs_func = [&file_parser, in]()
         { file_parser.parse_segments_file(in.segments_filename); };
         utl::perform_func_and_print_execution_time(
-            parse_segs_func, "parsing segments file");
+            parse_segs_func, "Parsing segments file");
     }
 
     if (!in.latency_filename.empty())
