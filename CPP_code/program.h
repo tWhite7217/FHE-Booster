@@ -9,12 +9,7 @@
 
 class Program
 {
-    class FileParser;
-    class FileWriter;
-
 public:
-    std::unique_ptr<FileWriter> file_writer;
-
     struct ConstructorInput
     {
         std::string dag_filename;
@@ -39,6 +34,7 @@ public:
     int find_unsatisfied_bootstrap_segment_index() const;
 
     void add_operation(const OperationPtr &);
+    void set_bootstrap_segments(const std::vector<BootstrapSegment> &);
 
     void update_num_segments_for_every_operation();
     void update_ESTs_and_LSTs();
@@ -46,6 +42,7 @@ public:
     void update_all_bootstrap_urgencies();
 
     void remove_unnecessary_bootstrap_pairs();
+    void convert_segments_to_selective();
 
 private:
     OpVector operations;
@@ -58,9 +55,11 @@ private:
          {OperationType::BOOT, 300}};
 
     bool no_segment_relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &);
+
+    class FileParser;
+    friend class FileWriter;
 };
 
 #include "file_parser.h"
-#include "file_writer.h"
 
 #endif

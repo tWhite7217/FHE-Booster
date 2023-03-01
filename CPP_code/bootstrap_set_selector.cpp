@@ -18,7 +18,8 @@ void BootstrapSetSelector::choose_and_output_bootstrap_sets()
         program.reset_bootstrap_set();
         print_options();
         choose_operations_to_bootstrap();
-        program.file_writer->write_bootstrapping_set_to_file(options.output_filenames[set_index] + ".lgr");
+        auto file_writer = FileWriter(std::ref(program));
+        file_writer.write_bootstrapping_set_to_file(options.output_filenames[set_index] + ".lgr");
         set_index++;
     }
 }

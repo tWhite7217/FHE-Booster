@@ -1,16 +1,16 @@
 #include "file_writer.h"
 
-Program::FileWriter::FileWriter(const std::reference_wrapper<const Program> program_ref)
+FileWriter::FileWriter(const std::reference_wrapper<const Program> program_ref)
     : program_ref{program_ref} {}
 
-void Program::FileWriter::write_segments_to_file(const std::string &output_filename) const
+void FileWriter::write_segments_to_file(const std::string &output_filename) const
 {
     std::ofstream output_file(output_filename);
     write_segments_to_file(output_file);
     output_file.close();
 }
 
-void Program::FileWriter::write_segments_to_file(std::ofstream &file) const
+void FileWriter::write_segments_to_file(std::ofstream &file) const
 {
     const auto &bootstrap_segments = program_ref.get().bootstrap_segments;
     size_t num_segments = bootstrap_segments.size();
@@ -32,14 +32,14 @@ void Program::FileWriter::write_segments_to_file(std::ofstream &file) const
     file.write((char *)(&ids[0]), sizeof(int) * total_num_ids);
 }
 
-void Program::FileWriter::write_segments_to_text_file(const std::string &output_filename) const
+void FileWriter::write_segments_to_text_file(const std::string &output_filename) const
 {
     std::ofstream output_file(output_filename);
     write_segments_to_text_file(output_file);
     output_file.close();
 }
 
-void Program::FileWriter::write_segments_to_text_file(std::ofstream &file) const
+void FileWriter::write_segments_to_text_file(std::ofstream &file) const
 {
     std::ostringstream out_string_stream;
 
@@ -58,7 +58,7 @@ void Program::FileWriter::write_segments_to_text_file(std::ofstream &file) const
     file.write(out_string.c_str(), out_string.size());
 }
 
-void Program::FileWriter::write_ldt_info_to_file(const std::string &filename) const
+void FileWriter::write_ldt_info_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
 
@@ -81,7 +81,7 @@ void Program::FileWriter::write_ldt_info_to_file(const std::string &filename) co
     output_file.close();
 }
 
-void Program::FileWriter::write_operation_list_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_operation_list_to_ldt_file(std::ofstream &file) const
 {
     for (auto operation : program_ref.get())
     {
@@ -89,7 +89,7 @@ void Program::FileWriter::write_operation_list_to_ldt_file(std::ofstream &file) 
     }
 }
 
-void Program::FileWriter::write_operation_types_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_operation_types_to_ldt_file(std::ofstream &file) const
 {
     for (auto operation : program_ref.get())
     {
@@ -109,7 +109,7 @@ void Program::FileWriter::write_operation_types_to_ldt_file(std::ofstream &file)
     }
 }
 
-void Program::FileWriter::write_operation_dependencies_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_operation_dependencies_to_ldt_file(std::ofstream &file) const
 {
     for (auto operation : program_ref.get())
     {
@@ -120,7 +120,7 @@ void Program::FileWriter::write_operation_dependencies_to_ldt_file(std::ofstream
     }
 }
 
-void Program::FileWriter::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_bootstrapping_constraints_to_ldt_file(std::ofstream &file) const
 {
     const auto &program = program_ref.get();
     for (const auto &segment : program.bootstrap_segments)
@@ -155,19 +155,19 @@ void Program::FileWriter::write_bootstrapping_constraints_to_ldt_file(std::ofstr
     }
 }
 
-void Program::FileWriter::write_data_separator_to_ldt_file(std::ofstream &file) const
+void FileWriter::write_data_separator_to_ldt_file(std::ofstream &file) const
 {
     file << "~" << std::endl;
 }
 
-void Program::FileWriter::write_lgr_info_to_file(const std::string &filename, int total_latency) const
+void FileWriter::write_lgr_info_to_file(const std::string &filename, int total_latency) const
 {
     std::ofstream output_file(filename);
     write_lgr_info_to_file(output_file, total_latency);
     output_file.close();
 }
 
-void Program::FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_latency) const
+void FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_latency) const
 {
     file << "Objective value: " << total_latency << ".0" << std::endl;
 
@@ -198,14 +198,14 @@ void Program::FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_
     file << "FINISH_TIME( OP0) " << total_latency << std::endl;
 }
 
-void Program::FileWriter::write_bootstrapping_set_to_file(const std::string &filename) const
+void FileWriter::write_bootstrapping_set_to_file(const std::string &filename) const
 {
     std::ofstream output_file(filename);
     write_bootstrapping_set_to_file(output_file);
     output_file.close();
 }
 
-void Program::FileWriter::write_bootstrapping_set_to_file(std::ofstream &file) const
+void FileWriter::write_bootstrapping_set_to_file(std::ofstream &file) const
 {
     if (program_ref.get().mode == BootstrapMode::COMPLETE)
     {
@@ -217,7 +217,7 @@ void Program::FileWriter::write_bootstrapping_set_to_file(std::ofstream &file) c
     }
 }
 
-void Program::FileWriter::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file) const
+void FileWriter::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file) const
 {
     for (auto operation : program_ref.get())
     {
@@ -228,7 +228,7 @@ void Program::FileWriter::write_bootstrapping_set_to_file_complete_mode(std::ofs
     }
 }
 
-void Program::FileWriter::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file) const
+void FileWriter::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file) const
 {
 
     for (auto operation : program_ref.get())

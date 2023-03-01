@@ -60,7 +60,7 @@ $(BIN)/list_scheduler.o: list_scheduler.cpp list_scheduler.h $(o_dependencies)
 list_scheduler.out: $(BIN)/list_scheduler.o $(shared_depenedencies)
 	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/list_scheduler.o $(shared_depenedencies)
 
-$(BIN)/complete_to_selective_converter.o: complete_to_selective_converter.cpp complete_to_selective_converter.h $(o_dependencies)
+$(BIN)/complete_to_selective_converter.o: complete_to_selective_converter.cpp $(o_dependencies)
 	$(CXX) $(CPP_FLAGS) -c -o $@ complete_to_selective_converter.cpp
 
 complete_to_selective_converter.out: $(BIN)/complete_to_selective_converter.o $(shared_depenedencies)

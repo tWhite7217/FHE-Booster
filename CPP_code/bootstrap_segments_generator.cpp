@@ -5,9 +5,6 @@ BootstrapSegmentGenerator::BootstrapSegmentGenerator(int argc, char **argv)
     parse_args(argc, argv);
     print_options();
 
-    standard_output_filename = options.output_filename + ".dat";
-    selective_output_filename = options.output_filename + "_selective.dat";
-
     Program::ConstructorInput in;
     in.dag_filename = options.dag_filename;
     program = Program(in);
@@ -25,10 +22,10 @@ bool BootstrapSegmentGenerator::segments_files_are_current() const
     struct stat standard_file_info;
     struct stat selective_file_info;
 
-    stat(executable_filename.c_str(), &executable_file_info);
+    stat(options.executable_filename.c_str(), &executable_file_info);
     stat(options.dag_filename.c_str(), &dag_file_info);
-    auto result1 = stat(standard_output_filename.c_str(), &standard_file_info);
-    auto result2 = stat(selective_output_filename.c_str(), &selective_file_info);
+    auto result1 = stat((options.output_filename + "_standard.dat").c_str(), &standard_file_info);
+    auto result2 = stat((options.output_filename + "_selective.dat").c_str(), &selective_file_info);
 
     auto executable_time = executable_file_info.st_mtime;
     auto dag_time = dag_file_info.st_mtime;
@@ -56,7 +53,7 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
         exit(1);
     }
 
-    executable_filename = argv[0];
+    options.executable_filename = argv[0];
     options.dag_filename = argv[1];
     options.output_filename = argv[2];
     options.num_levels = std::stoi(argv[3]);
@@ -315,57 +312,31 @@ void BootstrapSegmentGenerator::print_bootstrap_segments() const
 
 void BootstrapSegmentGenerator::write_segments_to_files()
 {
-    write_standard_files();
+    program.set_bootstrap_segments(bootstrap_segments);
 
-    convert_segments_to_selective();
+    write_files("standard");
 
-    write_selective_files();
+    program.convert_segments_to_selective();
+
+    write_files("selective");
 }
 
-void BootstrapSegmentGenerator::write_standard_files()
+void BootstrapSegmentGenerator::write_files(const std::string &suffix)
 {
-    std::function<void()> write_standard_func = [this]()
-    { program.file_writer->write_segments_to_file(standard_output_filename); };
+    const std::string filename_without_extension = options.output_filename + "_" + suffix;
+    auto file_writer = FileWriter(std::ref(program));
+    std::function<void()> write_binary_func = [file_writer, filename_without_extension]()
+    { file_writer.write_segments_to_file(filename_without_extension + ".dat"); };
 
-    utl::perform_func_and_print_execution_time(write_standard_func, "writing standard file");
+    utl::perform_func_and_print_execution_time(write_binary_func, "writing " + suffix + " file");
 
     if (options.write_text_files)
     {
-        std::function<void()> write_standard_text_func = [this]()
-        { program.file_writer->write_segments_to_text_file(options.output_filename + ".txt"); };
+        std::function<void()> write_text_func = [file_writer, filename_without_extension]()
+        { file_writer.write_segments_to_text_file(filename_without_extension + ".txt"); };
 
-        utl::perform_func_and_print_execution_time(write_standard_text_func, "writing standard text file");
+        utl::perform_func_and_print_execution_time(write_text_func, "writing selective text file");
     }
-}
-
-void BootstrapSegmentGenerator::write_selective_files()
-{
-    std::function<void()> write_selective_func = [this]()
-    { program.file_writer->write_segments_to_file(selective_output_filename); };
-
-    utl::perform_func_and_print_execution_time(write_selective_func, "writing selective file");
-
-    if (options.write_text_files)
-    {
-        std::function<void()> write_selective_text_func = [this]()
-        { program.file_writer->write_segments_to_text_file(options.output_filename + "_selective.txt"); };
-
-        utl::perform_func_and_print_execution_time(write_selective_text_func, "writing selective text file");
-    }
-}
-
-void BootstrapSegmentGenerator::convert_segments_to_selective()
-{
-    std::vector<BootstrapSegment> new_segments;
-    for (const auto &segment : bootstrap_segments)
-    {
-        for (const auto &child : segment.last_operation()->child_ptrs)
-        {
-            new_segments.push_back(segment);
-            new_segments.back().add(child);
-        }
-    }
-    bootstrap_segments = new_segments;
 }
 
 void BootstrapSegmentGenerator::remove_last_operation_from_segments()

@@ -1,4 +1,5 @@
 #include "program.h"
+#include "file_writer.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,5 +20,6 @@ int main(int argc, char *argv[])
 
     auto program = Program(in);
 
-    program.file_writer->write_ldt_info_to_file(output_filename);
+    auto file_writer = FileWriter(std::ref(program));
+    file_writer.write_ldt_info_to_file(output_filename);
 }

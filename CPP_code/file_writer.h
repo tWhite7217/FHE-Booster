@@ -2,10 +2,8 @@
 
 #include "program.h"
 
-class Program::FileWriter
+class FileWriter
 {
-    friend class Program;
-
 public:
     FileWriter(const std::reference_wrapper<const Program>);
 

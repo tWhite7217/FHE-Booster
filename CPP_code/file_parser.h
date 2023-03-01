@@ -12,8 +12,6 @@
 
 class Program::FileParser
 {
-    friend class Program;
-
 public:
     FileParser(const std::reference_wrapper<Program>);
     void parse_latency_file(const std::string &);

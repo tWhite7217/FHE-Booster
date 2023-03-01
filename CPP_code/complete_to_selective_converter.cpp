@@ -1,19 +1,7 @@
-#include "complete_to_selective_converter.h"
+#include <iostream>
 
-CompleteToSelectiveConverter::CompleteToSelectiveConverter(const std::string &dag_filename, const std::string &segments_filename, const std::string &bootstrap_filename)
-{
-    Program::ConstructorInput in;
-    in.dag_filename = dag_filename;
-    in.segments_filename = segments_filename;
-    in.bootstrap_filename = bootstrap_filename;
-    program = Program(in);
-}
-
-void CompleteToSelectiveConverter::write_selective_lgr_file(const std::string &output_lgr_filename)
-{
-    program.remove_unnecessary_bootstrap_pairs();
-    program.file_writer->write_bootstrapping_set_to_file(output_lgr_filename);
-}
+#include "program.h"
+#include "file_writer.h"
 
 int main(int argc, char *argv[])
 {
@@ -23,15 +11,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    std::string dag_filename = argv[1];
-    std::string segments_filename = argv[2];
-    std::string input_lgr_filename = argv[3];
+    Program::ConstructorInput in;
+    in.dag_filename = argv[1];
+    in.segments_filename = argv[2];
+    in.bootstrap_filename = argv[3];
+    auto program = Program(in);
+
+    program.remove_unnecessary_bootstrap_pairs();
+
     std::string output_lgr_filename = argv[4];
-
-    auto complete_to_selective_converter =
-        CompleteToSelectiveConverter(dag_filename, segments_filename, input_lgr_filename);
-
-    complete_to_selective_converter.write_selective_lgr_file(output_lgr_filename);
+    auto file_writer = FileWriter(std::ref(program));
+    file_writer.write_bootstrapping_set_to_file(output_lgr_filename);
 
     return 0;
 }

@@ -424,7 +424,8 @@ void ListScheduler::print_options() const
 
 void ListScheduler::write_to_output_files() const
 {
-    program.file_writer->write_lgr_info_to_file(options.output_filename + ".lgr", solver_latency);
+    auto file_writer = FileWriter(std::ref(program));
+    file_writer.write_lgr_info_to_file(options.output_filename + ".lgr", solver_latency);
     write_sched_to_file(options.output_filename + ".sched");
 }
 
