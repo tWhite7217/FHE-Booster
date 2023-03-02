@@ -13,7 +13,7 @@ for i in $(seq $first_graph_num $last_graph_num)
 do
     
     dag_file="DAGs/random_graph${i}/random_graph${i}.txt"
-    segments_file="DAGs/random_graph${i}/$levels/bootstrap_segments_selective.txt"
+    segments_file="DAGs/random_graph${i}/$levels/bootstrap_segments_selective.dat"
     input_bootstrap_set="results/random_graph$i/$levels/$heuristic_name/complete_bootstrap_set.lgr"
     output_bootstrap_set="results/random_graph$i/$levels/$heuristic_name/converted_bootstrap_set.lgr"
     

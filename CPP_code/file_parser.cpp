@@ -86,7 +86,7 @@ void Program::FileParser::parse_constant(const std::vector<std::string> &line)
 
 void Program::FileParser::parse_segments_file(const std::string &segments_filename)
 {
-    std::ifstream segments_file(segments_filename, std::ios::binary);
+    std::ifstream segments_file(segments_filename);
 
     size_t num_segments;
     segments_file.read((char *)(&num_segments), sizeof(size_t));
