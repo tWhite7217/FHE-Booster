@@ -17,11 +17,20 @@ int main(int argc, char *argv[])
     in.bootstrap_filename = argv[3];
     auto program = Program(in);
 
-    program.remove_unnecessary_bootstrap_pairs();
+    std::function<void()> conversion_func = [&program]()
+    { program.remove_unnecessary_bootstrap_pairs(); };
+
+    utl::perform_func_and_print_execution_time(
+        conversion_func, "Removing unnecessary bootstrap pairs");
 
     std::string output_lgr_filename = argv[4];
     auto file_writer = FileWriter(std::ref(program));
-    file_writer.write_bootstrapping_set_to_file(output_lgr_filename);
+
+    std::function<void()> write_func = [&file_writer, &output_lgr_filename]()
+    { file_writer.write_bootstrapping_set_to_file(output_lgr_filename); };
+
+    utl::perform_func_and_print_execution_time(
+        write_func, "Writing converted bootstrap set to file");
 
     return 0;
 }
