@@ -89,3 +89,18 @@ bool BootstrapSegment::relies_on_bootstrap_pair(const OperationPtr &parent, cons
     }
     return true;
 }
+
+BootstrapPairSet BootstrapSegment::get_currently_satisfying_pairs() const
+{
+    BootstrapPairSet currently_satisfying_pairs;
+    for (size_t i = 0; i < segment.size() - 1; i++)
+    {
+        auto parent = segment[i];
+        auto child = segment[i + 1];
+        if (parent->bootstrap_children.count(child))
+        {
+            currently_satisfying_pairs.insert({parent, child});
+        }
+    }
+    return currently_satisfying_pairs;
+}

@@ -4,6 +4,27 @@
 #include "operation.h"
 #include "shared_utils.h"
 
+struct BootstrapPair
+{
+    OperationPtr parent;
+    OperationPtr child;
+
+    bool operator==(const BootstrapPair &other) const
+    {
+        return parent == other.parent && child == other.child;
+    }
+
+    struct Hash
+    {
+        auto operator()(const BootstrapPair &p) const
+        {
+            return std::hash<OperationPtr>()(p.parent) + std::hash<OperationPtr>()(p.child);
+        }
+    };
+};
+
+using BootstrapPairSet = std::unordered_set<BootstrapPair, BootstrapPair::Hash>;
+
 class BootstrapSegment
 {
 public:
@@ -23,6 +44,7 @@ public:
     bool is_satisfied(const BootstrapMode) const;
     bool is_alive(const BootstrapMode) const;
     bool relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &) const;
+    BootstrapPairSet get_currently_satisfying_pairs() const;
 
 private:
     bool is_satisfied_in_complete_mode() const;

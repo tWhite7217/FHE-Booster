@@ -54,6 +54,7 @@ private:
          {OperationType::MUL, 5},
          {OperationType::BOOT, 300}};
 
+    BootstrapPairSet get_candidate_pairs();
     bool no_segment_relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &);
 
     class FileParser;

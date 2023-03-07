@@ -178,25 +178,45 @@ void Program::update_all_bootstrap_urgencies()
 
 void Program::remove_unnecessary_bootstrap_pairs()
 {
+    auto candidate_pairs = get_candidate_pairs();
+
     int num_removed = 0;
-    for (auto parent : operations)
+    for (const auto &[parent, child] : candidate_pairs)
     {
-        auto child_it = parent->bootstrap_children.begin();
-        while (child_it != parent->bootstrap_children.end())
+        if (no_segment_relies_on_bootstrap_pair(parent, child))
         {
-            auto child = *child_it;
-            if (no_segment_relies_on_bootstrap_pair(parent, child))
-            {
-                child_it = parent->bootstrap_children.erase(child_it);
-                num_removed++;
-            }
-            else
-            {
-                child_it++;
-            }
+            parent->bootstrap_children.erase(child);
+            num_removed++;
         }
     }
     std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
+}
+
+BootstrapPairSet Program::get_candidate_pairs()
+{
+    BootstrapPairSet candidate_pairs;
+    BootstrapPairSet needed_pairs;
+
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
+    {
+        auto satisfying_pairs = bootstrap_segments[i].get_currently_satisfying_pairs();
+
+        if (satisfying_pairs.size() > 1)
+        {
+            candidate_pairs.insert(satisfying_pairs.begin(), satisfying_pairs.end());
+        }
+        else
+        {
+            needed_pairs.insert(satisfying_pairs.begin(), satisfying_pairs.end());
+        }
+    }
+
+    for (const auto &pair : needed_pairs)
+    {
+        candidate_pairs.erase(pair);
+    }
+
+    return candidate_pairs;
 }
 
 bool Program::no_segment_relies_on_bootstrap_pair(const OperationPtr &parent, const OperationPtr &child)
