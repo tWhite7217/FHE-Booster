@@ -33,7 +33,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     int core_num = 0;
     double bootstrap_urgency;
     int num_unsatisfied_segments;
-    std::vector<size_t> segment_indexes;
+    std::unordered_set<size_t> segment_indexes;
 
     int get_earliest_end_time(const LatencyMap &) const;
     int get_slack() const;

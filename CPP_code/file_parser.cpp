@@ -132,7 +132,7 @@ void Program::FileParser::add_segment_index_info_to_operations()
     {
         for (auto &operation : segment)
         {
-            operation->segment_indexes.push_back(segment_index);
+            operation->segment_indexes.insert(segment_index);
         }
         segment_index++;
     }

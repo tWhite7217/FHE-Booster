@@ -221,11 +221,17 @@ BootstrapPairSet Program::get_candidate_pairs()
 
 bool Program::no_segment_relies_on_bootstrap_pair(const OperationPtr &parent, const OperationPtr &child)
 {
-    for (auto segment : bootstrap_segments)
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
     {
-        if (segment.relies_on_bootstrap_pair(parent, child))
+        bool segment_contains_both =
+            parent->segment_indexes.contains(i) &&
+            child->segment_indexes.contains(i);
+        if (segment_contains_both)
         {
-            return false;
+            if (bootstrap_segments[i].relies_on_bootstrap_pair(parent, child))
+            {
+                return false;
+            }
         }
     }
     return true;
