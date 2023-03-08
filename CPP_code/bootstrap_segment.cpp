@@ -89,7 +89,7 @@ bool BootstrapSegment::relies_on_bootstrap_pair(const OperationPtr &parent, cons
         auto other_child = segment[i + 1];
         if (other_parent != parent || other_child != child)
         {
-            if (other_parent->bootstrap_children.count(other_child))
+            if (other_parent->bootstrap_children.contains(other_child))
             {
                 return false;
             }
@@ -105,7 +105,7 @@ BootstrapPairSet BootstrapSegment::get_currently_satisfying_pairs() const
     {
         auto parent = segment[i];
         auto child = segment[i + 1];
-        if (parent->bootstrap_children.count(child))
+        if (parent->bootstrap_children.contains(child))
         {
             currently_satisfying_pairs.insert({parent, child});
         }

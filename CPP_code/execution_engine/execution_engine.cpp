@@ -175,7 +175,7 @@ void ExecutionEngine::execute_validation_schedule()
 
 void ExecutionEngine::handle_input_mutex(const std::string &input_key)
 {
-  if (reg_locks.count(input_key))
+  if (reg_locks.contains(input_key))
   {
     reg_locks[input_key]->lock();
     reg_locks[input_key]->unlock();
@@ -388,7 +388,7 @@ int ExecutionEngine::execute_schedule()
         exit(-1);
       }
       if (ALAP_mode &&
-          sched_info.bootstrap_candidates.count(output_key) &&
+          sched_info.bootstrap_candidates.contains(output_key) &&
           ctxt_regs[output_key]->GetLevel() >= level_to_bootstrap)
       {
         ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[output_key]);

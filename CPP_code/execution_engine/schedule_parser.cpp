@@ -85,7 +85,7 @@ void ScheduleParser::parse_line(const std::string &line_str)
     sched_info.dependent_outputs[input_key2].insert(output_key);
   }
 
-  if (outputs.count(output_key))
+  if (outputs.contains(output_key))
   {
     std::cout << "ERROR: Schedules must maintain SSA form." << std::endl;
     std::cout << "Ciphertext " << output_key << " is the output of multiple operations." << std::endl;
@@ -130,7 +130,7 @@ std::unordered_set<EngineOpInput, EngineOpInput::hash> ScheduleParser::get_initi
   std::unordered_set<EngineOpInput, EngineOpInput::hash> initial_inputs;
   for (const auto &input : all_inputs)
   {
-    if (!outputs.count(input.key))
+    if (!outputs.contains(input.key))
     {
       initial_inputs.insert(input);
     }
