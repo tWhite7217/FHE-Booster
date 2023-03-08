@@ -30,13 +30,14 @@ public:
     int get_latency_of(const OperationType::Type) const;
     int get_maximum_slack() const;
     int get_maximum_num_segments() const;
-    bool bootstrap_segments_are_satisfied() const;
-    int find_unsatisfied_bootstrap_segment_index() const;
+    bool has_unsatisfied_bootstrap_segments() const;
+    void initialize_unsatisfied_segment_indexes();
+    void initialize_num_segments_for_every_operation();
+    void update_unsatisfied_segments_and_num_segments_for_every_operation();
 
     void add_operation(const OperationPtr &);
     void set_bootstrap_segments(const std::vector<BootstrapSegment> &);
 
-    void update_num_segments_for_every_operation();
     void update_ESTs_and_LSTs();
     void reset_bootstrap_set();
     void update_all_bootstrap_urgencies();
@@ -47,6 +48,7 @@ public:
 private:
     OpVector operations;
     std::vector<BootstrapSegment> bootstrap_segments;
+    std::unordered_set<size_t> unsatisfied_bootstrap_segment_indexes;
     BootstrapMode mode;
     LatencyMap latencies =
         {{OperationType::ADD, 1},

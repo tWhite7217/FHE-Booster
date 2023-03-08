@@ -42,15 +42,17 @@ public:
     OperationPtr operation_at(const size_t) const;
     OperationPtr first_operation() const;
     OperationPtr last_operation() const;
-    bool is_satisfied(const BootstrapMode) const;
-    bool is_alive(const BootstrapMode) const;
+    void update_satisfied_status(const BootstrapMode);
+    bool is_satisfied() const;
+    bool is_alive() const;
     bool relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &) const;
     BootstrapPairSet get_currently_satisfying_pairs() const;
 
 private:
-    bool is_satisfied_in_complete_mode() const;
-    bool is_satisfied_in_selective_mode() const;
+    void update_satisfied_status_in_complete_mode();
+    void update_satisfied_status_in_selective_mode();
     OpVector segment;
+    bool satisfied_status = false;
 };
 
 #endif

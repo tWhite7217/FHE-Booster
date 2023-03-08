@@ -78,23 +78,6 @@ int Program::get_maximum_slack() const
     return max;
 }
 
-bool Program::bootstrap_segments_are_satisfied() const
-{
-    return find_unsatisfied_bootstrap_segment_index() == -1;
-}
-
-int Program::find_unsatisfied_bootstrap_segment_index() const
-{
-    for (size_t i = 0; i < bootstrap_segments.size(); i++)
-    {
-        if (!bootstrap_segments[i].is_satisfied(mode))
-        {
-            return i;
-        }
-    }
-    return -1;
-}
-
 void Program::add_operation(const OperationPtr &operation)
 {
     operations.push_back(operation);
@@ -113,21 +96,49 @@ void Program::reset_bootstrap_set()
     }
 }
 
-void Program::update_num_segments_for_every_operation()
+bool Program::has_unsatisfied_bootstrap_segments() const
 {
-    for (auto &operation : operations)
-    {
-        operation->num_unsatisfied_segments = 0;
-    }
+    return unsatisfied_bootstrap_segment_indexes.size() > 0;
+}
 
-    for (auto segment : bootstrap_segments)
+void Program::initialize_unsatisfied_segment_indexes()
+{
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
     {
-        if (!segment.is_satisfied(mode))
+        unsatisfied_bootstrap_segment_indexes.insert(i);
+    }
+}
+
+void Program::initialize_num_segments_for_every_operation()
+{
+    for (const auto &segment : bootstrap_segments)
+    {
+        for (auto &operation : segment)
         {
-            for (auto &operation : segment)
+            operation->num_unsatisfied_segments++;
+        }
+    }
+}
+
+void Program::update_unsatisfied_segments_and_num_segments_for_every_operation()
+{
+    auto seg_index_it = unsatisfied_bootstrap_segment_indexes.begin();
+    while (seg_index_it != unsatisfied_bootstrap_segment_indexes.end())
+    {
+        const auto seg_index = *seg_index_it;
+        auto &segment = bootstrap_segments[seg_index];
+        segment.update_satisfied_status(mode);
+        if (segment.is_satisfied())
+        {
+            seg_index_it = unsatisfied_bootstrap_segment_indexes.erase(seg_index_it);
+            for (const auto &operation : segment)
             {
-                operation->num_unsatisfied_segments++;
+                operation->num_unsatisfied_segments--;
             }
+        }
+        else
+        {
+            seg_index_it++;
         }
     }
 }
@@ -158,7 +169,7 @@ void Program::update_all_bootstrap_urgencies()
     auto count = 0;
     for (const auto &segment : bootstrap_segments)
     {
-        if (segment.is_alive(mode))
+        if (segment.is_alive())
         {
             count++;
             auto segment_size = segment.size();

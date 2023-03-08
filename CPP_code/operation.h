@@ -32,7 +32,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     int bootstrap_start_time = 0;
     int core_num = 0;
     double bootstrap_urgency;
-    int num_unsatisfied_segments;
+    int num_unsatisfied_segments = 0;
     bool exists_on_some_segment;
 
     int get_earliest_end_time(const LatencyMap &) const;

@@ -17,9 +17,20 @@ void BootstrapSetSelector::choose_and_output_bootstrap_sets()
     {
         program.reset_bootstrap_set();
         print_options();
-        choose_operations_to_bootstrap();
-        auto file_writer = FileWriter(std::ref(program));
-        file_writer.write_bootstrapping_set_to_file(options.output_filenames[set_index] + ".lgr");
+
+        std::function<void()> choose_operations_func = [this]()
+        { choose_operations_to_bootstrap(); };
+
+        utl::perform_func_and_print_execution_time(choose_operations_func, "Choosing operations to bootstrap");
+
+        std::function<void()> write_file_func = [this]()
+        {
+            auto file_writer = FileWriter(std::ref(program));
+            file_writer.write_bootstrapping_set_to_file(options.output_filenames[set_index] + ".lgr");
+        };
+
+        utl::perform_func_and_print_execution_time(write_file_func, "Writing bootstrap set to file");
+
         set_index++;
     }
 }
@@ -27,9 +38,10 @@ void BootstrapSetSelector::choose_and_output_bootstrap_sets()
 void BootstrapSetSelector::choose_operations_to_bootstrap()
 {
     auto count = 0;
-    while (!program.bootstrap_segments_are_satisfied())
+    program.initialize_unsatisfied_segment_indexes();
+    program.initialize_num_segments_for_every_operation();
+    while (program.has_unsatisfied_bootstrap_segments())
     {
-        program.update_num_segments_for_every_operation();
         max_num_segments = program.get_maximum_num_segments();
         if (options.slack_weight[set_index] != 0)
         {
@@ -41,6 +53,8 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
             program.update_all_bootstrap_urgencies();
         }
         choose_operation_to_bootstrap_based_on_score();
+        
+        program.update_unsatisfied_segments_and_num_segments_for_every_operation();
     }
 }
 

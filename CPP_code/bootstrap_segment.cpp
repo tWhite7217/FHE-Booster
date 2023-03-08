@@ -29,30 +29,32 @@ OperationPtr BootstrapSegment::operation_at(const size_t i) const
 OperationPtr BootstrapSegment::first_operation() const { return segment.front(); }
 OperationPtr BootstrapSegment::last_operation() const { return segment.back(); }
 
-bool BootstrapSegment::is_satisfied(const BootstrapMode mode) const
+void BootstrapSegment::update_satisfied_status(const BootstrapMode mode)
 {
     if (mode == BootstrapMode::SELECTIVE)
     {
-        return is_satisfied_in_selective_mode();
+        update_satisfied_status_in_selective_mode();
     }
-
-    return is_satisfied_in_complete_mode();
+    else
+    {
+        update_satisfied_status_in_complete_mode();
+    }
 }
 
-bool BootstrapSegment::is_satisfied_in_complete_mode() const
+void BootstrapSegment::update_satisfied_status_in_complete_mode()
 {
-
     for (auto operation : segment)
     {
         if (operation->is_bootstrapped())
         {
-            return true;
+            satisfied_status = true;
+            return;
         }
     }
-    return false;
+    satisfied_status = false;
 }
 
-bool BootstrapSegment::is_satisfied_in_selective_mode() const
+void BootstrapSegment::update_satisfied_status_in_selective_mode()
 {
     for (size_t i = 0; i < segment.size() - 1; i++)
     {
@@ -60,16 +62,22 @@ bool BootstrapSegment::is_satisfied_in_selective_mode() const
         auto child = segment[i + 1];
         if (child->receives_bootstrapped_result_from(parent))
         {
-            return true;
+            satisfied_status = true;
+            return;
         }
     }
-    return false;
+    satisfied_status = false;
 }
 
-bool BootstrapSegment::is_alive(const BootstrapMode mode) const
+bool BootstrapSegment::is_satisfied() const
+{
+    return satisfied_status;
+}
+
+bool BootstrapSegment::is_alive() const
 {
     auto first_operation = segment.front();
-    return !is_satisfied(mode) &&
+    return !satisfied_status &&
            first_operation->parents_meet_urgency_criteria();
 }
 
