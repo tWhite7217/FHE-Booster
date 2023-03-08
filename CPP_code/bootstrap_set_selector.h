@@ -80,7 +80,7 @@ Batching:
 
   void choose_operations_to_bootstrap();
 
-  void choose_operation_to_bootstrap_based_on_score();
+  OperationPtr choose_operation_to_bootstrap_based_on_score();
   double get_score(const OperationPtr &) const;
   void parse_args(int, char **);
   void print_options() const;

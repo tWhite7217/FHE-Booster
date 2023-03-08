@@ -111,8 +111,29 @@ void Program::initialize_num_segments_for_every_operation()
     }
 }
 
-void Program::update_unsatisfied_segments_and_num_segments_for_every_operation()
+void Program::initialize_alive_segment_indexes()
 {
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
+    {
+        if (bootstrap_segments[i].is_alive())
+        {
+            alive_bootstrap_segment_indexes.insert(i);
+        }
+    }
+}
+
+void Program::initialize_operation_to_segments_map()
+{
+    for (size_t i = 0; i < bootstrap_segments.size(); i++)
+    {
+        auto first_operation = bootstrap_segments[i].first_operation();
+        segment_indexes_started_by_op[first_operation].insert(i);
+    }
+}
+
+std::vector<size_t> Program::update_unsatisfied_segments_and_num_segments_for_every_operation()
+{
+    std::vector<size_t> newly_satisfied_segments;
     auto seg_index_it = unsatisfied_bootstrap_segment_indexes.begin();
     while (seg_index_it != unsatisfied_bootstrap_segment_indexes.end())
     {
@@ -122,6 +143,7 @@ void Program::update_unsatisfied_segments_and_num_segments_for_every_operation()
         if (segment.is_satisfied())
         {
             seg_index_it = unsatisfied_bootstrap_segment_indexes.erase(seg_index_it);
+            newly_satisfied_segments.push_back(seg_index);
             for (const auto &operation : segment)
             {
                 operation->num_unsatisfied_segments--;
@@ -132,6 +154,7 @@ void Program::update_unsatisfied_segments_and_num_segments_for_every_operation()
             seg_index_it++;
         }
     }
+    return newly_satisfied_segments;
 }
 
 int Program::get_maximum_num_segments() const
@@ -154,27 +177,42 @@ void Program::update_all_bootstrap_urgencies()
 {
     for (const auto &operation : operations)
     {
-        operation->bootstrap_urgency = -1;
+        operation->bootstrap_urgency = 0;
     }
 
-    auto count = 0;
-    for (const auto &segment : bootstrap_segments)
+    for (const auto i : alive_bootstrap_segment_indexes)
     {
-        if (segment.is_alive())
+        const auto &segment = bootstrap_segments[i];
+        auto segment_size = segment.size();
+        for (double i = 0; i < segment_size; i++)
         {
-            count++;
-            auto segment_size = segment.size();
-            for (double i = 0; i < segment_size; i++)
+            segment.operation_at(i)->bootstrap_urgency =
+                std::max(segment.operation_at(i)->bootstrap_urgency,
+                         (i + 1) / segment_size);
+        }
+    }
+    if (alive_bootstrap_segment_indexes.empty())
+    {
+        std::cout << "here" << std::endl;
+    }
+}
+
+void Program::update_alive_segments(const OperationPtr &bootstrapped_op, const std::vector<size_t> &newly_satisfied_segments)
+{
+    for (const auto &child : bootstrapped_op->child_ptrs)
+    {
+        for (const auto i : segment_indexes_started_by_op[child])
+        {
+            if (bootstrap_segments[i].is_alive())
             {
-                segment.operation_at(i)->bootstrap_urgency =
-                    std::max(segment.operation_at(i)->bootstrap_urgency,
-                             (i + 1) / segment_size);
+                alive_bootstrap_segment_indexes.insert(i);
             }
         }
     }
-    if (count == 0)
+
+    for (const auto i : newly_satisfied_segments)
     {
-        std::cout << "here" << std::endl;
+        alive_bootstrap_segment_indexes.erase(i);
     }
 }
 

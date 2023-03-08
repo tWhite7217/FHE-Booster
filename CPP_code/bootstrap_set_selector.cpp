@@ -40,6 +40,8 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
     auto count = 0;
     program.initialize_unsatisfied_segment_indexes();
     program.initialize_num_segments_for_every_operation();
+    program.initialize_alive_segment_indexes();
+    program.initialize_operation_to_segments_map();
     while (program.has_unsatisfied_bootstrap_segments())
     {
         max_num_segments = program.get_maximum_num_segments();
@@ -52,13 +54,17 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
         {
             program.update_all_bootstrap_urgencies();
         }
-        choose_operation_to_bootstrap_based_on_score();
+        auto chosen_op = choose_operation_to_bootstrap_based_on_score();
 
-        program.update_unsatisfied_segments_and_num_segments_for_every_operation();
+        auto newly_satisfied_segments = program.update_unsatisfied_segments_and_num_segments_for_every_operation();
+        if (options.urgency_weight[set_index] != 0)
+        {
+            program.update_alive_segments(chosen_op, newly_satisfied_segments);
+        }
     }
 }
 
-void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
+OperationPtr BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
 {
     auto max_score = -1;
     OperationPtr max_score_operation;
@@ -76,6 +82,7 @@ void BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score()
     }
 
     max_score_operation->bootstrap_children = max_score_operation->child_ptrs;
+    return max_score_operation;
 }
 
 double BootstrapSetSelector::get_score(const OperationPtr &operation) const
