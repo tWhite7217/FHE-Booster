@@ -24,6 +24,7 @@ struct BootstrapPair
 };
 
 using BootstrapPairSet = std::unordered_set<BootstrapPair, BootstrapPair::Hash>;
+using BootstrapPairIndexesMap = std::unordered_map<BootstrapPair, std::unordered_set<size_t>, BootstrapPair::Hash>;
 
 class BootstrapSegment
 {

@@ -33,7 +33,7 @@ bool Operation::parents_meet_urgency_criteria() const
 {
     for (auto parent : parent_ptrs)
     {
-        if ((parent->segment_indexes.size() > 0) && !parent->is_bootstrapped())
+        if ((parent->exists_on_some_segment) && !parent->is_bootstrapped())
         {
             return false;
         }

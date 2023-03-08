@@ -20,10 +20,10 @@ public:
     void parse_segments_file(const std::string &);
 
 private:
-    std::reference_wrapper<Program> program_ref;
+std::reference_wrapper<Program> program_ref;
 
     void parse_operation_and_its_dependences(const std::vector<std::string> &);
     void parse_constant(const std::vector<std::string> &);
     void generate_segments_from_id_vector(const std::vector<int> &, const std::vector<size_t> &);
-    void add_segment_index_info_to_operations();
+    void add_segment_existence_info_to_operations();
 };

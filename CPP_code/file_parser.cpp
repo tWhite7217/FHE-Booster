@@ -106,7 +106,7 @@ void Program::FileParser::parse_segments_file(const std::string &segments_filena
 
     generate_segments_from_id_vector(ids, segment_sizes);
 
-    add_segment_index_info_to_operations();
+    add_segment_existence_info_to_operations();
 }
 
 void Program::FileParser::generate_segments_from_id_vector(const std::vector<int> &ids, const std::vector<size_t> &segment_sizes)
@@ -125,15 +125,13 @@ void Program::FileParser::generate_segments_from_id_vector(const std::vector<int
     }
 }
 
-void Program::FileParser::add_segment_index_info_to_operations()
+void Program::FileParser::add_segment_existence_info_to_operations()
 {
-    auto segment_index = 0;
     for (const auto &segment : program_ref.get().bootstrap_segments)
     {
         for (auto &operation : segment)
         {
-            operation->segment_indexes.insert(segment_index);
+            operation->exists_on_some_segment = true;
         }
-        segment_index++;
     }
 }

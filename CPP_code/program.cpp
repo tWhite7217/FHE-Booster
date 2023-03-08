@@ -178,13 +178,14 @@ void Program::update_all_bootstrap_urgencies()
 
 void Program::remove_unnecessary_bootstrap_pairs()
 {
-    auto candidate_pairs = get_candidate_pairs();
+    auto pairs_to_indexes_map = get_candidate_pairs_and_segment_indexes();
 
     int num_removed = 0;
-    for (const auto &[parent, child] : candidate_pairs)
+    for (const auto &[candidate_pair, segment_indexes] : pairs_to_indexes_map)
     {
-        if (no_segment_relies_on_bootstrap_pair(parent, child))
+        if (no_segment_relies_on_bootstrap_pair(candidate_pair, segment_indexes))
         {
+            auto &[parent, child] = candidate_pair;
             parent->bootstrap_children.erase(child);
             num_removed++;
         }
@@ -192,9 +193,9 @@ void Program::remove_unnecessary_bootstrap_pairs()
     std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
 }
 
-BootstrapPairSet Program::get_candidate_pairs()
+BootstrapPairIndexesMap Program::get_candidate_pairs_and_segment_indexes()
 {
-    BootstrapPairSet candidate_pairs;
+    BootstrapPairIndexesMap candidate_pairs_map;
     BootstrapPairSet needed_pairs;
 
     for (size_t i = 0; i < bootstrap_segments.size(); i++)
@@ -203,7 +204,10 @@ BootstrapPairSet Program::get_candidate_pairs()
 
         if (satisfying_pairs.size() > 1)
         {
-            candidate_pairs.insert(satisfying_pairs.begin(), satisfying_pairs.end());
+            for (auto &pair : satisfying_pairs)
+            {
+                candidate_pairs_map[pair].insert(i);
+            }
         }
         else
         {
@@ -213,25 +217,20 @@ BootstrapPairSet Program::get_candidate_pairs()
 
     for (const auto &pair : needed_pairs)
     {
-        candidate_pairs.erase(pair);
+        candidate_pairs_map.erase(pair);
     }
 
-    return candidate_pairs;
+    return candidate_pairs_map;
 }
 
-bool Program::no_segment_relies_on_bootstrap_pair(const OperationPtr &parent, const OperationPtr &child)
+bool Program::no_segment_relies_on_bootstrap_pair(const BootstrapPair &pair, const std::unordered_set<size_t> &segment_indexes)
 {
-    for (size_t i = 0; i < bootstrap_segments.size(); i++)
+    const auto &[parent, child] = pair;
+    for (const auto i : segment_indexes)
     {
-        bool segment_contains_both =
-            parent->segment_indexes.contains(i) &&
-            child->segment_indexes.contains(i);
-        if (segment_contains_both)
+        if (bootstrap_segments[i].relies_on_bootstrap_pair(parent, child))
         {
-            if (bootstrap_segments[i].relies_on_bootstrap_pair(parent, child))
-            {
-                return false;
-            }
+            return false;
         }
     }
     return true;
