@@ -45,7 +45,7 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
         max_num_segments = program.get_maximum_num_segments();
         if (options.slack_weight[set_index] != 0)
         {
-            program.update_ESTs_and_LSTs();
+            program.update_slack_for_every_operation();
             max_slack = program.get_maximum_slack();
         }
         if (options.urgency_weight[set_index] != 0)
@@ -53,7 +53,7 @@ void BootstrapSetSelector::choose_operations_to_bootstrap()
             program.update_all_bootstrap_urgencies();
         }
         choose_operation_to_bootstrap_based_on_score();
-        
+
         program.update_unsatisfied_segments_and_num_segments_for_every_operation();
     }
 }

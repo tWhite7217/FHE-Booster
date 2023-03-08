@@ -2,16 +2,14 @@
 
 Operation::Operation(OperationType type, int id) : type{type}, id{id} {}
 
-int Operation::get_earliest_end_time(const LatencyMap &latencies) const
+int Operation::get_total_latency(const LatencyMap &latencies) const
 {
     auto pre_bootstrap_latency = latencies.at(type);
     auto bootstrap_latency = is_bootstrapped()
                                  ? latencies.at(OperationType::BOOT)
                                  : 0;
 
-    auto total_latency = pre_bootstrap_latency + bootstrap_latency;
-
-    return earliest_start_time + total_latency;
+    return pre_bootstrap_latency + bootstrap_latency;
 }
 
 int Operation::get_slack() const
@@ -58,54 +56,29 @@ bool Operation::receives_bootstrapped_result_from(const OperationPtr &parent)
     return parent->bootstrap_children.count(shared_from_this());
 }
 
-void Operation::update_earliest_start_time(const LatencyMap &latencies)
+void Operation::update_earliest_start_and_finish_times(const LatencyMap &latencies)
 {
+    earliest_start_time = 0;
+
     auto bootstrap_latency = latencies.at(OperationType::BOOT);
     for (auto parent : parent_ptrs)
     {
-        int parent_latency = latencies.at(parent->type);
-        if (receives_bootstrapped_result_from(parent))
-        {
-            parent_latency += bootstrap_latency;
-        }
-        int possible_est =
-            parent->earliest_start_time +
-            parent_latency;
-        if (possible_est > earliest_start_time)
-        {
-            earliest_start_time = possible_est;
-        }
+        earliest_start_time = std::max(earliest_start_time, parent->earliest_finish_time);
     }
+
+    earliest_finish_time = earliest_start_time + get_total_latency(latencies);
 }
 
 void Operation::update_latest_start_time(const LatencyMap &latencies, const int earliest_possible_program_end_time)
 {
-    latest_start_time = std::numeric_limits<decltype(latest_start_time)>::max();
+    auto latest_finish_time = earliest_possible_program_end_time;
 
-    if (child_ptrs.empty())
+    for (auto child : child_ptrs)
     {
-        latest_start_time =
-            earliest_possible_program_end_time - latencies.at(type);
+        latest_finish_time = std::min(latest_finish_time, child->latest_start_time);
     }
-    else
-    {
-        auto bootstrap_latency = latencies.at(OperationType::BOOT);
-        for (auto child : child_ptrs)
-        {
-            int child_latency = latencies.at(child->type);
-            if (child->is_bootstrapped())
-            {
-                child_latency += bootstrap_latency;
-            }
-            int possible_lst =
-                child->latest_start_time -
-                child_latency;
-            if (possible_lst < latest_start_time)
-            {
-                latest_start_time = possible_lst;
-            }
-        }
-    }
+
+    latest_start_time = latest_finish_time - get_total_latency(latencies);
 }
 
 // bool Operation::bootstraps_on_same_core_as(const OperationPtr &op)

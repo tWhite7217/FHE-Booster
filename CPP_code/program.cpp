@@ -38,29 +38,20 @@ int Program::get_latency_of(const OperationType::Type type) const
     return latencies.at(type);
 };
 
-void Program::update_ESTs_and_LSTs()
+void Program::update_slack_for_every_operation()
 {
-    // auto operations_in_topological_order = get_operations_in_topological_order();
-    // TGFF puts operations in topological order so we do not need to do that here
-    auto operations_in_topological_order = operations;
-
-    int earliest_program_end_time = 0;
-    for (auto operation : operations_in_topological_order)
+    int earliest_program_finish_time = 0;
+    for (auto operation : operations)
     {
-        operation->update_earliest_start_time(latencies);
-        auto earliest_operation_end_time = operation->get_earliest_end_time(latencies);
-        if (earliest_operation_end_time > earliest_program_end_time)
-        {
-            earliest_program_end_time = earliest_operation_end_time;
-        }
+        operation->update_earliest_start_and_finish_times(latencies);
+        earliest_program_finish_time =
+            std::max(earliest_program_finish_time, operation->earliest_finish_time);
     }
 
-    auto operations_in_reverse_topological_order = operations_in_topological_order;
-    std::reverse(operations_in_reverse_topological_order.begin(), operations_in_reverse_topological_order.end());
-
-    for (auto operation : operations_in_reverse_topological_order)
+    std::ranges::reverse_view reverse_operations{operations};
+    for (auto operation : reverse_operations)
     {
-        operation->update_latest_start_time(latencies, earliest_program_end_time);
+        operation->update_latest_start_time(latencies, earliest_program_finish_time);
     }
 }
 

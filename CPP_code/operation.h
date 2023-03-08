@@ -34,8 +34,9 @@ struct Operation : public std::enable_shared_from_this<Operation>
     double bootstrap_urgency;
     int num_unsatisfied_segments = 0;
     bool exists_on_some_segment;
+    int earliest_finish_time;
 
-    int get_earliest_end_time(const LatencyMap &) const;
+    int get_total_latency(const LatencyMap &) const;
     int get_slack() const;
 
     bool is_bootstrapped() const;
@@ -45,7 +46,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     // bool bootstraps_on_the_same_core_as(const OperationPtr &);
     bool receives_bootstrapped_result_from(const OperationPtr &);
 
-    void update_earliest_start_time(const LatencyMap &);
+    void update_earliest_start_and_finish_times(const LatencyMap &);
     void update_latest_start_time(const LatencyMap &, const int);
 
 private:

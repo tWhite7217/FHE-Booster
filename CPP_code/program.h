@@ -38,7 +38,7 @@ public:
     void add_operation(const OperationPtr &);
     void set_bootstrap_segments(const std::vector<BootstrapSegment> &);
 
-    void update_ESTs_and_LSTs();
+    void update_slack_for_every_operation();
     void reset_bootstrap_set();
     void update_all_bootstrap_urgencies();
 
