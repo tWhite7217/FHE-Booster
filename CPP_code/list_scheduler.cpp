@@ -339,7 +339,7 @@ void ListScheduler::write_sched_to_file(const std::string &filename) const
 
 void ListScheduler::perform_list_scheduling()
 {
-    program.update_ESTs_and_LSTs();
+    program.update_slack_for_every_operation();
     // program.update_slacks_and_get_maximum();
     std::cout << "Generating lgr..." << std::endl;
     generate_start_times_and_solver_latency();
@@ -358,7 +358,7 @@ void ListScheduler::update_pred_count()
     {
         for (const auto &child : op->child_ptrs)
         {
-            if (!child->receives_bootstrapped_result_from(op) && utl::multiset_contains_element(prioritized_unstarted_operations, child))
+            if (!child->receives_bootstrapped_result_from(op) && prioritized_unstarted_operations.contains(child))
             {
                 pred_count[child]--;
             }
@@ -369,7 +369,7 @@ void ListScheduler::update_pred_count()
     {
         for (const auto &child : op->bootstrap_children)
         {
-            if (utl::multiset_contains_element(prioritized_unstarted_operations, child))
+            if (prioritized_unstarted_operations.contains(child))
             {
                 pred_count[child]--;
             }

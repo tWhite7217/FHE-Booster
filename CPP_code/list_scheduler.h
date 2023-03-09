@@ -57,18 +57,27 @@ Options:
 
   Program program;
 
-  struct SlackCmp
+  struct PriorityCmp
   {
     bool operator()(const OperationPtr &a, const OperationPtr &b) const
     {
-      return a->get_slack() < b->get_slack();
+      auto a_slack = a->get_slack();
+      auto b_slack = b->get_slack();
+      if (a_slack == b_slack)
+      {
+        return a->id < b->id;
+      }
+      else
+      {
+        return a_slack < b_slack;
+      }
     }
   };
 
   std::map<OperationPtr, int> pred_count;
   std::map<OperationPtr, int> running_operations;
   std::map<OperationPtr, int> bootstrapping_operations;
-  std::multiset<OperationPtr, SlackCmp> prioritized_unstarted_operations;
+  std::set<OperationPtr, PriorityCmp> prioritized_unstarted_operations;
   OpVector ready_operations;
   int clock_cycle;
   int bootstrap_latency;
@@ -76,7 +85,7 @@ Options:
   OpSet finished_running_operations;
   OpSet finished_bootstrapping_operations;
 
-  std::multiset<OperationPtr, SlackCmp> bootstrapping_queue;
+  std::set<OperationPtr, PriorityCmp> bootstrapping_queue;
 
   std::function<void()> start_bootstrapping_ready_operations;
 
