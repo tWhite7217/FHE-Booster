@@ -49,12 +49,11 @@ Options:
   -o <string>, --output-suffix=<string>
     A file named \"<sched_file>_eval_time_<mode>_<string>.txt\" stores the evaluation time of the schedule.
   -s, --save-num-bootstraps
-    A file named \"<sched_file>_num_bootstraps.txt\" stores the number of the bootstraps performed executing the schedule.)";
+    A file named \"<sched_file>_num_bootstraps_<mode>.txt\" stores the number of the bootstraps performed executing the schedule.)";
 
   CommandLineOptions options;
 
   ScheduleInfo sched_info;
-  ExecMode mode;
   ContextType context;
   KeyPair key_pair;
 

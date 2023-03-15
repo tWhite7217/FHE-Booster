@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Usage <script_name> <source_lgr> <first_graph_num> <last_graph_num> <heuristic_name> <bootstrap_mode> <levels> <num_cores>
+#Usage <script_name> <first_graph_num> <last_graph_num> <heuristic_name> <bootstrap_mode> <levels> <num_cores>
 
 make list_scheduler.out
 

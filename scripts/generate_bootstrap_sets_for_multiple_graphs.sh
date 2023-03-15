@@ -15,8 +15,6 @@ IFS=',' read -ra segments_weights <<< "$segments_weight"
 IFS=',' read -ra slack_weights <<< "$slack_weight"
 IFS=',' read -ra urgency_weights <<< "$urgency_weight"
 
-echo ${heuristic_names[1]}
-
 for i in $(seq $first_graph_num $last_graph_num)
 do
     dag_file="DAGs/random_graph$i/random_graph$i.txt"

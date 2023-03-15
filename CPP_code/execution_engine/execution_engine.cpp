@@ -129,8 +129,8 @@ void ExecutionEngine::execute_validation_schedule()
       auto output_key = operation->get_output();
       auto inputs = operation->get_inputs();
       auto input_key1 = inputs[0].key;
-      std::string input_key2;
       handle_input_mutex(input_key1);
+      std::string input_key2;
       if (inputs.size() == 2)
       {
         input_key2 = inputs[1].key;
@@ -175,7 +175,7 @@ void ExecutionEngine::execute_validation_schedule()
 
 void ExecutionEngine::handle_input_mutex(const std::string &input_key)
 {
-  if (reg_locks.contains(input_key))
+  if (reg_locks.count(input_key))
   {
     reg_locks[input_key]->lock();
     reg_locks[input_key]->unlock();
@@ -330,7 +330,7 @@ void ExecutionEngine::execute_in_ciphertext()
 
 int ExecutionEngine::execute_schedule()
 {
-  const bool ALAP_mode = (mode == ALAP);
+  const bool ALAP_mode = (options.mode == ALAP);
   std::atomic<int> bootstrap_counter = 0;
 #pragma omp parallel for
   for (size_t i = 0; i < sched_info.circuit.size(); i++)
@@ -343,7 +343,11 @@ int ExecutionEngine::execute_schedule()
       // auto input_key2 = input_indices.second;
       auto inputs = operation->get_inputs();
       handle_input_mutex(inputs[0].key);
-      handle_input_mutex(inputs[1].key);
+      bool has_2_inputs = (inputs.size() == 2);
+      if (has_2_inputs)
+      {
+        handle_input_mutex(inputs[1].key);
+      }
       switch (operation->get_op_type())
       {
       case CP_MUL:
@@ -388,7 +392,7 @@ int ExecutionEngine::execute_schedule()
         exit(-1);
       }
       if (ALAP_mode &&
-          sched_info.bootstrap_candidates.contains(output_key) &&
+          sched_info.bootstrap_candidates.count(output_key) &&
           ctxt_regs[output_key]->GetLevel() >= level_to_bootstrap)
       {
         ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[output_key]);
@@ -398,7 +402,7 @@ int ExecutionEngine::execute_schedule()
       reg_locks[output_key]->unlock();
 
       update_dependence_info(inputs[0], output_key);
-      if (inputs[1].key != "")
+      if (has_2_inputs)
       {
         update_dependence_info(inputs[1], output_key);
       }
