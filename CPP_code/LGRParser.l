@@ -3,12 +3,13 @@
 %%
 
 "BOOTSTRAPPED( OP"[0-9]+")"[ \t]+"1" {
+    program_ref.get().set_boot_mode(BootstrapMode::COMPLETE);
     auto operation = get_first_operation_ptr(matched());
     operation->bootstrap_children = operation->child_ptrs;
 }
 
 "BOOTSTRAPPED( OP"[0-9]+", OP"[0-9]+")"[ \t]+"1" {
-    used_selective_model = true;
+    program_ref.get().set_boot_mode(BootstrapMode::SELECTIVE);
     auto operation1 = get_first_operation_ptr(matched());
     auto operation2 = get_second_operation_ptr(matched());
     operation1->bootstrap_children.insert(operation2);

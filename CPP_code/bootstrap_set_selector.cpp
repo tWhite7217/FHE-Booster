@@ -9,6 +9,8 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
     in.segments_filename = options.segments_filename;
 
     program = Program(in);
+
+    program.set_boot_mode(BootstrapMode::COMPLETE);
 }
 
 void BootstrapSetSelector::choose_and_output_bootstrap_sets()

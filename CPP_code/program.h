@@ -16,7 +16,6 @@ public:
         std::string segments_filename;
         std::string bootstrap_filename;
         std::string latency_filename;
-        BootstrapMode b_mode;
     };
 
     Program(){};
@@ -40,6 +39,7 @@ public:
 
     void add_operation(const OperationPtr &);
     void set_bootstrap_segments(const std::vector<BootstrapSegment> &);
+    void set_boot_mode(const BootstrapMode);
 
     void update_slack_for_every_operation();
     void reset_bootstrap_set();
@@ -54,7 +54,7 @@ private:
     std::unordered_set<size_t> unsatisfied_bootstrap_segment_indexes;
     std::unordered_set<size_t> alive_bootstrap_segment_indexes;
     std::unordered_map<OperationPtr, std::unordered_set<size_t>> segment_indexes_started_by_op;
-    BootstrapMode mode;
+    BootstrapMode mode = BootstrapMode::COMPLETE;
     LatencyMap latencies =
         {{OperationType::ADD, 1},
          {OperationType::SUB, 1},

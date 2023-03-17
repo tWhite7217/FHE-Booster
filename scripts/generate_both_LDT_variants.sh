@@ -13,5 +13,7 @@ selective_output_file="$seg_dir/selective.LDT"
 
 make ldt_generator.out
 
+echo ./CPP_code/ldt_generator.out $dag_file $standard_segments_file $complete_output_file COMPLETE
 ./CPP_code/ldt_generator.out $dag_file $standard_segments_file $complete_output_file COMPLETE
+echo ./CPP_code/ldt_generator.out $dag_file $selective_segments_file $selective_output_file SELECTIVE
 ./CPP_code/ldt_generator.out $dag_file $selective_segments_file $selective_output_file SELECTIVE

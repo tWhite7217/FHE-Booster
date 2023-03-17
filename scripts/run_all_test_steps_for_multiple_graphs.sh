@@ -10,7 +10,7 @@ last_save_num=$7
 levels="b${bootstrap_levels}_i${initial_levels}"
 
 ./scripts/generate_segments_for_multiple_graphs.sh $first_graph_num $last_graph_num $bootstrap_levels $initial_levels
-# ./scripts/generate_LDTs_for_for_multiple_graphs.sh $first_graph_num $last_graph_num $levels
+# ./scripts/generate_LDTs_for_multiple_graphs.sh $first_graph_num $last_graph_num $levels
 # ./scripts/get_min_bootstrapping_for_multiple_graphs.sh $first_graph_num $last_graph_num $levels
 ./scripts/generate_and_convert_all_bootstrap_sets_for_multiple_graphs.sh $first_graph_num $last_graph_num $levels
 ./scripts/list_schedule_all_heuristics_for_multiple_graphs.sh $first_graph_num $last_graph_num $num_cores $levels

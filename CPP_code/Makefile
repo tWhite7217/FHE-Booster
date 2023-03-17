@@ -8,7 +8,7 @@ shared_depenedencies = $(BIN)/shared_utils.o $(primitive_dependencies)
 
 o_dependencies = lgrp.cc Makefile
 
-CPP_FLAGS = -std=c++20 -O3 -Werror -Wextra
+CPP_FLAGS = -std=c++20 -O3 -Werror -Wextra -flto
 
 all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out complete_to_selective_converter.out random_graph_generator.out ldt_generator.out
 

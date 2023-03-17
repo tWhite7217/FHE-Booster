@@ -32,7 +32,6 @@ public:
     // My public members
     int max_finish_time = 0;
     bool used_bootstrap_limited_model = false;
-    bool used_selective_model = false;
 
 private:
     int lex_();

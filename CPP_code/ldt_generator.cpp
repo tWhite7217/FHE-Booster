@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
     Program::ConstructorInput in;
     in.dag_filename = argv[1];
     in.segments_filename = argv[2];
-    in.b_mode = using_selective_model ? BootstrapMode::SELECTIVE : BootstrapMode::COMPLETE;
     auto program = Program(in);
+    program.set_boot_mode(using_selective_model ? BootstrapMode::SELECTIVE : BootstrapMode::COMPLETE);
 
     std::string output_filename = argv[3];
     auto file_writer = FileWriter(std::ref(program));

@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
     in.segments_filename = argv[2];
     in.bootstrap_filename = argv[3];
     auto program = Program(in);
+    program.set_boot_mode(BootstrapMode::SELECTIVE);
 
     std::function<void()> conversion_func = [&program]()
     { program.remove_unnecessary_bootstrap_pairs(); };

@@ -79,6 +79,11 @@ void Program::set_bootstrap_segments(const std::vector<BootstrapSegment> &segmen
     bootstrap_segments = segments;
 }
 
+void Program::set_boot_mode(const BootstrapMode b_mode)
+{
+    mode = b_mode;
+}
+
 void Program::reset_bootstrap_set()
 {
     for (auto operation : operations)
