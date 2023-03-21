@@ -94,19 +94,31 @@ double BootstrapSetSelector::get_score(const OperationPtr &operation) const
     {
         return 0;
     }
-
     double normalized_num_segments = ((double)num_segments) / max_num_segments;
-    double normalized_slack = ((double)operation->get_slack()) / max_slack;
 
-    return std::max(options.segments_weight[set_index] * normalized_num_segments +
-                        options.slack_weight[set_index] * normalized_slack +
-                        options.urgency_weight[set_index] * operation->bootstrap_urgency,
-                    0.0);
+    double normalized_slack;
+    if (max_slack == 0)
+    {
+        normalized_slack = 0;
+    }
+    else
+    {
+        normalized_slack = ((double)operation->get_slack()) / max_slack;
+    }
+
+    double score =
+        options.segments_weight[set_index] * normalized_num_segments +
+        options.slack_weight[set_index] * normalized_slack +
+        options.urgency_weight[set_index] * operation->bootstrap_urgency;
+
+    return std::max(score, 0.0);
 }
 
 void BootstrapSetSelector::parse_args(int argc, char **argv)
 {
-    if (argc < 3)
+    const int minimum_arguments = 4;
+
+    if (argc < minimum_arguments)
     {
         std::cout << help_info << std::endl;
         exit(1);
@@ -122,11 +134,7 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     const std::function<int(std::string)> stoi_function = [](std::string str)
     { return std::stoi(str); };
 
-    std::string options_string;
-    for (int i = 4; i < argc; i++)
-    {
-        options_string += std::string(argv[i]) + " ";
-    }
+    std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
 
     options.segments_weight = utl::get_list_arg(options_string, "-s", "--segments-weight", help_info, num_sets, 0, stoi_function);
     options.slack_weight = utl::get_list_arg(options_string, "-r", "--slack-weight", help_info, num_sets, 0, stoi_function);

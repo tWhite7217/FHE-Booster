@@ -379,7 +379,9 @@ void ListScheduler::update_pred_count()
 
 void ListScheduler::parse_args(int argc, char **argv)
 {
-    if (argc < 2)
+    const int minimum_arguments = 3;
+
+    if (argc < minimum_arguments)
     {
         std::cout << help_info << std::endl;
         exit(1);
@@ -388,11 +390,7 @@ void ListScheduler::parse_args(int argc, char **argv)
     options.dag_filename = argv[1];
     options.output_filename = argv[2];
 
-    std::string options_string;
-    for (auto i = 3; i < argc; i++)
-    {
-        options_string += std::string(argv[i]) + " ";
-    }
+    std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
 
     auto num_threads_string = utl::get_arg(options_string, "-t", "--num-threads", help_info);
     if (!num_threads_string.empty())

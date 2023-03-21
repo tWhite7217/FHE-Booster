@@ -47,7 +47,9 @@ bool BootstrapSegmentGenerator::segments_files_are_current() const
 
 void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
 {
-    if (argc < 3)
+    const int minimum_arguments = 4;
+
+    if (argc < minimum_arguments)
     {
         std::cout << help_info << std::endl;
         exit(1);
@@ -58,11 +60,7 @@ void BootstrapSegmentGenerator::parse_args(int argc, char **argv)
     options.output_filename = argv[2];
     options.num_levels = std::stoi(argv[3]);
 
-    std::string options_string;
-    for (int i = 4; i < argc; i++)
-    {
-        options_string += std::string(argv[i]) + " ";
-    }
+    std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
 
     options.write_text_files = !utl::arg_exists(options_string, "-n", "--no-text-files");
 

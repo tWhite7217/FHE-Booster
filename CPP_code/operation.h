@@ -31,7 +31,7 @@ struct Operation : public std::enable_shared_from_this<Operation>
     int start_time;
     int bootstrap_start_time = 0;
     int core_num = 0;
-    double bootstrap_urgency;
+    double bootstrap_urgency = 0;
     int num_unsatisfied_segments = 0;
     bool exists_on_some_segment;
     int earliest_finish_time;

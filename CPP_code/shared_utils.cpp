@@ -56,6 +56,16 @@ std::vector<std::string> utl::split_string_by_character(const std::string &str, 
     return str_as_list;
 }
 
+std::string utl::make_options_string(int argc, char **argv, int start_index)
+{
+    std::string options_string = " ";
+    for (int i = start_index; i < argc; i++)
+    {
+        options_string += std::string(argv[i]) + " ";
+    }
+    return options_string;
+}
+
 bool utl::arg_exists(const std::string &options_string, const std::string &short_form, const std::string &long_form)
 {
     bool short_form_exists = options_string.find(" " + short_form + " ") != std::string::npos;

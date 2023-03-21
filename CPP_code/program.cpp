@@ -196,10 +196,10 @@ void Program::update_all_bootstrap_urgencies()
                          (i + 1) / segment_size);
         }
     }
-    if (alive_bootstrap_segment_indexes.empty())
-    {
-        std::cout << "here" << std::endl;
-    }
+    // if (alive_bootstrap_segment_indexes.empty())
+    // {
+    //     std::cout << "here" << std::endl;
+    // }
 }
 
 void Program::update_alive_segments(const OperationPtr &bootstrapped_op, const std::vector<size_t> &newly_satisfied_segments)

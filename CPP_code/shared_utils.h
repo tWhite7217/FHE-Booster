@@ -33,6 +33,7 @@ namespace utl
     void remove_chars_from_string(std::string &, const std::vector<char> &);
     int extract_number_from_string(const std::string &, const size_t, const size_t);
     std::vector<std::string> split_string_by_character(const std::string &, char);
+    std::string make_options_string(int, char **, int);
     bool arg_exists(const std::string &, const std::string &, const std::string &);
     std::string get_arg(const std::string &, const std::string &, const std::string &, const std::string &);
     void print_size_mismatch_error(const size_t, const size_t, const std::string &, const std::string &);

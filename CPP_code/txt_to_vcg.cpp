@@ -1,5 +1,8 @@
 #include <functional>
 
+#include "shared_utils.h"
+#include "program.h"
+
 std::string input_filename;
 std::string output_filename;
 

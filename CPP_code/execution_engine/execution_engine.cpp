@@ -489,14 +489,17 @@ void ExecutionEngine::print_schedule() const
 
 void ExecutionEngine::parse_args(int argc, char **argv)
 {
+  const int minimum_arguments = 2;
+
+  if (argc < minimum_arguments)
+  {
+    std::cout << help_info << std::endl;
+  }
+
   std::string sched_filename = argv[1];
   options.input_filename = sched_filename + ".sched";
 
-  std::string options_string;
-  for (auto i = 2; i < argc; i++)
-  {
-    options_string += std::string(argv[i]) + " ";
-  }
+  std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
 
   auto num_levels_string = utl::get_arg(options_string, "-l", "--num-levels", help_info);
   if (!num_levels_string.empty())

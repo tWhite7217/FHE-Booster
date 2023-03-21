@@ -1,15 +1,31 @@
 #include "random_graph_generator.h"
 
-RandomGraphGenerator::RandomGraphGenerator()
+RandomGraphGenerator::RandomGraphGenerator(int argc, char **argv)
 {
-    auto seed = std::chrono::system_clock::now().time_since_epoch().count();
-    rand_gen.seed(seed);
+    parse_args(argc, argv);
+    print_options();
+
+    unsigned int seed;
+
+    if (options.use_input_seed)
+    {
+        seed = read_input_seed();
+        rand_gen.seed(seed);
+    }
+    else
+    {
+        seed = std::chrono::system_clock::now().time_since_epoch().count();
+        rand_gen.seed(seed);
+    }
+
+    if (options.save_seed)
+    {
+        write_seed(seed);
+    }
 }
 
-void RandomGraphGenerator::create_graph(graph_generator_options new_options)
+void RandomGraphGenerator::create_graph()
 {
-    options = new_options;
-
     int num_levels = utl::random_int_between(options.min_levels, options.max_levels, rand_gen);
 
     level_widths = get_random_level_widths(num_levels);
@@ -29,7 +45,7 @@ void RandomGraphGenerator::create_graph(graph_generator_options new_options)
 
         for (auto operation : level_ops[i])
         {
-            add_random_parents_to_operation(operation, options.probability_of_two_parents, options.probability_parent_is_a_constant, i);
+            add_random_parents_to_operation(operation, options.probability_of_two_parents, options.constant_probability, i);
         }
     }
 
@@ -253,8 +269,9 @@ void RandomGraphGenerator::fix_constants()
     }
 }
 
-void RandomGraphGenerator::write_graph_to_txt_file(std::string output_filename)
+void RandomGraphGenerator::write_graph_to_txt_file()
 {
+    std::string output_filename = options.output_file_base_path + ".txt";
     std::ofstream output_file(output_filename);
 
     // output_file << "ADD,1" << std::endl;
@@ -331,50 +348,98 @@ bool RandomGraphGenerator::operation_is_unique(const OperationPtr &operation) co
     return true;
 }
 
-int main(int argc, char *argv[])
+void RandomGraphGenerator::parse_args(int argc, char **argv)
 {
-    if (argc != 10)
-    {
-        std::cout << "Usage: ./graph_generator <min_num_operations> <min_levels> <max_levels> <min_width> <max_width> <max_constants> <probability_of_two_parents> <probability_parent_is_a_constant> <output_file_base_path>" << std::endl;
-        return 1;
-    }
+    const int minimum_arguments = 7;
 
-    auto min_operations = std::stoi(argv[1]);
-    auto min_levels = std::stoi(argv[2]);
-    auto max_levels = std::stoi(argv[3]);
-    auto min_width = std::stoi(argv[4]);
-    auto max_width = std::stoi(argv[5]);
-    auto max_constants = std::stoi(argv[6]);
-    auto probability_of_two_parents = std::stod(argv[7]);
-    auto probability_parent_is_a_constant = std::stod(argv[8]);
-    std::string output_file_base_path = argv[9];
-
-    if ((min_operations < 5) ||
-        (min_levels * max_width < min_operations) ||
-        (max_levels * min_width > min_operations) ||
-        (max_constants < max_width / 2))
+    if (argc < minimum_arguments)
     {
-        std::cout << "Inputs must meet the following constraints." << std::endl;
-        std::cout << "min_operations >= 5" << std::endl;
-        std::cout << "min_levels * max_width >= min_operations" << std::endl;
-        std::cout << "max_levels * min_width <= min_operations" << std::endl;
-        std::cout << "max_constants >= max_width / 2" << std::endl;
+        std::cout << help_info << std::endl;
         exit(1);
     }
 
-    auto options = RandomGraphGenerator::graph_generator_options{
-        min_operations,
-        min_levels,
-        max_levels,
-        min_width,
-        max_width,
-        max_constants,
-        probability_of_two_parents,
-        probability_parent_is_a_constant};
+    options.output_file_base_path = argv[1];
+    options.min_operations = std::stoi(argv[2]);
+    options.min_levels = std::stoi(argv[3]);
+    options.max_levels = std::stoi(argv[4]);
+    options.min_width = std::stoi(argv[5]);
+    options.max_width = std::stoi(argv[6]);
 
-    RandomGraphGenerator graph_generator;
-    graph_generator.create_graph(options);
+    std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
+
+    std::cout << options_string << std::endl;
+
+    options.use_input_seed = utl::arg_exists(options_string, "-i", "--input-seed");
+    options.save_seed = utl::arg_exists(options_string, "-s", "--save-seed");
+
+    auto max_constants_string = utl::get_arg(options_string, "-m", "--max-constants", help_info);
+    if (!max_constants_string.empty())
+    {
+        options.max_constants = std::stoi(max_constants_string);
+    }
+    else
+    {
+        options.max_constants = options.max_width;
+    }
+
+    auto probability_of_two_parents_string = utl::get_arg(options_string, "-p", "--probability-of-two-parents", help_info);
+    if (!probability_of_two_parents_string.empty())
+    {
+        options.probability_of_two_parents = std::stod(probability_of_two_parents_string);
+    }
+
+    auto constant_probability_string = utl::get_arg(options_string, "-c", "--constant-probability", help_info);
+    if (!constant_probability_string.empty())
+    {
+        options.constant_probability = std::stod(constant_probability_string);
+    }
+
+    if ((options.min_operations < 5) ||
+        (options.min_levels * options.max_width < options.min_operations) ||
+        (options.max_levels * options.min_width > options.min_operations) ||
+        (options.max_constants < options.max_width / 2))
+    {
+        std::cout << "ERROR: Input constraints violated. Now printing help info for this program." << std::endl;
+        std::cout << help_info << std::endl;
+        exit(1);
+    }
+}
+
+void RandomGraphGenerator::print_options() const
+{
+    std::cout << "Generator using the following options." << std::endl;
+    std::cout << "output_file_base_path: " << options.output_file_base_path << std::endl;
+    std::cout << "min_operations: " << options.min_operations << std::endl;
+    std::cout << "min_levels: " << options.min_levels << std::endl;
+    std::cout << "max_levels: " << options.max_levels << std::endl;
+    std::cout << "min_width: " << options.min_width << std::endl;
+    std::cout << "max_width: " << options.max_width << std::endl;
+    std::cout << "max_constants: " << options.max_constants << std::endl;
+    std::cout << "probability_of_two_parents: " << options.probability_of_two_parents << std::endl;
+    std::cout << "constant_probability: " << options.constant_probability << std::endl;
+    std::cout << "use_input_seed: " << (options.use_input_seed ? "yes" : "no") << std::endl;
+    std::cout << "save_seed: " << (options.save_seed ? "yes" : "no") << std::endl;
+}
+
+unsigned int RandomGraphGenerator::read_input_seed() const
+{
+    std::ifstream input_file(options.output_file_base_path + ".seed");
+    std::string seed_string;
+    getline(input_file, seed_string);
+    return std::stoul(seed_string);
+}
+
+void RandomGraphGenerator::write_seed(unsigned int seed) const
+{
+    std::ofstream output_file(options.output_file_base_path + ".seed");
+    output_file << seed << std::endl;
+}
+
+int main(int argc, char *argv[])
+{
+    RandomGraphGenerator graph_generator(argc, argv);
+    graph_generator.create_graph();
     std::cout << "Graph created" << std::endl;
-    graph_generator.write_graph_to_txt_file(output_file_base_path + ".txt");
+    graph_generator.write_graph_to_txt_file();
     std::cout << "txt created" << std::endl;
 }
