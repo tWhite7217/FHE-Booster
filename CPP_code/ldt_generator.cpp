@@ -23,5 +23,6 @@ int main(int argc, char *argv[])
     std::function<void()> write_func = [file_writer, output_filename]()
     { file_writer.write_ldt_info_to_file(output_filename); };
 
-    utl::perform_func_and_print_execution_time(write_func, "Writing LDT to file");
+    std::ofstream log_file(output_filename + ".log");
+    utl::perform_func_and_print_execution_time(write_func, "Writing LDT to file", log_file);
 }

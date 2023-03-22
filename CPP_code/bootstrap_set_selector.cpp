@@ -15,7 +15,7 @@ BootstrapSetSelector::BootstrapSetSelector(int argc, char **argv)
 
 void BootstrapSetSelector::choose_and_output_bootstrap_sets()
 {
-    while (set_index < num_sets)
+    std::function<void()> one_iteration_func = [this]()
     {
         program.reset_bootstrap_set();
         print_options();
@@ -32,6 +32,13 @@ void BootstrapSetSelector::choose_and_output_bootstrap_sets()
         };
 
         utl::perform_func_and_print_execution_time(write_file_func, "Writing bootstrap set to file");
+    };
+
+    while (set_index < num_sets)
+    {
+        std::ofstream log_file(get_log_filename());
+
+        utl::perform_func_and_print_execution_time(one_iteration_func, log_file);
 
         set_index++;
     }
@@ -139,6 +146,11 @@ void BootstrapSetSelector::parse_args(int argc, char **argv)
     options.segments_weight = utl::get_list_arg(options_string, "-s", "--segments-weight", help_info, num_sets, 0, stoi_function);
     options.slack_weight = utl::get_list_arg(options_string, "-r", "--slack-weight", help_info, num_sets, 0, stoi_function);
     options.urgency_weight = utl::get_list_arg(options_string, "-u", "--urgency-weight", help_info, num_sets, 0, stoi_function);
+}
+
+std::string BootstrapSetSelector::get_log_filename() const
+{
+    return options.output_filenames[set_index] + ".lgr.log";
 }
 
 void BootstrapSetSelector::print_options() const

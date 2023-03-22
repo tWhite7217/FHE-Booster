@@ -427,12 +427,24 @@ void ListScheduler::write_to_output_files() const
     write_sched_to_file(options.output_filename + ".sched");
 }
 
+std::string ListScheduler::get_log_filename() const
+{
+    return options.output_filename + ".log";
+}
+
 int main(int argc, char **argv)
 {
     ListScheduler list_scheduler = ListScheduler(argc, argv);
 
-    list_scheduler.perform_list_scheduling();
-    list_scheduler.write_to_output_files();
+    std::ofstream log_file(list_scheduler.get_log_filename());
+
+    std::function<void()> main_func = [&list_scheduler]()
+    {
+        list_scheduler.perform_list_scheduling();
+        list_scheduler.write_to_output_files();
+    };
+
+    utl::perform_func_and_print_execution_time(main_func, log_file);
 
     return 0;
 }

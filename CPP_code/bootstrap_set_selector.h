@@ -17,6 +17,7 @@ class BootstrapSetSelector
 public:
   BootstrapSetSelector(int, char **);
   void choose_and_output_bootstrap_sets();
+  std::string get_log_filename() const;
 
 private:
   const std::string help_info = R"(

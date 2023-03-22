@@ -21,6 +21,8 @@ public:
   void write_sched_to_file(const std::string &) const;
   void write_to_output_files() const;
 
+  std::string get_log_filename() const;
+
 private:
   const std::string help_info = R"(
 Usage: ./list_scheduler.out <dag_file>

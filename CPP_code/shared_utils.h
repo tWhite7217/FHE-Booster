@@ -187,6 +187,12 @@ namespace utl
     }
 
     template <typename T>
+    T perform_func_and_print_execution_time(std::function<T()> func, const std::string &task_preamble, std::ofstream &output_file)
+    {
+        return perform_func_and_print_execution_time(func, task_preamble, nullptr, &output_file);
+    }
+
+    template <typename T>
     T perform_func_and_print_execution_time(std::function<T()> func, std::ofstream &output_file)
     {
         return perform_func_and_print_execution_time(func, "", nullptr, &output_file);
