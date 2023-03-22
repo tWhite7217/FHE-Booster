@@ -364,14 +364,27 @@ void BootstrapSegmentGenerator::remove_last_operation_from_segments()
     }
 }
 
+std::string BootstrapSegmentGenerator::get_log_filename() const
+{
+    return options.output_filename + ".log";
+}
+
 int main(int argc, char **argv)
 {
+
     auto generator = BootstrapSegmentGenerator(argc, argv);
 
     if (generator.is_in_forced_generation_mode() || !generator.segments_files_are_current())
     {
-        generator.generate_bootstrap_segments();
-        generator.write_segments_to_files();
+        std::ofstream log_file(generator.get_log_filename());
+
+        std::function<void()> main_func = [&generator]()
+        {
+            generator.generate_bootstrap_segments();
+            generator.write_segments_to_files();
+        };
+
+        utl::perform_func_and_print_execution_time(main_func, log_file);
     }
     else
     {

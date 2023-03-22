@@ -144,32 +144,58 @@ namespace utl
         void return_and_destroy() {}
     };
 
-    template <typename T>
-    T perform_func_and_print_execution_time(const std::function<T()> &func, const std::string &task_preamble, double *execution_time_ptr)
+    namespace
     {
-        auto func_wrapper = utl::CallWrapper(func);
-
-        using hrc = std::chrono::high_resolution_clock;
-        using TimeSpanType = std::chrono::duration<double>;
-
-        std::cout << task_preamble << "..." << std::endl;
-        auto t1 = hrc::now();
-        func_wrapper.call_without_return();
-        auto t2 = hrc::now();
-        auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
-        auto execution_time = time_span.count();
-        if (execution_time_ptr != nullptr)
+        template <typename T>
+        T perform_func_and_print_execution_time(const std::function<T()> &func, const std::string &task_preamble, double *execution_time_ptr, std::ofstream *output_file_ptr)
         {
-            *execution_time_ptr = execution_time;
+            auto func_wrapper = utl::CallWrapper(func);
+
+            using hrc = std::chrono::high_resolution_clock;
+            using TimeSpanType = std::chrono::duration<double>;
+
+            if (!task_preamble.empty())
+            {
+                std::cout << task_preamble << "..." << std::endl;
+            }
+            auto t1 = hrc::now();
+            func_wrapper.call_without_return();
+            auto t2 = hrc::now();
+            auto time_span = std::chrono::duration_cast<TimeSpanType>(t2 - t1);
+            auto execution_time = time_span.count();
+            if (execution_time_ptr != nullptr)
+            {
+                *execution_time_ptr = execution_time;
+            }
+            if (output_file_ptr != nullptr)
+            {
+                std::ofstream &output_file = *output_file_ptr;
+                output_file << execution_time << std::endl;
+            }
+            if (!task_preamble.empty())
+            {
+                std::cout << "Execution time: " << execution_time << " seconds." << std::endl;
+            }
+            return func_wrapper.return_and_destroy();
         }
-        std::cout << "Execution time: " << execution_time << " seconds." << std::endl;
-        return func_wrapper.return_and_destroy();
+    }
+
+    template <typename T>
+    T perform_func_and_print_execution_time(std::function<T()> func, const std::string &task_preamble, double *execution_time_ptr)
+    {
+        return perform_func_and_print_execution_time(func, task_preamble, execution_time_ptr, nullptr);
+    }
+
+    template <typename T>
+    T perform_func_and_print_execution_time(std::function<T()> func, std::ofstream &output_file)
+    {
+        return perform_func_and_print_execution_time(func, "", nullptr, &output_file);
     }
 
     template <typename T>
     T perform_func_and_print_execution_time(std::function<T()> func, const std::string &task_preamble)
     {
-        return perform_func_and_print_execution_time(func, task_preamble, nullptr);
+        return perform_func_and_print_execution_time(func, task_preamble, nullptr, nullptr);
     }
 
     template <typename T>

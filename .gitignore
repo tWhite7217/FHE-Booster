@@ -16,7 +16,8 @@ profile.txt
 *.o
 results/
 DDGs/
-DAGs/
+DAGs/*/*
+!*.seed
 *tgff*
 CPP_code/benchmark_generation/*.txt
 CPP_code/execution_engine/build/

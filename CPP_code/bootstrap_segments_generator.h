@@ -15,6 +15,7 @@ public:
   bool is_in_forced_generation_mode() const;
   void generate_bootstrap_segments();
   void write_segments_to_files();
+  std::string get_log_filename() const;
 
 private:
   static const std::string help_info;
