@@ -45,7 +45,7 @@ public:
     void reset_bootstrap_set();
     void update_all_bootstrap_urgencies();
 
-    void remove_unnecessary_bootstrap_pairs();
+    void remove_unnecessary_bootstrap_pairs(size_t &, size_t &);
     void convert_segments_to_selective();
 
 private:
@@ -61,7 +61,7 @@ private:
          {OperationType::MUL, 5},
          {OperationType::BOOT, 300}};
 
-    BootstrapPairIndexesMap get_candidate_pairs_and_segment_indexes();
+    BootstrapPairIndexesMap get_candidate_pairs_and_segment_indexes(size_t &);
     bool no_segment_relies_on_bootstrap_pair(const BootstrapPair &, const std::unordered_set<size_t> &);
 
     class FileParser;

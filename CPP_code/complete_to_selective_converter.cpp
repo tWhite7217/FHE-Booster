@@ -21,10 +21,13 @@ int main(int argc, char *argv[])
 
     std::ofstream log_file(output_lgr_filename + ".log");
 
-    std::function<void()> main_func = [&program, &output_lgr_filename]()
+    size_t num_pairs_removed;
+    size_t total_num_pairs;
+
+    std::function<void()> main_func = [&program, &output_lgr_filename, &num_pairs_removed, &total_num_pairs]()
     {
-        std::function<void()> conversion_func = [&program]()
-        { program.remove_unnecessary_bootstrap_pairs(); };
+        std::function<void()> conversion_func = [&program, &num_pairs_removed, &total_num_pairs]()
+        { program.remove_unnecessary_bootstrap_pairs(num_pairs_removed, total_num_pairs); };
 
         utl::perform_func_and_print_execution_time(
             conversion_func, "Removing unnecessary bootstrap pairs");
@@ -39,6 +42,11 @@ int main(int argc, char *argv[])
     };
 
     utl::perform_func_and_print_execution_time(main_func, log_file);
+
+    log_file << num_pairs_removed << std::endl;
+    size_t num_remaining_pairs = total_num_pairs - num_pairs_removed;
+    log_file << num_remaining_pairs << std::endl;
+    // log_file << total_num_pairs << std::endl;
 
     return 0;
 }

@@ -9,22 +9,18 @@ struct BootstrapPair
     OperationPtr parent;
     OperationPtr child;
 
-    bool operator==(const BootstrapPair &other) const
+    bool operator<(const BootstrapPair &other) const
     {
-        return parent == other.parent && child == other.child;
-    }
-
-    struct Hash
-    {
-        auto operator()(const BootstrapPair &p) const
+        if (parent->id == other.parent->id)
         {
-            return std::hash<OperationPtr>()(p.parent) + std::hash<OperationPtr>()(p.child);
+            return child->id < other.child->id;
         }
-    };
+        return parent->id < other.parent->id;
+    }
 };
 
-using BootstrapPairSet = std::unordered_set<BootstrapPair, BootstrapPair::Hash>;
-using BootstrapPairIndexesMap = std::unordered_map<BootstrapPair, std::unordered_set<size_t>, BootstrapPair::Hash>;
+using BootstrapPairSet = std::set<BootstrapPair>;
+using BootstrapPairIndexesMap = std::map<BootstrapPair, std::unordered_set<size_t>>;
 
 class BootstrapSegment
 {

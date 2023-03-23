@@ -82,7 +82,7 @@ OperationPtr BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score(
         if (!operation->is_bootstrapped())
         {
             auto score = get_score(operation);
-            if (score > max_score)
+            if (score > max_score && operation->num_unsatisfied_segments > 0)
             {
                 max_score = score;
                 max_score_operation = operation;

@@ -221,11 +221,11 @@ void Program::update_alive_segments(const OperationPtr &bootstrapped_op, const s
     }
 }
 
-void Program::remove_unnecessary_bootstrap_pairs()
+void Program::remove_unnecessary_bootstrap_pairs(size_t &num_removed, size_t &total_num_pairs)
 {
-    auto pairs_to_indexes_map = get_candidate_pairs_and_segment_indexes();
+    auto pairs_to_indexes_map = get_candidate_pairs_and_segment_indexes(total_num_pairs);
 
-    int num_removed = 0;
+    num_removed = 0;
     for (const auto &[candidate_pair, segment_indexes] : pairs_to_indexes_map)
     {
         if (no_segment_relies_on_bootstrap_pair(candidate_pair, segment_indexes))
@@ -238,7 +238,7 @@ void Program::remove_unnecessary_bootstrap_pairs()
     std::cout << "Removed " << num_removed << " unnecessary bootstrapped results." << std::endl;
 }
 
-BootstrapPairIndexesMap Program::get_candidate_pairs_and_segment_indexes()
+BootstrapPairIndexesMap Program::get_candidate_pairs_and_segment_indexes(size_t &total_num_pairs)
 {
     BootstrapPairIndexesMap candidate_pairs_map;
     BootstrapPairSet needed_pairs;
@@ -264,6 +264,8 @@ BootstrapPairIndexesMap Program::get_candidate_pairs_and_segment_indexes()
     {
         candidate_pairs_map.erase(pair);
     }
+
+    total_num_pairs = candidate_pairs_map.size() + needed_pairs.size();
 
     return candidate_pairs_map;
 }
