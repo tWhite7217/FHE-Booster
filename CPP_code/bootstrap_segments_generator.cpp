@@ -258,6 +258,10 @@ void BootstrapSegmentGenerator::remove_redundant_segments()
             if (bootstrap_segments[i].size() < bootstrap_segments[j].size() &&
                 segments_are_redundant(bootstrap_segments[i], bootstrap_segments[j]))
             {
+                // std::cout << "small" << std::endl;
+                // bootstrap_segments[i].print();
+                // std::cout << "large" << std::endl;
+                // bootstrap_segments[j].print();
                 bootstrap_segments.erase(bootstrap_segments.begin() + j);
                 redundant_count++;
             }

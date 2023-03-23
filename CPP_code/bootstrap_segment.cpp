@@ -6,6 +6,18 @@ OpVector::iterator BootstrapSegment::end() { return segment.end(); }
 OpVector::const_iterator BootstrapSegment::begin() const { return segment.begin(); }
 OpVector::const_iterator BootstrapSegment::end() const { return segment.end(); }
 
+void BootstrapSegment::print() const
+{
+    std::ostringstream seg_stream;
+    for (const auto &operation : segment)
+    {
+        seg_stream << operation->id << ",";
+    }
+    auto seg_string = seg_stream.str();
+    seg_string.pop_back();
+    std::cout << seg_string << std::endl;
+}
+
 void BootstrapSegment::add(const OperationPtr &op)
 {
     segment.push_back(op);

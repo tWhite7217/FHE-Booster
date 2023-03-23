@@ -34,6 +34,8 @@ public:
     OpVector::const_iterator begin() const;
     OpVector::const_iterator end() const;
 
+    void print() const;
+
     void add(const OperationPtr &);
     void remove_last_operation();
 
