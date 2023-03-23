@@ -28,12 +28,12 @@ void ExecutionEngine::execute()
 
   generate_data_structures();
 
-  if (options.mode == PLAINTEXT || options.verify_results)
+  if (options.mode == ExecMode::PLAINTEXT || options.verify_results)
   {
     execute_in_plaintext();
   }
 
-  if (options.mode == PLAINTEXT)
+  if (options.mode == ExecMode::PLAINTEXT)
   {
     print_test_info();
   }
@@ -70,19 +70,74 @@ void ExecutionEngine::generate_data_structures()
 {
   std::function<void()> struct_funcs = [this]()
   {
-    generate_random_inputs();
+    generate_inputs();
     generate_reg_locks();
     generate_dependence_locks();
   };
   utl::perform_func_and_print_execution_time(struct_funcs, "Generating random inputs and mutexes");
 }
 
+void ExecutionEngine::generate_inputs()
+{
+  switch (options.input_mode)
+  {
+  case InputMode::CONSTANT:
+    generate_constant_inputs();
+    break;
+  case InputMode::RANDOM:
+    generate_random_inputs();
+    break;
+  case InputMode::FILE:
+    generate_inputs_from_file();
+    break;
+  default:
+    std::cout << "Invalid input mode." << std::endl;
+    exit(1);
+    break;
+  }
+}
+
+void ExecutionEngine::generate_constant_inputs()
+{
+  for (const auto &input : sched_info.initial_inputs)
+  {
+    validation_regs[input.key] = options.inputs_value;
+  }
+}
+
 void ExecutionEngine::generate_random_inputs()
 {
   for (const auto &input : sched_info.initial_inputs)
   {
-    // validation_regs[key] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX / options.rand_thresh);
-    validation_regs[input.key] = options.rand_thresh;
+    validation_regs[input.key] = static_cast<double>(rand()) / static_cast<double>(RAND_MAX / options.rand_thresh);
+  }
+}
+
+void ExecutionEngine::generate_inputs_from_file()
+{
+  std::ifstream inputs_file(options.inputs_filename);
+
+  auto line = utl::get_trimmed_line_from_file(inputs_file);
+  while (!line.empty())
+  {
+    auto line_as_list = utl::split_string_by_character(line, ',');
+    validation_regs[line_as_list[0]] = std::stod(line_as_list[1]);
+    line = utl::get_trimmed_line_from_file(inputs_file);
+  }
+
+  if (validation_regs.size() != sched_info.initial_inputs.size())
+  {
+    std::cout << "Invalid inputs file. Number of inputs does not match schedule." << std::endl;
+    exit(1);
+  }
+
+  for (const auto &input : sched_info.initial_inputs)
+  {
+    if (!validation_regs.count(input.key))
+    {
+      std::cout << "Invalid inputs file. Missing input with key " << input.key << "." << std::endl;
+      exit(1);
+    }
   }
 }
 
@@ -330,7 +385,7 @@ void ExecutionEngine::execute_in_ciphertext()
 
 int ExecutionEngine::execute_schedule()
 {
-  const bool ALAP_mode = (options.mode == ALAP);
+  const bool ALAP_mode = (options.mode == ExecMode::ALAP);
   std::atomic<int> bootstrap_counter = 0;
 #pragma omp parallel for
   for (size_t i = 0; i < sched_info.circuit.size(); i++)
@@ -496,8 +551,8 @@ void ExecutionEngine::parse_args(int argc, char **argv)
     std::cout << help_info << std::endl;
   }
 
-  std::string sched_filename = argv[1];
-  options.input_filename = sched_filename + ".sched";
+  std::string sched_filename_no_ext = argv[1];
+  options.sched_filename = sched_filename_no_ext + ".sched";
 
   std::string options_string = utl::make_options_string(argc, argv, minimum_arguments);
 
@@ -505,6 +560,37 @@ void ExecutionEngine::parse_args(int argc, char **argv)
   if (!num_levels_string.empty())
   {
     options.num_levels = stoi(num_levels_string);
+  }
+
+  auto input_mode_pair_string = utl::get_arg(options_string, "-i", "--input_mode", help_info);
+  auto input_mode_pair_list = utl::split_string_by_character(input_mode_pair_string, ',');
+
+  options.input_mode_string = input_mode_pair_list[0];
+  auto value = input_mode_pair_list[1];
+  if (options.input_mode_string.empty())
+  {
+    options.input_mode_string = "CONSTANT";
+    options.input_mode = InputMode::CONSTANT;
+    options.inputs_value = std::stod(value);
+  }
+  else if (options.input_mode_string == "CONSTANT")
+  {
+    options.input_mode = InputMode::CONSTANT;
+    options.inputs_value = std::stod(value);
+  }
+  else if (options.input_mode_string == "RANDOM")
+  {
+    options.input_mode = InputMode::RANDOM;
+    options.rand_thresh = std::stod(value);
+  }
+  else if (options.input_mode_string == "FILE")
+  {
+    options.input_mode = InputMode::FILE;
+    options.inputs_filename = value;
+  }
+  else
+  {
+    throw std::invalid_argument(options.input_mode_string + "is not a valid input mode.");
   }
 
   auto rand_thresh_string = utl::get_arg(options_string, "-r", "--rand-thresh", help_info);
@@ -517,23 +603,23 @@ void ExecutionEngine::parse_args(int argc, char **argv)
   if (options.mode_string.empty())
   {
     options.mode_string = "BOOSTER";
-    options.mode = BOOSTER;
+    options.mode = ExecMode::BOOSTER;
   }
   else if (options.mode_string == "BOOSTER")
   {
-    options.mode = BOOSTER;
+    options.mode = ExecMode::BOOSTER;
   }
   else if (options.mode_string == "ALAP")
   {
-    options.mode = ALAP;
+    options.mode = ExecMode::ALAP;
   }
   else if (options.mode_string == "PLAINTEXT")
   {
-    options.mode = PLAINTEXT;
+    options.mode = ExecMode::PLAINTEXT;
   }
   else
   {
-    throw std::invalid_argument(options.mode_string + "is not a valid execution mode");
+    throw std::invalid_argument(options.mode_string + "is not a valid execution mode.");
   }
 
   if (utl::arg_exists(options_string, "-v", "--verify"))
@@ -549,12 +635,12 @@ void ExecutionEngine::parse_args(int argc, char **argv)
   auto output_suffix = utl::get_arg(options_string, "-o", "--output-suffix", help_info);
   if (!output_suffix.empty())
   {
-    options.eval_time_filename = sched_filename + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
+    options.eval_time_filename = sched_filename_no_ext + "_eval_time_" + options.mode_string + "_" + output_suffix + ".txt";
   }
 
   if (utl::arg_exists(options_string, "-s", "--save-num-bootstraps"))
   {
-    options.num_bootstraps_filename = sched_filename + "_num_bootstraps_" + options.mode_string + ".txt";
+    options.num_bootstraps_filename = sched_filename_no_ext + "_num_bootstraps_" + options.mode_string + ".txt";
   }
 }
 
@@ -562,11 +648,23 @@ void ExecutionEngine::print_options() const
 {
   std::cout << "FHE-Runner using the following options." << std::endl;
   std::cout << "num_levels: " << options.num_levels << std::endl;
-  std::cout << "rand_thresh: " << options.rand_thresh << std::endl;
+  std::cout << "input_mode: " << options.input_mode_string << std::endl;
+  switch (options.input_mode)
+  {
+  case InputMode::CONSTANT:
+    std::cout << "inputs_value: " << options.inputs_value << std::endl;
+    break;
+  case InputMode::RANDOM:
+    std::cout << "rand_thresh: " << options.rand_thresh << std::endl;
+    break;
+  case InputMode::FILE:
+    std::cout << "inputs_filename: " << options.inputs_filename << std::endl;
+    break;
+  }
   std::cout << "mode: " << options.mode_string << std::endl;
   std::cout << "verify_results: " << (options.verify_results ? "yes" : "no") << std::endl;
   std::cout << "bootstrap_inputs: " << (options.bootstrap_inputs ? "yes" : "no") << std::endl;
-  std::cout << "input_filename: " << options.input_filename << std::endl;
+  std::cout << "sched_filename: " << options.sched_filename << std::endl;
   std::cout << "eval_time_filename: " << options.eval_time_filename << std::endl;
   std::cout << "num_bootstraps_filename: " << options.num_bootstraps_filename << std::endl;
 }

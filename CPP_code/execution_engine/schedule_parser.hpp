@@ -14,7 +14,14 @@
 #include "../shared_utils.h"
 #include "engine_operation.hpp"
 
-enum ExecMode
+enum class InputMode
+{
+  CONSTANT,
+  RANDOM,
+  FILE
+};
+
+enum class ExecMode
 {
   BOOSTER,
   ALAP,
@@ -24,12 +31,16 @@ enum ExecMode
 struct CommandLineOptions
 {
   int num_levels = 9;
-  double rand_thresh = 1.0;
-  ExecMode mode = BOOSTER;
+  InputMode input_mode = InputMode::CONSTANT;
+  std::string input_mode_string = "CONSTANT";
+  double inputs_value = 1.0;
+  double rand_thresh;
+  std::string inputs_filename;
+  ExecMode mode = ExecMode::BOOSTER;
   std::string mode_string = "BOOSTER";
   bool verify_results = false;
   bool bootstrap_inputs = false;
-  std::string input_filename;
+  std::string sched_filename;
   std::string eval_time_filename;
   std::string num_bootstraps_filename;
 };

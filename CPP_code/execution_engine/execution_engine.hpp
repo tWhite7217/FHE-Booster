@@ -35,8 +35,12 @@ Usage: ./execution_engine <sched_file> [<options>]" << std::endl;
 Options:
   -l <int>, --num-levels=<int>
     The number of levels between bootstraps, also called the noise threshold. Defaults to 9.
-  -r <float>, --rand-thresh=<float>
-    The maximum value of randomly generated inputs. Defaults to 1.0.
+  -i <mode,value>, --input_mode=<mode,value>
+    The input mode. There are three possible options, of which CONSTANT is the default.
+      CONSTANT: All inputs are the same. Value is a double, defaults to 1.0.
+      RANDOM: Inputs are assigned a random number between 0 and value. Value is a double.
+      FILE: Inputs are provided by a file. The file has one input per line, with the format <key>,<number>.
+        Keys are checked to match the provided schedule. Value is the filename.
   -m <mode>, --mode=<mode>
     The execution mode. There are three possible options, of which BOOSTER is the default.
       BOOSTER: Standard execution mode, with all operation types supported.
@@ -86,7 +90,10 @@ Options:
   void handle_input_mutex(const std::string &);
   int execute_schedule();
   void execute_validation_schedule();
+  void generate_inputs();
+  void generate_constant_inputs();
   void generate_random_inputs();
+  void generate_inputs_from_file();
   void encrypt_inputs();
   void generate_reg_locks();
   void generate_dependence_locks();
