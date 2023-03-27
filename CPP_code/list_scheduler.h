@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <map>
-#include <queue>
 #include <unordered_set>
 #include <numeric>
 
@@ -15,10 +14,6 @@ public:
 
   void perform_list_scheduling();
 
-  void generate_start_times_and_solver_latency();
-  void generate_core_assignments();
-
-  void write_sched_to_file(const std::string &) const;
   void write_to_output_files() const;
 
   std::string get_log_filename() const;
@@ -54,9 +49,6 @@ Options:
 
   std::unordered_map<int, bool> core_availability;
 
-  bool create_core_assignments;
-  std::vector<std::string> core_schedules;
-
   Program program;
 
   struct PriorityCmp
@@ -87,9 +79,7 @@ Options:
   OpSet finished_running_operations;
   OpSet finished_bootstrapping_operations;
 
-  std::set<OperationPtr, PriorityCmp> bootstrapping_queue;
-
-  std::function<void()> start_bootstrapping_ready_operations;
+  void run_simulation();
 
   void initialize_pred_count();
   void update_ready_operations();
@@ -97,10 +87,7 @@ Options:
   void decrement_cycles_left(std::map<OperationPtr, int> &);
   OpSet get_finished_operations(std::map<OperationPtr, int> &);
   void start_ready_operations();
-  void add_necessary_operations_to_bootstrapping_queue();
   void start_bootstrapping_necessary_operations();
-  void start_bootstrapping_ready_operations_for_unlimited_model();
-  void start_bootstrapping_ready_operations_for_limited_model();
   void mark_cores_available(const OpSet &);
   void update_pred_count();
   void initialize_simulation_state();
@@ -111,7 +98,5 @@ Options:
   int get_available_core_num() const;
   bool core_is_available(int) const;
   bool program_is_not_finished() const;
-  std::string get_constant_arg(const OperationPtr &, size_t) const;
-  std::string get_variable_arg(const OperationPtr &, size_t) const;
   void print_options() const;
 };

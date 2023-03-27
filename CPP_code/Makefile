@@ -83,6 +83,12 @@ $(BIN)/txt_to_vcg.o: txt_to_vcg.cpp $(o_dependencies)
 
 txt_to_vcg.out: $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependencies)
 	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/txt_to_vcg.o $(BIN)/shared_utils.o $(primitive_dependencies)
+	
+$(BIN)/lgr_to_sched.o: lgr_to_sched.cpp $(o_dependencies)
+	$(CXX) $(CPP_FLAGS) -c -o $@ lgr_to_sched.cpp
+
+lgr_to_sched.out: $(BIN)/lgr_to_sched.o $(BIN)/shared_utils.o $(primitive_dependencies)
+	$(CXX) $(CPP_FLAGS) -o $@ $(BIN)/lgr_to_sched.o $(BIN)/shared_utils.o $(primitive_dependencies)
 
 clean:
 	rm lex.cc lgrp.cc LGRParserBase.h lex.yy.c *.out bin/*

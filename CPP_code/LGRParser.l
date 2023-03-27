@@ -41,6 +41,13 @@
     operation->core_num = core_num;
 }
 
+"O2C( OP"[0-9]+", C"[0-9]+")"[ \t]+"1" {
+    used_bootstrap_limited_model = true;
+    auto operation = get_first_operation_ptr(matched());
+    int core_num = get_core_num(matched());
+    operation->core_num = core_num;
+}
+
 .|\n {}
 
 %%
