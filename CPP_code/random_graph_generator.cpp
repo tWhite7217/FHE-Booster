@@ -133,6 +133,7 @@ OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operat
 
 void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &operation, double two_parent_probability, double constant_probability, int level)
 {
+    // Note: operations entering this function do not have any constant parents yet
     auto num_current_parents = operation->parent_ptrs.size();
     if (num_current_parents == 2)
     {
@@ -143,30 +144,31 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
     while (!added_parents && (num_current_parents == 0 || tries < 100))
     {
         double rand_decimal = ((double)rand_gen()) / RAND_MAX;
-        int num_parents = rand_decimal < two_parent_probability ? 2 : 1;
+        size_t num_parents = rand_decimal < two_parent_probability ? 2 : 1;
+
+        if (num_parents == num_current_parents)
+        {
+            return;
+        }
 
         std::vector<bool> parent_at_index_is_constant;
 
-        if (constant_probability == 1)
+        if (level == 0)
         {
-            for (int i = 0; i < num_parents; i++)
+            for (size_t i = 0; i < num_parents; i++)
             {
                 parent_at_index_is_constant.push_back(true);
             }
         }
         else
         {
-            if (num_current_parents == 0)
-            {
-                parent_at_index_is_constant.push_back(false);
-            }
+            parent_at_index_is_constant.push_back(false);
             if (num_parents == 2)
             {
                 add_a_random_parent_type(parent_at_index_is_constant, constant_probability);
             }
         }
 
-        size_t i = 0;
         int prev_parent_id = -1;
         if (num_current_parents == 1)
         {
@@ -177,7 +179,8 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
                                           (parent_at_index_is_constant[0] !=
                                            parent_at_index_is_constant[1]);
 
-        while (i < (num_parents - num_current_parents))
+        size_t i = num_current_parents;
+        while (i < num_parents)
         {
             int parent_id;
             bool parent_is_constant = parent_at_index_is_constant[i];
@@ -218,10 +221,14 @@ void RandomGraphGenerator::add_random_parents_to_operation(const OperationPtr &o
 
         if (!operation_is_unique(operation))
         {
-            auto first_parent_ptr = operation->parent_ptrs.front();
+            OperationPtr first_parent_ptr;
+            if (num_current_parents == 1)
+            {
+                first_parent_ptr = operation->parent_ptrs.front();
+            }
             operation->parent_ptrs.clear();
             operation->constant_parent_ids.clear();
-            if (num_current_parents != 0 && operation->parent_ptrs.size() == 2)
+            if (num_current_parents == 1)
             {
                 operation->parent_ptrs.push_back(first_parent_ptr);
             }

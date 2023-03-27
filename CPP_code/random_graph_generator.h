@@ -25,7 +25,7 @@ private:
         int max_width;
         int max_constants;
         double probability_of_two_parents = 0.7;
-        double constant_probability = 0.02;
+        double constant_probability = 0.04;
         bool use_input_seed;
         bool save_seed;
     } options;
@@ -98,7 +98,7 @@ Arguments:
     Defaults to 0.7.
   -c <float>, --constant-probability=<float>
     The probability that an input to any given operation will
-    be one of the initial ciphertext inputs. Defaults to 0.02.
+    be one of the initial ciphertext inputs. Defaults to 0.04.
         
 Note:
   The supplied arguments must satisfy the following constraints.

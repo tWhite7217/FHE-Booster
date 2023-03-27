@@ -60,7 +60,7 @@ void write_graph_to_vcg_file(std::string output_filename)
     for (auto &operation : program)
     {
         std::string color = get_vcg_node_color(operation);
-        output_file << "node: {title: \"" << operation->id << "\" label: \"OP" << operation->id << " (" << operation->type << ")\" color: " << color << " }" << std::endl;
+        output_file << "node: {title: \"" << operation->id << "\" label: \"OP" << operation->id << " (" << operation->type.to_string() << ")\" color: " << color << " }" << std::endl;
     }
 
     for (auto &operation : program)
