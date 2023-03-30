@@ -456,13 +456,21 @@ int ExecutionEngine::execute_schedule()
 
       reg_locks[output_key]->unlock();
 
+      // std::cout << output_key << " level: " << ctxt_regs[output_key]->GetLevel() << std::endl;
+      // if (ctxt_regs[output_key]->GetLevel() == 0)
+      // {
+      //   std::cout << inputs[0].key << " level: " << ctxt_regs[inputs[0].key]->GetLevel() << std::endl;
+      //   if (has_2_inputs)
+      //   {
+      //     std::cout << inputs[1].key << " level: " << ctxt_regs[inputs[1].key]->GetLevel() << std::endl;
+      //   }
+      // }
+
       update_dependence_info(inputs[0], output_key);
       if (has_2_inputs)
       {
         update_dependence_info(inputs[1], output_key);
       }
-
-      // std::cout << output_key << " level: " << ctxt_regs[output_key]->GetLevel() << std::endl;
     }
   }
   return bootstrap_counter;
@@ -563,34 +571,36 @@ void ExecutionEngine::parse_args(int argc, char **argv)
   }
 
   auto input_mode_pair_string = utl::get_arg(options_string, "-i", "--input_mode", help_info);
-  auto input_mode_pair_list = utl::split_string_by_character(input_mode_pair_string, ',');
 
-  options.input_mode_string = input_mode_pair_list[0];
-  auto value = input_mode_pair_list[1];
-  if (options.input_mode_string.empty())
+  if (input_mode_pair_string.empty())
   {
     options.input_mode_string = "CONSTANT";
     options.input_mode = InputMode::CONSTANT;
-    options.inputs_value = std::stod(value);
-  }
-  else if (options.input_mode_string == "CONSTANT")
-  {
-    options.input_mode = InputMode::CONSTANT;
-    options.inputs_value = std::stod(value);
-  }
-  else if (options.input_mode_string == "RANDOM")
-  {
-    options.input_mode = InputMode::RANDOM;
-    options.rand_thresh = std::stod(value);
-  }
-  else if (options.input_mode_string == "FILE")
-  {
-    options.input_mode = InputMode::FILE;
-    options.inputs_filename = value;
   }
   else
   {
-    throw std::invalid_argument(options.input_mode_string + "is not a valid input mode.");
+    auto input_mode_pair_list = utl::split_string_by_character(input_mode_pair_string, ',');
+    options.input_mode_string = input_mode_pair_list[0];
+    auto value = input_mode_pair_list[1];
+    if (options.input_mode_string == "CONSTANT")
+    {
+      options.input_mode = InputMode::CONSTANT;
+      options.inputs_value = std::stod(value);
+    }
+    else if (options.input_mode_string == "RANDOM")
+    {
+      options.input_mode = InputMode::RANDOM;
+      options.rand_thresh = std::stod(value);
+    }
+    else if (options.input_mode_string == "FILE")
+    {
+      options.input_mode = InputMode::FILE;
+      options.inputs_filename = value;
+    }
+    else
+    {
+      throw std::invalid_argument(options.input_mode_string + "is not a valid input mode.");
+    }
   }
 
   auto rand_thresh_string = utl::get_arg(options_string, "-r", "--rand-thresh", help_info);
