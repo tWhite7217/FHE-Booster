@@ -23,6 +23,8 @@ private:
   Program program;
   std::vector<BootstrapSegment> bootstrap_segments;
 
+  std::vector<BootstrapSegment> removed_segments;
+
   std::unordered_map<int, std::unordered_map<OperationPtr, std::vector<BootstrapSegment>>> back_segs;
   // std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> segs;
 
@@ -54,21 +56,18 @@ private:
   void get_segs_from_children(const OperationPtr &op, const int i);
   // std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
 
-  void print_number_of_segments() const;
   void print_bootstrap_segments() const;
 
   void sort_segments();
-  void remove_last_operation_from_segments();
   void remove_redundant_segments();
   bool segments_are_redundant(const BootstrapSegment &, const BootstrapSegment &) const;
 
   void write_files(const std::string &);
 
-  // void convert_segments_to_standard();
-  void convert_segments_to_selective();
-
   void sort_segments_and_report_time();
   void remove_redundant_segments_and_report_time();
+
+  void reinstate_removed_redundant_segments();
 
   void parse_args(int, char **);
   void print_options() const;

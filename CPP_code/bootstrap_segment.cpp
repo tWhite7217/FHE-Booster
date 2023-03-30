@@ -41,6 +41,16 @@ OperationPtr BootstrapSegment::operation_at(const size_t i) const
 OperationPtr BootstrapSegment::first_operation() const { return segment.front(); }
 OperationPtr BootstrapSegment::last_operation() const { return segment.back(); }
 
+OperationPtr BootstrapSegment::last_multiplication() const
+{
+    if (last_mul == nullptr)
+    {
+        std::cout << "Last multiplication operation of segment not yet set." << std::endl;
+        exit(1);
+    }
+    return last_mul;
+}
+
 void BootstrapSegment::update_satisfied_status(const BootstrapMode mode)
 {
     if (mode == BootstrapMode::SELECTIVE)
@@ -123,4 +133,9 @@ BootstrapPairSet BootstrapSegment::get_currently_satisfying_pairs() const
         }
     }
     return currently_satisfying_pairs;
+}
+
+void BootstrapSegment::set_last_mul(const OperationPtr &op)
+{
+    last_mul = op;
 }

@@ -40,17 +40,21 @@ public:
     OperationPtr operation_at(const size_t) const;
     OperationPtr first_operation() const;
     OperationPtr last_operation() const;
+    OperationPtr last_multiplication() const;
     void update_satisfied_status(const BootstrapMode);
     bool is_satisfied() const;
     bool is_alive() const;
     bool relies_on_bootstrap_pair(const OperationPtr &, const OperationPtr &) const;
     BootstrapPairSet get_currently_satisfying_pairs() const;
 
+    void set_last_mul(const OperationPtr &);
+
 private:
     void update_satisfied_status_in_complete_mode();
     void update_satisfied_status_in_selective_mode();
     OpVector segment;
     bool satisfied_status = false;
+    OperationPtr last_mul = nullptr;
 };
 
 #endif

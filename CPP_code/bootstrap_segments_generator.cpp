@@ -117,7 +117,7 @@ void BootstrapSegmentGenerator::find_operations_to_ignore()
         tffc[{op, -1}] = true;
     }
 
-    for (int i = 0; i <= options.initial_levels; i++)
+    for (int i = 0; i <= options.initial_levels + 1; i++)
     {
         for (const auto &op : program)
         {
@@ -142,7 +142,7 @@ void BootstrapSegmentGenerator::find_operations_to_ignore()
 
 bool BootstrapSegmentGenerator::is_ignorable(const OperationPtr &operation) const
 {
-    return !too_far_from_fresh_ciphertext.at({operation, options.initial_levels});
+    return !too_far_from_fresh_ciphertext.at({operation, options.initial_levels + 1});
 }
 
 void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
@@ -150,15 +150,16 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     std::ranges::reverse_view reverse_program{program};
     for (const auto &op : reverse_program)
     {
+        get_segs_from_children(op, 1);
         if (op->has_multiplication_child())
         {
             auto seg = BootstrapSegment();
             seg.add(op);
             back_segs[1][op].push_back(seg);
-        }
-        else
-        {
-            get_segs_from_children(op, 1);
+            for (auto &seg : back_segs[1][op])
+            {
+                seg.set_last_mul(op);
+            }
         }
     }
 
@@ -211,13 +212,13 @@ void BootstrapSegmentGenerator::sort_segments()
     public:
         bool operator()(BootstrapSegment segment1, BootstrapSegment segment2)
         {
-            if (segment1.last_operation() == segment2.last_operation())
+            if (segment1.last_multiplication() == segment2.last_multiplication())
             {
                 return segment1.size() < segment2.size();
             }
             else
             {
-                return segment1.last_operation()->id < segment2.last_operation()->id;
+                return segment1.last_multiplication()->id < segment2.last_multiplication()->id;
             }
         }
     };
@@ -247,13 +248,12 @@ void BootstrapSegmentGenerator::sort_segments_and_report_time()
 
 void BootstrapSegmentGenerator::remove_redundant_segments()
 {
-    auto redundant_count = 0;
     for (size_t i = 0; i < bootstrap_segments.size(); i++)
     {
         auto j = i + 1;
         while (j < bootstrap_segments.size() &&
                bootstrap_segments[i].first_operation() == bootstrap_segments[j].first_operation() &&
-               bootstrap_segments[i].last_operation() == bootstrap_segments[j].last_operation())
+               bootstrap_segments[i].last_multiplication() == bootstrap_segments[j].last_multiplication())
         {
             if (bootstrap_segments[i].size() < bootstrap_segments[j].size() &&
                 segments_are_redundant(bootstrap_segments[i], bootstrap_segments[j]))
@@ -262,8 +262,8 @@ void BootstrapSegmentGenerator::remove_redundant_segments()
                 // bootstrap_segments[i].print();
                 // std::cout << "large" << std::endl;
                 // bootstrap_segments[j].print();
+                removed_segments.push_back(*(bootstrap_segments.begin() + j));
                 bootstrap_segments.erase(bootstrap_segments.begin() + j);
-                redundant_count++;
             }
             else
             {
@@ -271,7 +271,7 @@ void BootstrapSegmentGenerator::remove_redundant_segments()
             }
         }
     }
-    std::cout << "Number of redundant bootstrap segments removed: " << redundant_count << std::endl;
+    std::cout << "Number of redundant bootstrap segments removed: " << removed_segments.size() << std::endl;
 }
 
 void BootstrapSegmentGenerator::remove_redundant_segments_and_report_time()
@@ -300,25 +300,6 @@ bool BootstrapSegmentGenerator::segments_are_redundant(const BootstrapSegment &s
     return true;
 }
 
-void BootstrapSegmentGenerator::print_number_of_segments() const
-{
-    std::unordered_map<OperationPtr, int> num_segments_to;
-    for (auto operation : program)
-    {
-        num_segments_to[operation] = 1;
-        for (auto parent : operation->parent_ptrs)
-        {
-            num_segments_to[operation] += num_segments_to[parent] + 1;
-        }
-    }
-
-    int result = std::accumulate(std::begin(num_segments_to), std::end(num_segments_to), 0,
-                                 [](const int previous, const std::pair<const OperationPtr, int> &p)
-                                 { return previous + p.second; });
-
-    std::cout << result << std::endl;
-}
-
 void BootstrapSegmentGenerator::print_bootstrap_segments() const
 {
     for (auto segment : bootstrap_segments)
@@ -337,6 +318,8 @@ void BootstrapSegmentGenerator::write_segments_to_files()
 
     write_files("standard");
 
+    reinstate_removed_redundant_segments();
+    program.set_bootstrap_segments(bootstrap_segments);
     program.convert_segments_to_selective();
 
     write_files("selective");
@@ -360,11 +343,11 @@ void BootstrapSegmentGenerator::write_files(const std::string &suffix)
     }
 }
 
-void BootstrapSegmentGenerator::remove_last_operation_from_segments()
+void BootstrapSegmentGenerator::reinstate_removed_redundant_segments()
 {
-    for (auto &segment : bootstrap_segments)
+    for (const auto &removed_seg : removed_segments)
     {
-        segment.remove_last_operation();
+        bootstrap_segments.push_back(removed_seg);
     }
 }
 
