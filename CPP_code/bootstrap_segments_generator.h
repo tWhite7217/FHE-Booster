@@ -25,8 +25,7 @@ private:
 
   std::vector<BootstrapSegment> removed_segments;
 
-  std::unordered_map<int, std::unordered_map<OperationPtr, std::vector<BootstrapSegment>>> back_segs;
-  // std::map<std::pair<OperationPtr, int>, std::vector<BootstrapSegment>> segs;
+  std::map<int, std::map<OperationPtr, std::vector<BootstrapSegment>>> back_segs;
 
   struct Options
   {
@@ -53,8 +52,9 @@ private:
   bool is_ignorable(const OperationPtr &) const;
 
   void create_raw_bootstrap_segments();
-  void get_segs_from_children(const OperationPtr &op, const int i);
-  // std::vector<BootstrapSegment> create_bootstrap_segments_helper(OperationPtr, BootstrapSegment, int);
+  void get_segs_from_children(const OperationPtr &, const int);
+  void clean_children_memory(const OperationPtr, const int);
+  bool clean_child_memory(const OperationPtr, const int, const int);
 
   void print_bootstrap_segments() const;
 

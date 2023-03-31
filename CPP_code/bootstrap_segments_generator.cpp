@@ -168,6 +168,7 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
         for (const auto &op : reverse_program)
         {
             get_segs_from_children(op, i);
+            clean_children_memory(op, i);
         }
         back_segs.erase(i - 1);
     }
@@ -186,6 +187,33 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     }
 
     back_segs.clear();
+}
+
+void BootstrapSegmentGenerator::clean_children_memory(const OperationPtr op, const int i)
+{
+    const bool last_level = (i == options.num_levels);
+    for (const auto &child : op->child_ptrs)
+    {
+        auto deleted = clean_child_memory(child, i, op->id);
+        if (last_level && deleted && (child->type != OperationType::MUL || is_ignorable(child)))
+        {
+            back_segs[i].erase(child);
+        }
+    }
+}
+
+bool BootstrapSegmentGenerator::clean_child_memory(const OperationPtr child, const int i, const int current_id)
+{
+    for (const auto &parent : child->parent_ptrs)
+    {
+        if (parent->id < current_id)
+        {
+            return false;
+        }
+    }
+
+    back_segs[i - 1].erase(child);
+    return true;
 }
 
 void BootstrapSegmentGenerator::get_segs_from_children(const OperationPtr &op, const int i)
