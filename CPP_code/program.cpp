@@ -58,7 +58,7 @@ void Program::update_slack_for_every_operation()
 int Program::get_maximum_slack() const
 {
     int max = 0;
-    for (auto &operation : operations)
+    for (const auto operation : operations)
     {
         auto slack = operation->get_slack();
         if (slack > max)
@@ -69,9 +69,12 @@ int Program::get_maximum_slack() const
     return max;
 }
 
-void Program::add_operation(const OperationPtr &operation)
+OperationPtr Program::add_operation(const Operation &operation)
 {
-    operations.push_back(operation);
+    operation_ptrs.emplace_back(new Operation(operation));
+    auto new_op = operation_ptrs.back().get();
+    operations.push_back(new_op);
+    return new_op;
 }
 
 void Program::set_bootstrap_segments(const std::vector<BootstrapSegment> &segments)
@@ -166,7 +169,7 @@ int Program::get_maximum_num_segments() const
 {
     int max = 0;
 
-    for (auto &operation : operations)
+    for (const auto operation : operations)
     {
         auto num_segments = operation->num_unsatisfied_segments;
         if (num_segments > max)

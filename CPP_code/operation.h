@@ -12,13 +12,13 @@
 
 class Operation;
 
-using OperationPtr = std::shared_ptr<Operation>;
+using OperationPtr = Operation *;
 using OpVector = std::vector<OperationPtr>;
 using OpSet = std::unordered_set<OperationPtr>;
 
 using LatencyMap = std::map<OperationType::Type, int>;
 
-struct Operation : public std::enable_shared_from_this<Operation>
+struct Operation
 {
     Operation(OperationType type, int id);
 

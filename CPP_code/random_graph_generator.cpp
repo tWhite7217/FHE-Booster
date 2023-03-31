@@ -126,8 +126,7 @@ OperationPtr RandomGraphGenerator::add_random_operation_to_operations(int operat
     {
         operation_type = OperationType::MUL;
     }
-    auto new_operation = OperationPtr(new Operation(operation_type, operation_id));
-    program.add_operation(new_operation);
+    auto new_operation = program.add_operation(Operation(operation_type, int(program.size()) + 1));
     return new_operation;
 }
 
@@ -327,7 +326,7 @@ bool RandomGraphGenerator::operation_is_unique(const OperationPtr &operation) co
     var_parents_set.insert(operation->parent_ptrs.begin(), operation->parent_ptrs.end());
     const_parents_set.insert(operation->constant_parent_ids.begin(), operation->constant_parent_ids.end());
 
-    for (auto other_operation : program)
+    for (const auto other_operation : program)
     {
         if (operation != other_operation)
         {

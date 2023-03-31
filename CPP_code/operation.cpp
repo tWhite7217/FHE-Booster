@@ -53,7 +53,7 @@ bool Operation::has_multiplication_child() const
 
 bool Operation::receives_bootstrapped_result_from(const OperationPtr &parent)
 {
-    return parent->bootstrap_children.contains(shared_from_this());
+    return parent->bootstrap_children.contains(this);
 }
 
 void Operation::update_earliest_start_and_finish_times(const LatencyMap &latencies)

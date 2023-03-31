@@ -21,7 +21,7 @@ void get_info_from_input_parser()
     in.dag_filename = input_filename;
     program = Program(in);
 
-    for (auto operation : program)
+    for (const auto operation : program)
     {
         for (const auto constant_id : operation->constant_parent_ids)
         {
@@ -57,13 +57,13 @@ void write_graph_to_vcg_file(std::string output_filename)
         output_file << "node: {title: \"K" << constant_id << "\" label: \"SET CONST" << constant_id << "\" color: lightgreen }" << std::endl;
     }
 
-    for (auto &operation : program)
+    for (const auto operation : program)
     {
         std::string color = get_vcg_node_color(operation);
         output_file << "node: {title: \"" << operation->id << "\" label: \"OP" << operation->id << " (" << operation->type.to_string() << ")\" color: " << color << " }" << std::endl;
     }
 
-    for (auto &operation : program)
+    for (const auto operation : program)
     {
         for (const auto &parent : operation->parent_ptrs)
         {

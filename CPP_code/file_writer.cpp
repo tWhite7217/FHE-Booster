@@ -92,7 +92,7 @@ void FileWriter::write_ldt_info_to_file(std::ofstream &file) const
 
 void FileWriter::write_operation_list_to_ldt_string_stream(std::ostringstream &stream) const
 {
-    for (auto operation : program_ref.get())
+    for (const auto operation : program_ref.get())
     {
         stream << "OP" << operation->id << std::endl;
     }
@@ -100,7 +100,7 @@ void FileWriter::write_operation_list_to_ldt_string_stream(std::ostringstream &s
 
 void FileWriter::write_operation_types_to_ldt_string_stream(std::ostringstream &stream) const
 {
-    for (auto operation : program_ref.get())
+    for (const auto operation : program_ref.get())
     {
         auto operation_type_num = operation->type;
         for (size_t i = 0; i < OperationType::num_types_except_bootstrap; i++)
@@ -120,7 +120,7 @@ void FileWriter::write_operation_types_to_ldt_string_stream(std::ostringstream &
 
 void FileWriter::write_operation_dependencies_to_ldt_string_stream(std::ostringstream &stream) const
 {
-    for (auto operation : program_ref.get())
+    for (const auto operation : program_ref.get())
     {
         for (const auto &parent : operation->parent_ptrs)
         {
@@ -183,12 +183,12 @@ void FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_latency) 
     write_bootstrapping_set_to_file(file);
 
     const auto &program = program_ref.get();
-    for (auto operation : program)
+    for (const auto operation : program)
     {
         file << "START_TIME( OP" << operation->id << ") " << operation->start_time << std::endl;
     }
 
-    for (auto operation : program)
+    for (const auto operation : program)
     {
         if (operation->core_num > 0)
         {
@@ -196,7 +196,7 @@ void FileWriter::write_lgr_info_to_file(std::ofstream &file, int total_latency) 
         }
     }
 
-    for (auto operation : program)
+    for (const auto operation : program)
     {
         if (operation->bootstrap_start_time > 0)
         {
@@ -228,7 +228,7 @@ void FileWriter::write_bootstrapping_set_to_file(std::ofstream &file) const
 
 void FileWriter::write_bootstrapping_set_to_file_complete_mode(std::ofstream &file) const
 {
-    for (auto operation : program_ref.get())
+    for (const auto operation : program_ref.get())
     {
         if (operation->is_bootstrapped())
         {
@@ -240,7 +240,7 @@ void FileWriter::write_bootstrapping_set_to_file_complete_mode(std::ofstream &fi
 void FileWriter::write_bootstrapping_set_to_file_selective_mode(std::ofstream &file) const
 {
 
-    for (auto operation : program_ref.get())
+    for (const auto operation : program_ref.get())
     {
         for (auto child : operation->bootstrap_children)
         {

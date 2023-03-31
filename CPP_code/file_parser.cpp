@@ -59,8 +59,7 @@ void Program::FileParser::parse_operation_and_its_dependences(const std::vector<
 {
     auto type = OperationType(line[1]);
     auto &program = program_ref.get();
-    auto new_operation = OperationPtr(new Operation(type, int(program.size()) + 1));
-    program.add_operation(new_operation);
+    auto new_operation = program.add_operation(Operation(type, int(program.size()) + 1));
 
     for (size_t i = 2; i < line.size(); i++)
     {

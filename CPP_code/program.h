@@ -37,7 +37,7 @@ public:
     std::vector<size_t> update_unsatisfied_segments_and_num_segments_for_every_operation();
     void update_alive_segments(const OperationPtr &, const std::vector<size_t> &);
 
-    void add_operation(const OperationPtr &);
+    OperationPtr add_operation(const Operation &);
     void set_bootstrap_segments(const std::vector<BootstrapSegment> &);
     void set_boot_mode(const BootstrapMode);
 
@@ -50,6 +50,7 @@ public:
 
 private:
     OpVector operations;
+    std::vector<std::unique_ptr<Operation>> operation_ptrs;
     std::vector<BootstrapSegment> bootstrap_segments;
     std::unordered_set<size_t> unsatisfied_bootstrap_segment_indexes;
     std::unordered_set<size_t> alive_bootstrap_segment_indexes;

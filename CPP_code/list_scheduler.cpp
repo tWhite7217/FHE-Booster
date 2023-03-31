@@ -55,7 +55,7 @@ void ListScheduler::initialize_simulation_state()
 
 void ListScheduler::initialize_pred_count()
 {
-    for (auto operation : program)
+    for (const auto operation : program)
     {
         pred_count[operation] = operation->parent_ptrs.size();
     }
