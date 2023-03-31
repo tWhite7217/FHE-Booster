@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
 #include <array>
+#include <vector>
 
 using variable = std::string;
 using bit = std::string;
@@ -8,18 +9,36 @@ using bit = std::string;
 class DAGGenerator
 {
 public:
+    variable zero_var;
+    variable one_var;
+
     DAGGenerator(std::ofstream &);
 
     void print_set(variable &);
-    void print_add(variable &, variable &, variable &);
-    void print_sub(variable &, variable &, variable &);
-    void print_mul(variable &, variable &);
-    void print_mul(variable &, variable &, variable &);
+    void print_add(variable &, const variable &, const variable &);
+    void print_sub(variable &, const variable &, const variable &);
+    void print_mul(variable &, const variable &);
+    void print_mul(variable &, const variable &, const variable &);
+    void print_pow(variable &, const variable &, const int);
+    void print_sine7(variable &, const variable &);
+    void print_sine9(variable &, const variable &);
+    void print_sine11(variable &, const variable &);
+    // void print_sine13(variable &, const variable &);
+    // void print_sine15(variable &, const variable &);
+
+    void print_set_vector(std::vector<variable> &);
 
     template <size_t N>
     void print_set_array(std::array<variable, N> &);
 
-    void set_zero();
+    void set_zero_bit();
+    void set_zero_var();
+    void set_one_var();
+    void set_sine7_vars();
+    void set_sine9_vars();
+    void set_sine11_vars();
+    // void set_sine13_vars();
+    // void set_sine15_vars();
 
     template <size_t N>
     void set(std::array<bit, N> &, std::array<bit, N> &);
@@ -45,9 +64,22 @@ private:
     size_t instruction_count = 1;
     // size_t num_bits;
 
-    bit zero;
+    bit zero_bit;
+
+    variable inv6;
+    variable inv120;
+    variable inv5040;
+    variable inv362880;
+    variable inv39916800;
 
     std::ofstream &output_file;
+
+    void print_pow5(variable &, const variable &);
+    void print_pow7(variable &, const variable &);
+    void print_pow9(variable &, const variable &);
+    void print_pow11(variable &, const variable &);
+    void print_pow13(variable &, const variable &);
+    void print_pow15(variable &, const variable &);
 };
 
 template <size_t N>
@@ -98,7 +130,7 @@ void DAGGenerator::shift_left(std::array<bit, N> &output_arr, std::array<bit, N>
     {
         if (i < num)
         {
-            output_arr[i] = zero;
+            output_arr[i] = zero_bit;
         }
         else
         {
@@ -118,7 +150,7 @@ void DAGGenerator::shift_right(std::array<bit, N> &output_arr, std::array<bit, N
         }
         else
         {
-            output_arr[i] = zero;
+            output_arr[i] = zero_bit;
         }
     }
 }

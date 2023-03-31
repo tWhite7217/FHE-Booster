@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
     auto dg = DAGGenerator(output_file);
 
-    dg.set_zero();
+    dg.set_zero_bit();
 
     std::array<std::array<bit, num_bits>, num_rounds> exp_key;
     for (int i = 0; i < num_rounds; i++)
