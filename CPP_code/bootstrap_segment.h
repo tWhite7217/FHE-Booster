@@ -33,6 +33,7 @@ public:
     void print() const;
 
     void add(const OperationPtr &);
+    void shrink_to_fit();
     void remove_last_operation();
 
     size_t size() const;
@@ -53,8 +54,8 @@ private:
     void update_satisfied_status_in_complete_mode();
     void update_satisfied_status_in_selective_mode();
     OpVector segment;
-    bool satisfied_status = false;
     OperationPtr last_mul = nullptr;
+    bool satisfied_status = false;
 };
 
 #endif

@@ -285,17 +285,3 @@ bool Program::no_segment_relies_on_bootstrap_pair(const BootstrapPair &pair, con
     }
     return true;
 }
-
-void Program::convert_segments_to_selective()
-{
-    std::vector<BootstrapSegment> new_segments;
-    for (const auto &segment : bootstrap_segments)
-    {
-        for (const auto &child : segment.last_operation()->child_ptrs)
-        {
-            new_segments.push_back(segment);
-            new_segments.back().add(child);
-        }
-    }
-    bootstrap_segments = new_segments;
-}

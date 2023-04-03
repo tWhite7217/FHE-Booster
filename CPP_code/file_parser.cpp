@@ -121,6 +121,7 @@ void Program::FileParser::generate_segments_from_id_vector(const std::vector<int
             seg.add(program.get_operation_ptr_from_id(ids[i]));
             i++;
         }
+        seg.shrink_to_fit();
     }
 }
 

@@ -68,6 +68,7 @@ private:
   void remove_redundant_segments_and_report_time();
 
   void reinstate_removed_redundant_segments();
+  void convert_segments_to_selective();
 
   void parse_args(int, char **);
   void print_options() const;

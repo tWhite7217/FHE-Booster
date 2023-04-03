@@ -150,15 +150,18 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     std::ranges::reverse_view reverse_program{program};
     for (const auto &op : reverse_program)
     {
-        get_segs_from_children(op, 1);
-        if (op->has_multiplication_child())
+        if (!is_ignorable(op))
         {
-            auto seg = BootstrapSegment();
-            seg.add(op);
-            back_segs[1][op].push_back(seg);
-            for (auto &seg : back_segs[1][op])
+            get_segs_from_children(op, 1);
+            if (op->has_multiplication_child())
             {
-                seg.set_last_mul(op);
+                auto seg = BootstrapSegment();
+                seg.add(op);
+                back_segs[1][op].push_back(seg);
+                for (auto &seg : back_segs[1][op])
+                {
+                    seg.set_last_mul(op);
+                }
             }
         }
     }
@@ -167,8 +170,11 @@ void BootstrapSegmentGenerator::create_raw_bootstrap_segments()
     {
         for (const auto &op : reverse_program)
         {
-            get_segs_from_children(op, i);
-            clean_children_memory(op, i);
+            if (!is_ignorable(op))
+            {
+                get_segs_from_children(op, i);
+                clean_children_memory(op, i);
+            }
         }
         back_segs.erase(i - 1);
     }
@@ -219,7 +225,6 @@ bool BootstrapSegmentGenerator::clean_child_memory(const OperationPtr child, con
 void BootstrapSegmentGenerator::get_segs_from_children(const OperationPtr &op, const int i)
 {
     auto &op_segs = back_segs[i][op];
-    // int remaining_levels = i - (op->type == OperationType::MUL ? 1 : 0);
     for (const auto &child : op->child_ptrs)
     {
         int remaining_levels = i - (child->type == OperationType::MUL ? 1 : 0);
@@ -230,6 +235,7 @@ void BootstrapSegmentGenerator::get_segs_from_children(const OperationPtr &op, c
     for (auto &seg : op_segs)
     {
         seg.add(op);
+        seg.shrink_to_fit();
     }
 }
 
@@ -342,30 +348,42 @@ void BootstrapSegmentGenerator::print_bootstrap_segments() const
 
 void BootstrapSegmentGenerator::write_segments_to_files()
 {
-    program.set_bootstrap_segments(bootstrap_segments);
-
     write_files("standard");
 
     reinstate_removed_redundant_segments();
-    program.set_bootstrap_segments(bootstrap_segments);
-    program.convert_segments_to_selective();
+    convert_segments_to_selective();
 
     write_files("selective");
+}
+
+void BootstrapSegmentGenerator::convert_segments_to_selective()
+{
+    std::vector<BootstrapSegment> new_segments;
+    for (const auto &segment : bootstrap_segments)
+    {
+        for (const auto &child : segment.last_operation()->child_ptrs)
+        {
+            new_segments.push_back(segment);
+            new_segments.back().add(child);
+            new_segments.back().shrink_to_fit();
+        }
+    }
+    new_segments.shrink_to_fit();
+    bootstrap_segments = new_segments;
 }
 
 void BootstrapSegmentGenerator::write_files(const std::string &suffix)
 {
     const std::string filename_without_extension = options.output_filename + "_" + suffix;
-    auto file_writer = FileWriter(std::ref(program));
-    std::function<void()> write_binary_func = [file_writer, filename_without_extension]()
-    { file_writer.write_segments_to_file(filename_without_extension + ".dat"); };
+    std::function<void()> write_binary_func = [this, &filename_without_extension]()
+    { FileWriter::write_segments_to_file(bootstrap_segments, filename_without_extension + ".dat"); };
 
     utl::perform_func_and_print_execution_time(write_binary_func, "Writing " + suffix + " file");
 
     if (options.write_text_files)
     {
-        std::function<void()> write_text_func = [file_writer, filename_without_extension]()
-        { file_writer.write_segments_to_text_file(filename_without_extension + ".txt"); };
+        std::function<void()> write_text_func = [this, &filename_without_extension]()
+        { FileWriter::write_segments_to_text_file(bootstrap_segments, filename_without_extension + ".txt"); };
 
         utl::perform_func_and_print_execution_time(write_text_func, "Writing " + suffix + " text file");
     }
@@ -373,10 +391,9 @@ void BootstrapSegmentGenerator::write_files(const std::string &suffix)
 
 void BootstrapSegmentGenerator::reinstate_removed_redundant_segments()
 {
-    for (const auto &removed_seg : removed_segments)
-    {
-        bootstrap_segments.push_back(removed_seg);
-    }
+    bootstrap_segments.insert(bootstrap_segments.end(), std::make_move_iterator(removed_segments.begin()), std::make_move_iterator(removed_segments.end()));
+    removed_segments.clear();
+    removed_segments.shrink_to_fit();
 }
 
 std::string BootstrapSegmentGenerator::get_log_filename() const

@@ -23,6 +23,11 @@ void BootstrapSegment::add(const OperationPtr &op)
     segment.push_back(op);
 }
 
+void BootstrapSegment::shrink_to_fit()
+{
+    segment.shrink_to_fit();
+}
+
 void BootstrapSegment::remove_last_operation()
 {
     segment.pop_back();

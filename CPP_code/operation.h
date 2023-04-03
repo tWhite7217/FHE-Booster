@@ -20,8 +20,11 @@ using LatencyMap = std::map<OperationType::Type, int>;
 
 struct Operation
 {
-    Operation(OperationType type, int id);
+private:
+    int earliest_start_time;
+    int latest_start_time;
 
+public:
     OperationType type;
     int id;
     OpVector parent_ptrs;
@@ -31,10 +34,12 @@ struct Operation
     int start_time;
     int bootstrap_start_time = 0;
     int core_num = 0;
-    double bootstrap_urgency = 0;
     int num_unsatisfied_segments = 0;
-    bool exists_on_some_segment;
+    double bootstrap_urgency = 0;
     int earliest_finish_time;
+    bool exists_on_some_segment;
+
+    Operation(OperationType type, int id);
 
     int get_total_latency(const LatencyMap &) const;
     int get_slack() const;
@@ -48,10 +53,6 @@ struct Operation
 
     void update_earliest_start_and_finish_times(const LatencyMap &);
     void update_latest_start_time(const LatencyMap &, const int);
-
-private:
-    int earliest_start_time;
-    int latest_start_time;
 };
 
 #endif

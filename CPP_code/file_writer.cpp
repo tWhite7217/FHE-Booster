@@ -3,16 +3,15 @@
 FileWriter::FileWriter(const std::reference_wrapper<const Program> program_ref)
     : program_ref{program_ref} {}
 
-void FileWriter::write_segments_to_file(const std::string &output_filename) const
+void FileWriter::write_segments_to_file(const std::vector<BootstrapSegment> &bootstrap_segments, const std::string &output_filename)
 {
     std::ofstream output_file(output_filename);
-    write_segments_to_file(output_file);
+    write_segments_to_file(bootstrap_segments, output_file);
     output_file.close();
 }
 
-void FileWriter::write_segments_to_file(std::ofstream &file) const
+void FileWriter::write_segments_to_file(const std::vector<BootstrapSegment> &bootstrap_segments, std::ofstream &file)
 {
-    const auto &bootstrap_segments = program_ref.get().bootstrap_segments;
     size_t num_segments = bootstrap_segments.size();
     file.write((char *)(&num_segments), sizeof(size_t));
     std::vector<int> ids;
@@ -32,18 +31,17 @@ void FileWriter::write_segments_to_file(std::ofstream &file) const
     file.write((char *)(&ids[0]), sizeof(int) * total_num_ids);
 }
 
-void FileWriter::write_segments_to_text_file(const std::string &output_filename) const
+void FileWriter::write_segments_to_text_file(const std::vector<BootstrapSegment> &bootstrap_segments, const std::string &output_filename)
 {
     std::ofstream output_file(output_filename);
-    write_segments_to_text_file(output_file);
+    write_segments_to_text_file(bootstrap_segments, output_file);
     output_file.close();
 }
 
-void FileWriter::write_segments_to_text_file(std::ofstream &file) const
+void FileWriter::write_segments_to_text_file(const std::vector<BootstrapSegment> &bootstrap_segments, std::ofstream &file)
 {
     std::ostringstream out_string_stream;
 
-    const auto &bootstrap_segments = program_ref.get().bootstrap_segments;
     for (const auto &segment : bootstrap_segments)
     {
         for (const auto &operation : segment)
