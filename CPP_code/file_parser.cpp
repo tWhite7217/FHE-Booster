@@ -61,6 +61,16 @@ void Program::FileParser::parse_operation_and_its_dependences(const std::vector<
     auto &program = program_ref.get();
     auto new_operation = program.add_operation(Operation(type, int(program.size()) + 1));
 
+    if (line.size() == 3)
+    {
+        const auto &arg = line[2];
+        new_operation->sched_args = " " + arg + " " + arg;
+    }
+    else
+    {
+        new_operation->sched_args = " " + line[2] + " " + line[3];
+    }
+
     for (size_t i = 2; i < line.size(); i++)
     {
         auto parent_is_ciphertext = (line[i][0] == 'c');

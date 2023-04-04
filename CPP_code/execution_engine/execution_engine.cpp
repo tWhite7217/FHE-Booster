@@ -74,7 +74,7 @@ void ExecutionEngine::generate_data_structures()
     generate_reg_locks();
     generate_dependence_locks();
   };
-  utl::perform_func_and_print_execution_time(struct_funcs, "Generating random inputs and mutexes");
+  utl::perform_func_and_print_execution_time(struct_funcs, "Generating inputs and mutexes");
 }
 
 void ExecutionEngine::generate_inputs()
@@ -183,45 +183,52 @@ void ExecutionEngine::execute_validation_schedule()
     {
       auto output_key = operation->get_output();
       auto inputs = operation->get_inputs();
-      auto input_key1 = inputs[0].key;
-      handle_input_mutex(input_key1);
-      std::string input_key2;
+      handle_input_mutex(inputs[0].key);
       if (inputs.size() == 2)
       {
-        input_key2 = inputs[1].key;
-        handle_input_mutex(input_key2);
+        handle_input_mutex(inputs[1].key);
       }
+      map_lock.lock();
+      auto input1 = validation_regs[inputs[0].key];
+      double input2;
+      if (inputs.size() == 2)
+      {
+        input2 = validation_regs[inputs[1].key];
+      }
+      map_lock.unlock();
+      double result;
       switch (operation->get_op_type())
       {
       case CP_MUL:
       case CC_MUL:
-        validation_regs[output_key] =
-            validation_regs[input_key1] * validation_regs[input_key2];
+        result = input1 * input2;
         break;
       case CP_ADD:
       case CC_ADD:
-        validation_regs[output_key] =
-            validation_regs[input_key1] + validation_regs[input_key2];
+        result = input1 + input2;
         break;
       case CP_SUB:
       case CC_SUB:
-        validation_regs[output_key] =
-            validation_regs[input_key1] - validation_regs[input_key2];
+        result = input1 - input2;
         break;
       case PC_SUB:
-        validation_regs[output_key] =
-            validation_regs[input_key2] - validation_regs[input_key1];
+        result = input2 - input1;
         break;
       case INV:
-        validation_regs[output_key] = -validation_regs[input_key1];
+        result = -input1;
         break;
       case BOOT:
-        validation_regs[output_key] = validation_regs[input_key1];
+        result = input1;
         break;
       default:
         std::cout << "Invalid Instruction! Exiting..." << std::endl;
         exit(-1);
       }
+
+      map_lock.lock();
+      validation_regs[output_key] = result;
+      map_lock.unlock();
+
       reg_locks[output_key]->unlock();
     }
   }
@@ -251,15 +258,15 @@ void ExecutionEngine::print_test_info() const
   int bad_count = 0;
   for (auto &[key, value] : validation_regs)
   {
-    if (value > 0.000001 && value < 10000)
+    if (abs(value) > 0.000001 && abs(value) < 10000)
     {
       good_count++;
     }
     else
     {
       bad_count++;
-      std::cout << key << ": " << value << std::endl;
     }
+    std::cout << key << ": " << value << std::endl;
   }
   std::cout << "good values: " << good_count << std::endl;
   std::cout << "bad values: " << bad_count << std::endl;
@@ -364,13 +371,16 @@ void ExecutionEngine::bootstrap_initial_inputs()
     auto it = ctxt_regs.begin();
     advance(it, i);
     auto &[_, ctxt] = *it;
-    ctxt = context->EvalBootstrap(ctxt);
+    auto tmp = context->EvalBootstrap(ctxt);
+    map_lock.lock();
+    ctxt = tmp;
     /* The below code can be commented in for testing
     with ciphertexts at the noise threshold */
     // for (int i = 0; i < options.num_levels; i++)
     // {
     //   ctxt = context->EvalMult(ctxt, ctxt);
     // }
+    map_lock.unlock();
   }
 }
 
@@ -383,6 +393,30 @@ void ExecutionEngine::execute_in_ciphertext()
   std::cout << "Number of bootstrap operations: " << num_bootstraps << "." << std::endl;
 }
 
+ExecutionEngine::Ctxt ExecutionEngine::get_ctxt_input(const std::vector<EngineOpInput> &inputs)
+{
+  map_lock.lock();
+  auto input_ctxt = ctxt_regs[inputs[0].key];
+  map_lock.unlock();
+  return input_ctxt;
+}
+
+std::pair<ExecutionEngine::Ctxt, ExecutionEngine::Ctxt> ExecutionEngine::get_ctxt_ctxt_inputs(const std::vector<EngineOpInput> &inputs)
+{
+  map_lock.lock();
+  auto inputs_pair = std::pair<Ctxt, Ctxt>{ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]};
+  map_lock.unlock();
+  return inputs_pair;
+}
+
+std::pair<ExecutionEngine::Ctxt, ExecutionEngine::Ptxt> ExecutionEngine::get_ctxt_ptxt_inputs(const std::vector<EngineOpInput> &inputs)
+{
+  map_lock.lock();
+  auto inputs_pair = std::pair<Ctxt, Ptxt>{ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]};
+  map_lock.unlock();
+  return inputs_pair;
+}
+
 int ExecutionEngine::execute_schedule()
 {
   const bool ALAP_mode = (options.mode == ExecMode::ALAP);
@@ -393,9 +427,6 @@ int ExecutionEngine::execute_schedule()
     for (const auto &operation : sched_info.circuit[i])
     {
       auto output_key = operation->get_output();
-      // auto input_indices = get_input_indices(operation);
-      // auto input_key1 = input_indices.first;
-      // auto input_key2 = input_indices.second;
       auto inputs = operation->get_inputs();
       handle_input_mutex(inputs[0].key);
       bool has_2_inputs = (inputs.size() == 2);
@@ -403,61 +434,87 @@ int ExecutionEngine::execute_schedule()
       {
         handle_input_mutex(inputs[1].key);
       }
+      Ctxt result;
       switch (operation->get_op_type())
       {
       case CP_MUL:
-        ctxt_regs[output_key] =
-            context->EvalMult(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
-        context->ModReduceInPlace(ctxt_regs[output_key]);
-        break;
+      {
+        const auto [input1, input2] = get_ctxt_ptxt_inputs(inputs);
+        result = context->EvalMult(input1, input2);
+        context->ModReduceInPlace(result);
+      }
+      break;
       case CC_MUL:
-        ctxt_regs[output_key] =
-            context->EvalMult(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
-        context->ModReduceInPlace(ctxt_regs[output_key]);
+      {
+        const auto [input1, input2] = get_ctxt_ctxt_inputs(inputs);
+        result = context->EvalMult(input1, input2);
+        context->ModReduceInPlace(result);
         break;
+      }
       case CP_ADD:
-        ctxt_regs[output_key] =
-            context->EvalAdd(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+      {
+        const auto [input1, input2] = get_ctxt_ptxt_inputs(inputs);
+        result = context->EvalAdd(input1, ptxt_regs[inputs[1].key]);
         break;
+      }
       case CC_ADD:
-        ctxt_regs[output_key] =
-            context->EvalAdd(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
+      {
+        const auto [input1, input2] = get_ctxt_ctxt_inputs(inputs);
+        result = context->EvalAdd(input1, input2);
         break;
+      }
       case CP_SUB:
-        ctxt_regs[output_key] =
-            context->EvalSub(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
+      {
+        const auto [input1, input2] = get_ctxt_ptxt_inputs(inputs);
+        result = context->EvalSub(input1, ptxt_regs[inputs[1].key]);
         break;
+      }
       case PC_SUB:
-        ctxt_regs[output_key] =
-            context->EvalSub(ctxt_regs[inputs[0].key], ptxt_regs[inputs[1].key]);
-        ctxt_regs[output_key] = context->EvalNegate(ctxt_regs[output_key]);
+      {
+        const auto [input1, input2] = get_ctxt_ptxt_inputs(inputs);
+        result = context->EvalSub(input1, ptxt_regs[inputs[1].key]);
+        result = context->EvalNegate(result);
+      }
       case CC_SUB:
-        ctxt_regs[output_key] =
-            context->EvalSub(ctxt_regs[inputs[0].key], ctxt_regs[inputs[1].key]);
+      {
+        const auto [input1, input2] = get_ctxt_ctxt_inputs(inputs);
+        result = context->EvalSub(input1, input2);
         break;
+      }
       case INV:
-        ctxt_regs[output_key] = context->EvalNegate(ctxt_regs[inputs[0].key]);
+      {
+        const auto input1 = get_ctxt_input(inputs);
+        result = context->EvalNegate(input1);
         break;
+      }
       case BOOT:
-        ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[inputs[0].key]);
+      {
+        const auto input1 = get_ctxt_input(inputs);
+        result = context->EvalBootstrap(input1);
         bootstrap_counter++;
         break;
+      }
       default:
         std::cout << "Invalid Instruction! Exiting..." << std::endl;
         exit(-1);
       }
       if (ALAP_mode &&
           sched_info.bootstrap_candidates.count(output_key) &&
-          ctxt_regs[output_key]->GetLevel() >= level_to_bootstrap)
+          result->GetLevel() >= level_to_bootstrap)
       {
-        ctxt_regs[output_key] = context->EvalBootstrap(ctxt_regs[output_key]);
+        result = context->EvalBootstrap(result);
         bootstrap_counter++;
+        std::cout << "here" << std::endl;
       }
+
+      map_lock.lock();
+      ctxt_regs[output_key] = result;
+      map_lock.unlock();
 
       reg_locks[output_key]->unlock();
 
-      // std::cout << output_key << " level: " << ctxt_regs[output_key]->GetLevel() << std::endl;
-      // if (ctxt_regs[output_key]->GetLevel() == 0)
+      // std::cout << output_key << " level: " << result->GetLevel() << std::endl;
+      // if (result->GetLevel() == 0)
       // {
       //   std::cout << inputs[0].key << " level: " << ctxt_regs[inputs[0].key]->GetLevel() << std::endl;
       //   if (has_2_inputs)
@@ -480,19 +537,21 @@ void ExecutionEngine::update_dependence_info(const EngineOpInput &input, const s
 {
   const auto &input_key = input.key;
   dependence_locks[input_key]->lock();
+  map_lock.lock();
   sched_info.dependent_outputs[input_key].erase(output_key);
   if (sched_info.dependent_outputs[input_key].empty())
   {
     if (input.is_ctxt)
     {
       ctxt_regs.erase(input_key);
-      reg_locks.erase(input_key);
+      // reg_locks.erase(input_key);
     }
     else
     {
       ptxt_regs.erase(input_key);
     }
   }
+  map_lock.unlock();
   dependence_locks[input_key]->unlock();
 }
 
@@ -506,6 +565,8 @@ void ExecutionEngine::verify_results()
 
 void ExecutionEngine::validate_results() const
 {
+  const double error_threshold = 0.5;
+
   for (const auto &[key, ctxt] : ctxt_regs)
   {
     Ptxt tmp_ptxt;
@@ -513,10 +574,13 @@ void ExecutionEngine::validate_results() const
     auto decrypted_val = tmp_ptxt->GetRealPackedValue()[0];
 
     auto percent_error = utl::get_percent_error(decrypted_val, validation_regs.at(key));
-    if (percent_error > 0.5)
+    if (percent_error > error_threshold)
     {
-      std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs.at(key) << ", error: " << percent_error << "%" << std::endl;
+      std::cout << "WARNING!" << std::endl;
+      std::cout << "WARNING!" << std::endl;
+      std::cout << "The following result has an error greater than the threshold of " << error_threshold << "%." << std::endl;
     }
+    std::cout << key << ": FHE result: " << decrypted_val << ", expected: " << validation_regs.at(key) << ", error: " << percent_error << "%" << std::endl;
   }
 }
 

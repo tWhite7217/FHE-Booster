@@ -37,6 +37,7 @@ public:
     int num_unsatisfied_segments = 0;
     double bootstrap_urgency = 0;
     int earliest_finish_time;
+    std::string sched_args;
     bool exists_on_some_segment;
 
     Operation(OperationType type, int id);

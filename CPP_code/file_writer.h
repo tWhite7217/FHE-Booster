@@ -44,8 +44,5 @@ private:
     void write_bootstrapping_set_to_file_selective_mode(std::ofstream &) const;
 
     void write_sched_file(std::ofstream &) const;
-    std::pair<std::string, std::string> get_arguments(const OperationPtr &) const;
-    std::string get_constant_arg(const OperationPtr &, size_t) const;
-    std::string get_variable_arg(const OperationPtr &, size_t) const;
     SchedDataStructure get_sched_data_from_program() const;
 };

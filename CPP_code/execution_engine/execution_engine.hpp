@@ -66,8 +66,9 @@ Options:
   std::map<std::string, Ctxt> ctxt_regs;
   std::map<std::string, Ptxt> ptxt_regs;
   std::map<std::string, double> validation_regs;
-  std::map<std::string, std::shared_ptr<std::mutex>> reg_locks;
-  std::map<std::string, std::shared_ptr<std::mutex>> dependence_locks;
+  std::map<std::string, std::unique_ptr<std::mutex>> reg_locks;
+  std::map<std::string, std::unique_ptr<std::mutex>> dependence_locks;
+  std::mutex map_lock;
 
   double execution_time;
   int num_bootstraps;
@@ -99,4 +100,7 @@ Options:
   void generate_dependence_locks();
   void lock_all_mutexes();
   void bootstrap_initial_inputs();
+  Ctxt get_ctxt_input(const std::vector<EngineOpInput> &);
+  std::pair<Ctxt, Ctxt> get_ctxt_ctxt_inputs(const std::vector<EngineOpInput> &);
+  std::pair<Ctxt, Ptxt> get_ctxt_ptxt_inputs(const std::vector<EngineOpInput> &);
 };

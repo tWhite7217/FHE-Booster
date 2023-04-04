@@ -264,72 +264,17 @@ void FileWriter::write_sched_file(std::ofstream &file) const
         {
             std::string result_var = " c" + std::to_string(operation->id);
 
-            auto [arg1, arg2] = get_arguments(operation);
+            auto args = operation->sched_args;
 
             std::string thread = " t" + std::to_string(core_num);
 
-            file << operation->type.to_string() << result_var << arg1 << arg2 << thread << std::endl;
+            file << operation->type.to_string() << result_var << args << thread << std::endl;
             if (operation->is_bootstrapped())
             {
                 file << "BOOT c0" << operation->id << " c" << operation->id << " t" << core_num << std::endl;
             }
         }
     }
-}
-
-std::pair<std::string, std::string> FileWriter::get_arguments(const OperationPtr &operation) const
-{
-    std::string arg1;
-    std::string arg2;
-
-    auto num_var_parents = operation->parent_ptrs.size();
-    auto num_const_parents = operation->constant_parent_ids.size();
-
-    if (num_var_parents == 2)
-    {
-        arg1 = get_variable_arg(operation, 0);
-        arg2 = get_variable_arg(operation, 1);
-    }
-    else if (num_const_parents == 2)
-    {
-        arg1 = get_constant_arg(operation, 0);
-        arg2 = get_constant_arg(operation, 1);
-    }
-    else if (num_var_parents == 1 && num_const_parents == 1)
-    {
-        arg1 = get_variable_arg(operation, 0);
-        arg2 = get_constant_arg(operation, 0);
-    }
-    else if (num_var_parents == 1)
-    {
-        arg1 = arg2 = get_variable_arg(operation, 0);
-    }
-    else if (num_const_parents == 1)
-    {
-        arg1 = arg2 = get_constant_arg(operation, 0);
-    }
-    else
-    {
-        throw std::runtime_error("An operation must have at least one input.");
-    }
-
-    return {arg1, arg2};
-}
-
-std::string FileWriter::get_constant_arg(const OperationPtr &operation, size_t parent_num) const
-{
-    return " k" + std::to_string(operation->constant_parent_ids[parent_num]);
-}
-
-std::string FileWriter::get_variable_arg(const OperationPtr &operation, size_t parent_num) const
-{
-    std::string arg = " c";
-    auto parent = operation->parent_ptrs[parent_num];
-    if (operation->receives_bootstrapped_result_from(parent))
-    {
-        arg += "0";
-    }
-    return arg + std::to_string(parent->id);
 }
 
 FileWriter::SchedDataStructure FileWriter::get_sched_data_from_program() const
