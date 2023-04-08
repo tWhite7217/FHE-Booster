@@ -64,11 +64,11 @@ void Program::FileParser::parse_operation_and_its_dependences(const std::vector<
     if (line.size() == 3)
     {
         const auto &arg = line[2];
-        new_operation->sched_args = " " + arg + " " + arg;
+        new_operation->sched_args = " " + arg + " " + arg + " ";
     }
     else
     {
-        new_operation->sched_args = " " + line[2] + " " + line[3];
+        new_operation->sched_args = " " + line[2] + " " + line[3] + " ";
     }
 
     for (size_t i = 2; i < line.size(); i++)

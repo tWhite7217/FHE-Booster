@@ -265,8 +265,21 @@ void FileWriter::write_sched_file(std::ofstream &file) const
             std::string result_var = " c" + std::to_string(operation->id);
 
             auto args = operation->sched_args;
+            for (const auto parent : operation->parent_ptrs)
+            {
+                if (operation->receives_bootstrapped_result_from(parent))
+                {
 
-            std::string thread = " t" + std::to_string(core_num);
+                    std::string unbootstrapped = " c" + std::to_string(parent->id) + " ";
+                    std::string bootstrapped = " c0" + std::to_string(parent->id) + " ";
+                    while (args.find(unbootstrapped) != std::string::npos)
+                    {
+                        args = std::regex_replace(args, std::regex(unbootstrapped), bootstrapped);
+                    }
+                }
+            }
+
+            std::string thread = "t" + std::to_string(core_num);
 
             file << operation->type.to_string() << result_var << args << thread << std::endl;
             if (operation->is_bootstrapped())
