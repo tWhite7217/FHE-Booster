@@ -33,26 +33,26 @@ int main(int argc, char *argv[])
     variable tmp;
 
     // Sigmoid (high accuracy taylor-series approximation)
-    dg.print_mul(tmp, accum);
+    dg.print_mul(tmp, accum, accum);
     dg.print_add(out, out, tmp);
     // Calculate x^3 term.
-    dg.print_mul(temp, accum);
+    dg.print_mul(temp, accum, accum);
     dg.print_mul(temp, temp, accum);
-    dg.print_mul(tmp, temp);
+    dg.print_mul(tmp, temp, temp);
     dg.print_sub(out, out, tmp);
     // Calculate x^5 term.
     dg.print_mul(temp, temp, accum);
     dg.print_mul(temp, temp, accum);
-    dg.print_mul(tmp, temp);
+    dg.print_mul(tmp, temp, temp);
     dg.print_sub(out, out, tmp);
     // Calculate x^9 term.
     dg.print_mul(temp, temp, accum);
     dg.print_mul(temp, temp, accum);
-    dg.print_mul(tmp, temp);
+    dg.print_mul(tmp, temp, temp);
     dg.print_sub(out, out, tmp);
     // Calculate x^11 term.
     dg.print_mul(temp, temp, accum);
     dg.print_mul(temp, temp, accum);
-    dg.print_mul(tmp, temp);
+    dg.print_mul(tmp, temp, temp);
     dg.print_sub(out, out, tmp);
 }

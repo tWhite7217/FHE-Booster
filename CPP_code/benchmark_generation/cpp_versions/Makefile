@@ -8,23 +8,23 @@ CXX = g++-10
 
 # o_dependencies = lgrp.cc Makefile
 
-CPP_FLAGS = -std=c++20 -O3
+CPP_FLAGS = -std=c++17 -O3
 
 # all: bootstrap_segments_generator.out bootstrap_set_selector.out list_scheduler.out complete_to_selective_converter.out random_graph_generator.out ldt_generator.out
 
-conv.out: conv.cpp
+conv.out: conv.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -o $@ conv.cpp
 
-conv_variable.out: conv_variable.cpp
+conv_variable.out: conv_variable.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -o $@ conv_variable.cpp
 
-pid.out: pid.cpp
+pid.out: pid.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -o $@ pid.cpp
 
-pendulum.out: pendulum.cpp
+pendulum.out: pendulum.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -o $@ pendulum.cpp
 
-sine_newton.out: sine_newton.cpp
+sine_newton.out: sine_newton.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -o $@ sine_newton.cpp
 
 clean:

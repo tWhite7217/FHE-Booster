@@ -17,14 +17,11 @@ public:
     void print_set(variable &);
     void print_add(variable &, const variable &, const variable &);
     void print_sub(variable &, const variable &, const variable &);
-    void print_mul(variable &, const variable &);
     void print_mul(variable &, const variable &, const variable &);
-    void print_pow(variable &, const variable &, const int);
+    void print_pow(variable &, const variable &, int);
     void print_sine7(variable &, const variable &);
     void print_sine9(variable &, const variable &);
     void print_sine11(variable &, const variable &);
-    // void print_sine13(variable &, const variable &);
-    // void print_sine15(variable &, const variable &);
 
     void print_set_vector(std::vector<variable> &);
 
@@ -37,8 +34,6 @@ public:
     void set_sine7_vars();
     void set_sine9_vars();
     void set_sine11_vars();
-    // void set_sine13_vars();
-    // void set_sine15_vars();
 
     template <size_t N>
     void set(std::array<bit, N> &, std::array<bit, N> &);
@@ -62,7 +57,6 @@ public:
 private:
     size_t constant_count = 1;
     size_t instruction_count = 1;
-    // size_t num_bits;
 
     bit zero_bit;
 
@@ -73,6 +67,8 @@ private:
     variable inv39916800;
 
     std::ofstream &output_file;
+
+    std::string get_inputs_string(const variable &, const variable &);
 
     void print_pow5(variable &, const variable &);
     void print_pow7(variable &, const variable &);

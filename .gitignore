@@ -26,3 +26,5 @@ CPP_code/execution_engine/build/
 *.ipynb_checkpoints/
 *.t2
 lgrp.cc
+do_tests_log*
+*unused/

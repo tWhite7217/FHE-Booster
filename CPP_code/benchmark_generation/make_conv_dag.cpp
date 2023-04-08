@@ -3,10 +3,10 @@
 const int image_height = 5;
 const int image_width = 5;
 const int kernel_size = 3;
-const int padding_each_side = kernel_size - 2;
+const int padding_each_side = kernel_size / 2;
 const int padded_height = image_height + (padding_each_side * 2);
 const int padded_width = image_width + (padding_each_side * 2);
-const int num_kernels = 2;
+const int num_kernels = 32;
 
 int main(int argc, char *argv[])
 {

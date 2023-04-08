@@ -1,6 +1,6 @@
 #include "dag_generator.h"
 
-const int num_iterations = 200; // should be 200 to match the benchmark
+const int num_iterations = 20; // should be 200 to match the benchmark
 
 int main(int argc, char *argv[])
 {
@@ -10,11 +10,11 @@ int main(int argc, char *argv[])
 
     dg.set_zero_var();
 
-    variable m;
-    variable kp;
-    variable ki;
-    variable kd;
-    variable c;
+    variable m;  // Ex. -5.0          -10 < m < 10
+    variable kp; // Ex. 9.4514
+    variable ki; // Ex. 0.69006
+    variable kd; // Ex. 2.8454
+    variable c;  // No example given  -10 < c < 10
 
     dg.print_set(m);
     dg.print_set(kp);
@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
     dg.print_set(kd);
     dg.print_set(c);
 
-    variable dt;    // 0.5
-    variable invdt; // 2.0
+    variable dt;    // 0.2 matches the original papers, 0.5 matches FPBench
+    variable invdt; // 1 / dt
     variable dot01; // 0.01
 
     dg.print_set(dt);
@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     variable i = dg.zero_var;
     variable d = dg.zero_var;
     variable r = dg.zero_var;
-    variable m_1 = m;
     variable eold = dg.zero_var;
     variable t = dg.zero_var;
 
@@ -46,8 +45,8 @@ int main(int argc, char *argv[])
 
     for (int iter = 0; iter < num_iterations; iter++)
     {
-        // e = c - m_1;
-        dg.print_sub(e, c, m_1);
+        // e = c - m;
+        dg.print_sub(e, c, m);
         // p = kp * e;
         dg.print_mul(p, kp, e);
         // i = i + ((ki * dt) * e);
@@ -61,9 +60,9 @@ int main(int argc, char *argv[])
         // r = (p + i) + d;
         dg.print_add(tmp1, p, i);
         dg.print_add(r, tmp1, d);
-        // m_1 = m_1 + (0.01 * r);
+        // m = m + (0.01 * r);
         dg.print_mul(tmp1, dot01, r);
-        dg.print_add(m_1, m_1, tmp1);
+        dg.print_add(m, m, tmp1);
         // eold = e;
         eold = e;
     }

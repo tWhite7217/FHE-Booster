@@ -16,8 +16,18 @@ void DAGGenerator::print_set(variable &output)
 
 void DAGGenerator::print_add(variable &output, const variable &input1, const variable &input2)
 {
-    output_file << instruction_count++ << ",ADD," << input1 << "," << input2 << std::endl;
+    std::string inputs = get_inputs_string(input1, input2);
+    output_file << instruction_count++ << ",ADD," << inputs << std::endl;
     output = "c" + std::to_string(instruction_count - 1);
+}
+
+std::string DAGGenerator::get_inputs_string(const variable &input1, const variable &input2)
+{
+    if (input1 == input2)
+    {
+        return input1;
+    }
+    return input1 + "," + input2;
 }
 
 void DAGGenerator::print_sub(variable &output, const variable &input1, const variable &input2)
@@ -26,15 +36,10 @@ void DAGGenerator::print_sub(variable &output, const variable &input1, const var
     output = "c" + std::to_string(instruction_count - 1);
 }
 
-void DAGGenerator::print_mul(variable &output, const variable &input)
-{
-    output_file << instruction_count++ << ",MUL," << input << std::endl;
-    output = "c" + std::to_string(instruction_count - 1);
-}
-
 void DAGGenerator::print_mul(variable &output, const variable &input1, const variable &input2)
 {
-    output_file << instruction_count++ << ",MUL," << input1 << "," << input2 << std::endl;
+    std::string inputs = get_inputs_string(input1, input2);
+    output_file << instruction_count++ << ",MUL," << inputs << std::endl;
     output = "c" + std::to_string(instruction_count - 1);
 }
 
@@ -195,17 +200,23 @@ void DAGGenerator::print_sine7(variable &output, const variable &x)
     variable tmp1;
     variable tmp2;
     variable tmp3;
+    variable x2;
+    variable x3;
+    variable x5;
+    variable x7;
 
     // return ((x - (pow(x, 3) / 6.0)) + (pow(x, 5) / 120.0)) - (pow(x, 7) / 5040.0);
-    print_pow(tmp1, x, 3);
-    print_mul(tmp1, tmp1, inv6);
+    print_mul(x2, x, x);
+    print_mul(x3, x2, x);
+    print_mul(x5, x3, x2);
+    print_mul(x7, x5, x2);
+
+    print_mul(tmp1, x3, inv6);
     print_sub(tmp1, x, tmp1);
 
-    print_pow(tmp2, x, 5);
-    print_mul(tmp2, tmp2, inv120);
+    print_mul(tmp2, x5, inv120);
 
-    print_pow(tmp3, x, 7);
-    print_mul(tmp3, tmp3, inv5040);
+    print_mul(tmp3, x7, inv5040);
 
     print_add(tmp1, tmp1, tmp2);
     print_sub(output, tmp1, tmp3);
@@ -215,49 +226,81 @@ void DAGGenerator::print_sine9(variable &output, const variable &x)
 {
     variable tmp1;
     variable tmp2;
+    variable tmp3;
+    variable tmp4;
+    variable x2;
+    variable x3;
+    variable x5;
+    variable x6;
+    variable x7;
+    variable x9;
 
-    print_sine7(tmp1, x);
+    // return ((x - (pow(x, 3) / 6.0)) + (pow(x, 5) / 120.0)) - (pow(x, 7) / 5040.0) + (pow(x, 9) / 362880.0);
+    print_mul(x2, x, x);
+    print_mul(x3, x2, x);
+    print_mul(x5, x3, x2);
+    print_mul(x6, x3, x3);
+    print_mul(x7, x5, x2);
+    // One extra multiplication by calculating x9 this way, but more parallelism and
+    // all these multiplcations use 4 levels, whereas doing x7 * x2 would add a
+    // level, for a total of 5
+    print_mul(x9, x6, x3);
 
-    print_pow(tmp2, x, 9);
-    print_mul(tmp2, tmp2, inv362880);
-    print_add(output, tmp1, tmp2);
+    print_mul(tmp1, x3, inv6);
+    print_sub(tmp1, x, tmp1);
+
+    print_mul(tmp2, x5, inv120);
+
+    print_mul(tmp3, x7, inv5040);
+
+    print_mul(tmp4, x9, inv362880);
+
+    print_add(tmp1, tmp1, tmp2);
+    print_sub(tmp1, tmp1, tmp3);
+    print_add(output, tmp1, tmp4);
 }
 
 void DAGGenerator::print_sine11(variable &output, const variable &x)
 {
     variable tmp1;
     variable tmp2;
+    variable tmp3;
+    variable tmp4;
+    variable tmp5;
+    variable x2;
+    variable x3;
+    variable x5;
+    variable x6;
+    variable x7;
+    variable x9;
+    variable x11;
 
-    print_sine9(tmp1, x);
+    // return ((x - (pow(x, 3) / 6.0)) + (pow(x, 5) / 120.0)) - (pow(x, 7) / 5040.0) + (pow(x, 9) / 362880.0) - (pow(x, 11) / 39916800.0);
+    print_mul(x2, x, x);
+    print_mul(x3, x2, x);
+    print_mul(x5, x3, x2);
+    print_mul(x6, x3, x3);
+    print_mul(x7, x5, x2);
+    print_mul(x9, x6, x3);
+    print_mul(x11, x6, x5);
+    // Again, all these multiplications only use 4 levels
 
-    print_pow(tmp2, x, 11);
-    print_mul(tmp2, tmp2, inv39916800);
-    print_sub(output, tmp1, tmp2);
+    print_mul(tmp1, x3, inv6);
+    print_sub(tmp1, x, tmp1);
+
+    print_mul(tmp2, x5, inv120);
+
+    print_mul(tmp3, x7, inv5040);
+
+    print_mul(tmp4, x9, inv362880);
+
+    print_mul(tmp5, x11, inv39916800);
+
+    print_add(tmp1, tmp1, tmp2);
+    print_sub(tmp1, tmp1, tmp3);
+    print_add(tmp1, tmp1, tmp4);
+    print_sub(output, tmp1, tmp5);
 }
-
-// void DAGGenerator::print_sine13(variable &output, const variable &x)
-// {
-//     variable tmp1;
-//     variable tmp2;
-
-//     print_sine11(tmp1, x);
-
-//     print_pow(tmp2, x, 13);
-//     print_mul(tmp2, tmp2, 1 / 6227020800);
-//     print_add(output, tmp1, tmp2);
-// }
-
-// void DAGGenerator::print_sine15(variable &output, const variable &x)
-// {
-//     variable tmp1;
-//     variable tmp2;
-
-//     print_sine13(tmp1, x);
-
-//     print_pow(tmp2, x, 15);
-//     print_mul(tmp2, tmp2, 1 / 1307674368000);
-//     print_sub(output, tmp1, tmp2);
-// }
 
 void DAGGenerator::set_sine7_vars()
 {
