@@ -86,10 +86,21 @@ void BootstrapSegmentGenerator::print_options() const
 
 void BootstrapSegmentGenerator::generate_bootstrap_segments()
 {
-    std::function<void()> find_ignorable_func = [this]()
-    { find_operations_to_ignore(); };
+    if (options.initial_levels > 0)
+    {
+        std::function<void()> find_ignorable_func = [this]()
+        { find_operations_to_ignore(); };
 
-    utl::perform_func_and_print_execution_time(find_ignorable_func, "Finding ignorable operations");
+        utl::perform_func_and_print_execution_time(find_ignorable_func, "Finding ignorable operations");
+    }
+    else
+    {
+        auto &tffc = too_far_from_fresh_ciphertext;
+        for (const auto op : program)
+        {
+            tffc[{op, options.initial_levels + 1}] = true;
+        }
+    }
 
     std::function<void()> create_segs_func = [this]()
     { create_raw_bootstrap_segments(); };

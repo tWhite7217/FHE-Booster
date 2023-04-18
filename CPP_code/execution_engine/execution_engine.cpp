@@ -504,7 +504,6 @@ int ExecutionEngine::execute_schedule()
       {
         result = context->EvalBootstrap(result);
         bootstrap_counter++;
-        std::cout << "here" << std::endl;
       }
 
       map_lock.lock();

@@ -77,6 +77,8 @@ OperationPtr BootstrapSetSelector::choose_operation_to_bootstrap_based_on_score(
 {
     auto max_score = -1;
     OperationPtr max_score_operation;
+    // std::ranges::reverse_view reverse_program{program};
+    // for (const auto &operation : reverse_program)
     for (const auto &operation : program)
     {
         if (!operation->is_bootstrapped())
