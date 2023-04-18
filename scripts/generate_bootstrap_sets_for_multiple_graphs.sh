@@ -29,6 +29,7 @@ do
 
     for ((j = 0; j < ${#segments_weights[@]}; j++))
     do
+        # heuristic_name="modified_s${segments_weights[j]}_r${slack_weights[j]}_u${urgency_weights[j]}"
         heuristic_name="s${segments_weights[j]}_r${slack_weights[j]}_u${urgency_weights[j]}"
         output_file_dir="$output_file_base/$heuristic_name"
         mkdir $output_file_dir
