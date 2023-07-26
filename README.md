@@ -61,7 +61,8 @@ Creating more detailed/helpful instructions here will be a consideration for fut
 
 ## Future Work
 
-Although it can be used as is and some may find it useful, FHE-Booster is currently more of a proof of concept than a fully-featured production-ready framework. Therefore, the following features are intended for future implementation, in some FHE-Booster 2.0 that will be hosted on a separate repository.
+Although it can be used as is and some may find it useful, FHE-Booster is currently more of a proof of concept than a fully-featured production-ready framework. Therefore, the following features are intended for future implementation, in some FHE-Booster 2.0.
+<!-- that will be hosted on a separate repository. -->
 
 - Dynamic (rather than static) placement of bootstrap operations, which should greatly increase the compatability of FHE-Booster, since it is currently limited to smaller programs.
 - An updated input file format, in preparation for a dynamic approach.
