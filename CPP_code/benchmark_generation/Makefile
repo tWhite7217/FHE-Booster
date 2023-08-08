@@ -4,7 +4,7 @@ BIN = ./bin
 
 CPP_FLAGS = -std=c++20 -O3
 
-all: make_nn_dag.out make_simon_dag.out make_lr_dag.out
+all: make_conv_dag.out make_lr_dag.out make_pendulum_dag.out make_pid_dag.out
 
 $(BIN)/dag_generator.o: dag_generator.h dag_generator.cpp Makefile
 	$(CXX) $(CPP_FLAGS) -c -o $@ dag_generator.cpp
