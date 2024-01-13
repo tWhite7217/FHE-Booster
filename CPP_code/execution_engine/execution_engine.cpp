@@ -190,7 +190,7 @@ void ExecutionEngine::execute_validation_schedule()
       }
       map_lock.lock();
       auto input1 = validation_regs[inputs[0].key];
-      double input2;
+      double input2=0;//Mihailo put this value to 0 to solve issues of warning being treated as errors
       if (inputs.size() == 2)
       {
         input2 = validation_regs[inputs[1].key];
@@ -366,7 +366,7 @@ void ExecutionEngine::encrypt_inputs()
 void ExecutionEngine::bootstrap_initial_inputs()
 {
 #pragma omp parallel for
-  for (int i = 0; i < ctxt_regs.size(); i++)
+  for (int i = 0; i < (int) ctxt_regs.size(); i++)//Mihailo added casting to solve issue of warnings being treated as errors (comparison of integer expressions of different signedness)
   {
     auto it = ctxt_regs.begin();
     advance(it, i);
@@ -500,7 +500,7 @@ int ExecutionEngine::execute_schedule()
       }
       if (ALAP_mode &&
           sched_info.bootstrap_candidates.count(output_key) &&
-          result->GetLevel() >= level_to_bootstrap)
+          result->GetLevel() >= (long unsigned int) level_to_bootstrap)//Mihailo added casting to solve issue of warnings being treated as errors (comparison of integer expressions of different signedness)
       {
         result = context->EvalBootstrap(result);
         bootstrap_counter++;

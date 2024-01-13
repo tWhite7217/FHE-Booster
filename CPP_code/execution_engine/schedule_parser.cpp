@@ -69,7 +69,7 @@ void ScheduleParser::parse_line(const std::string &line_str)
   EngineOperationPtr tmp = EngineOperationPtr(
       new EngineOperation(op_type, output_key, input_key1, input_key2));
 
-  if (thread_idx >= sched_info.circuit.size())
+  if ((long unsigned int) thread_idx >= sched_info.circuit.size())//Mihailo added casting to solve warnings treated as errors issue
   {
     sched_info.circuit.resize(thread_idx + 1);
   }
