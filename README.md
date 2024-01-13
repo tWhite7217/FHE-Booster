@@ -2,7 +2,31 @@
 
 FHE-Booster is a framework for reducing the execution time of fully homomorphic encryption programs via smart bootstrapping placement. While fully functional in its current form, FHE-Booster is still a work in progress. This repository is meant to host the framework as it existed upon submission of my thesis. Any commits to master moving forward will be accompanied by an update to this README. Such updates may not happen at all and are likely to only be bug fixes, not new features. A new repository will be created for the updated version of FHE-Booster.
 
-<!-- The initial paper describing our framework can be found here and the more detailed and up to date thesis is here. -->
+### How to cite this work
+The initial paper describing our framework can be accessed [here](https://doi.org/10.1109/HOST55118.2023.10132930); you can cite it as follows:
+```
+@INPROCEEDINGS{WGYT_FHEBooster_HOST23,
+  author={White, Tommy and Gouert, Charles and Yang, Chengmo and Tsoutsos, Nektarios Georgios},
+  booktitle={2023 IEEE International Symposium on Hardware Oriented Security and Trust (HOST)}, 
+  title={FHE-Booster: Accelerating Fully Homomorphic Execution with Fine-tuned Bootstrapping Scheduling}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={293-303},
+  doi={10.1109/HOST55118.2023.10132930}
+}
+```
+
+The more detailed and up-to-date thesis is [here](https://github.com/tWhite7217/FHE-Booster-Thesis); you can cite it as follows:
+```
+@mastersthesis{White_FHE_Thesis_2023,
+  author  = "Tommy White",
+  title   = "Scheduling General Purpose Encrypted Computation on Multicore Platform",
+  school  = "University of Delaware",
+  year    = "2023",
+  note    = "Available at \url{https://github.com/tWhite7217/FHE-Booster-Thesis}"
+}
+```
 
 ## Installation
 
